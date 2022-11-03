@@ -1,6 +1,93 @@
-
 mod Tuples {
-    use std::{f32::EPSILON};
+    use std::{f32::EPSILON, ops::Add};
+
+    enum TupleType {
+        Point,
+        Vector,
+    }
+
+    trait TupleTrait {
+        const type_of: TupleType;
+        fn new(input: (f32, f32, f32)) -> Self;
+    }
+
+    #[derive(Debug)]
+    struct Point {
+        x: f32,
+        y: f32,
+        z: f32,
+        w: f32,
+    }
+
+    impl TupleTrait for Point {
+        const type_of: TupleType = TupleType::Point;
+
+        fn new(input: (f32, f32, f32)) -> Self {
+            Point {
+                x: input.0,
+                y: input.1,
+                z: input.2,
+                w: 1.0,
+            }
+        }
+    }
+
+    impl Add<Vector> for Point {
+        type Output = Self;
+        fn add(self, rhs: Vector) -> Self::Output {
+            Point {
+                x: self.x + rhs.x,
+                y: self.y + rhs.y,
+                z: self.z + rhs.z,
+                w: self.w + rhs.w,
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    struct Vector {
+        x: f32,
+        y: f32,
+        z: f32,
+        w: f32,
+    }
+
+    impl TupleTrait for Vector {
+        const type_of: TupleType = TupleType::Vector;
+
+        fn new(input: (f32, f32, f32)) -> Self {
+            Vector {
+                x: input.0,
+                y: input.1,
+                z: input.2,
+                w: 0.0,
+            }
+        }
+    }
+
+    impl Add<Vector> for Vector {
+        type Output = Vector;
+        fn add(self, rhs: Vector) -> Self::Output {
+            Vector {
+                x: self.x + rhs.x,
+                y: self.y + rhs.y,
+                z: self.z + rhs.z,
+                w: self.w + rhs.w,
+            }
+        }
+    }
+
+    impl Add<Point> for Vector {
+        type Output = Point;
+        fn add(self, rhs: Point) -> Point {
+            Point {
+                x: self.x + rhs.x,
+                y: self.y + rhs.y,
+                z: self.z + rhs.z,
+                w: self.w + rhs.w,
+            }
+        }
+    }
 
     pub fn point(a: (f32, f32, f32)) -> (f32, f32, f32, f32) {
         (a.0, a.1, a.2, 1.0)
