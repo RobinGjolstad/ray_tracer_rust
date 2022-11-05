@@ -4,15 +4,32 @@ mod Tuples {
     enum TupleType {
         Point,
         Vector,
+        Undefined
     }
 
     trait TupleTrait {
-        const type_of: TupleType;
+        const TYPE_OF: TupleType;
         fn new(input: (f32, f32, f32)) -> Self;
     }
 
     #[derive(Debug)]
-    struct Point {
+    pub struct Tuple {
+        x: f32,
+        y: f32,
+        z: f32,
+        w: f32,
+    }
+
+
+    impl Tuple {
+        fn new(input: (f32, f32, f32, f32)) -> Self {
+            Tuple { x: input.0, y: input.1, z: input.2, w: input.3 }
+        }
+    }
+    
+    
+    #[derive(Debug)]
+    pub struct Point {
         x: f32,
         y: f32,
         z: f32,
@@ -20,7 +37,7 @@ mod Tuples {
     }
 
     impl TupleTrait for Point {
-        const type_of: TupleType = TupleType::Point;
+        const TYPE_OF: TupleType = TupleType::Point;
 
         fn new(input: (f32, f32, f32)) -> Self {
             Point {
@@ -45,7 +62,7 @@ mod Tuples {
     }
 
     #[derive(Debug)]
-    struct Vector {
+    pub struct Vector {
         x: f32,
         y: f32,
         z: f32,
@@ -53,7 +70,7 @@ mod Tuples {
     }
 
     impl TupleTrait for Vector {
-        const type_of: TupleType = TupleType::Vector;
+        const TYPE_OF: TupleType = TupleType::Vector;
 
         fn new(input: (f32, f32, f32)) -> Self {
             Vector {
@@ -89,8 +106,8 @@ mod Tuples {
         }
     }
 
-    pub fn point(a: (f32, f32, f32)) -> (f32, f32, f32, f32) {
-        (a.0, a.1, a.2, 1.0)
+    pub fn point(a: (f32, f32, f32)) -> Point {
+        Point::new(a)
     }
     pub fn is_point(tuple: (f32, f32, f32, f32)) -> bool {
         if is_float_equal(tuple.3, 1.0) {
@@ -100,8 +117,8 @@ mod Tuples {
         }
     }
 
-    pub fn vector(a: (f32, f32, f32)) -> (f32, f32, f32, f32) {
-        (a.0, a.1, a.2, 0.0)
+    pub fn vector(a: (f32, f32, f32)) -> Vector {
+        Vector::new(a)
     }
     pub fn is_vector(tuple: (f32, f32, f32, f32)) -> bool {
         if is_float_equal(tuple.3, 0.0) {
@@ -150,14 +167,19 @@ mod Tuples {
         fn function_point_creates_tuple_with_w_equal_1() {
             let p = point((4.0, -4.0, 3.0));
 
-            assert_eq!(p, (4.0, -4.0, 3.0, 1.0));
+            assert_eq!((p.x, p.y, p.z, p.w), (4.0, -4.0, 3.0, 1.0));
         }
 
         #[test]
         fn function_vector_creates_tuple_with_w_equal_0() {
             let p = vector((4.0, -4.0, 3.0));
 
-            assert_eq!(p, (4.0, -4.0, 3.0, 0.0));
+            assert_eq!((p.x, p.y, p.z, p.w), (4.0, -4.0, 3.0, 0.0));
+        }
+
+        #[test]
+        fn adding_two_tuples_results_in_a_new_tuple() {
+            let a1 = 
         }
     }
 }
