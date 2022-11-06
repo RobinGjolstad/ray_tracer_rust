@@ -56,7 +56,7 @@ mod Tuples {
     impl Sub<Tuple> for Tuple {
         type Output = Self;
         fn sub(self, rhs: Tuple) -> Self::Output {
-            Tuple { 
+            Tuple {
                 x: self.x - rhs.x,
                 y: self.y - rhs.y,
                 z: self.z - rhs.z,
@@ -252,6 +252,26 @@ mod Tuples {
             let v1 = vector((-2.0, -4.0, -6.0));
 
             assert_eq!(p1 - p2, v1);
+        }
+
+        #[test]
+        fn subtracting_a_vector_from_a_point_results_in_a_point() {
+            let p1 = point((3.0, 2.0, 1.0));
+            let v = vector((5.0, 6.0, 7.0));
+
+            let p2 = point((-2.0, -4.0, -6.0));
+
+            assert_eq!(p1 - v, p2);
+        }
+
+        #[test]
+        fn subtracting_two_vectors_results_in_a_vector() {
+            let v1 = vector((3.0, 2.0, 1.0));
+            let v2 = vector((5.0, 6.0, 7.0));
+
+            let v3 = vector((-2.0, -4.0, -6.0));
+
+            assert_eq!(v1 - v2, v3);
         }
     }
 }
