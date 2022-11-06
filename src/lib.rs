@@ -1,7 +1,7 @@
 mod Tuples {
     use std::{
         f32::EPSILON,
-        ops::{Add, Sub},
+        ops::{Add, Sub, Neg},
     };
 
     enum TupleType {
@@ -61,6 +61,17 @@ mod Tuples {
                 y: self.y - rhs.y,
                 z: self.z - rhs.z,
                 w: self.w - rhs.w,
+            }
+        }
+    }
+    impl Neg for Tuple {
+        type Output = Self;
+        fn neg(self) -> Self::Output {
+            Tuple {
+                x: -self.x,
+                y: -self.y,
+                z: -self.z,
+                w: -self.w,
             }
         }
     }
@@ -272,6 +283,24 @@ mod Tuples {
             let v3 = vector((-2.0, -4.0, -6.0));
 
             assert_eq!(v1 - v2, v3);
+        }
+
+        #[test]
+        fn subtracting_a_vector_from_the_zero_vector_results_in_a_negative_vector() {
+            let zero = vector((0.0, 0.0, 0.0));
+            let v = vector((1.0, -2.0, 3.0));
+
+            let zv = vector((-1.0, 2.0, -3.0));
+
+            assert_eq!(zero - v, zv);
+        }
+
+        #[test]
+        fn negating_a_vector_reverses_the_sign_of_each_element() {
+            let a = Tuple::new((1.0, -2.0, 3.0, -4.0));
+            let na = Tuple::new((-1.0, 2.0, -3.0, 4.0));
+
+            assert_eq!(-a, na);
         }
     }
 }
