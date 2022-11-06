@@ -89,12 +89,7 @@ mod Tuples {
         type Output = Self;
         fn add(self, rhs: Vector) -> Self::Output {
             Point {
-                tuple: Tuple {
-                    x: self.tuple.x + rhs.tuple.x,
-                    y: self.tuple.y + rhs.tuple.y,
-                    z: self.tuple.z + rhs.tuple.z,
-                    w: self.tuple.w + rhs.tuple.w,
-                },
+                tuple: self.tuple + rhs.tuple,
             }
         }
     }
@@ -102,12 +97,7 @@ mod Tuples {
         type Output = Vector;
         fn sub(self, rhs: Point) -> Vector {
             Vector {
-                tuple: Tuple {
-                    x: self.tuple.x - rhs.tuple.x,
-                    y: self.tuple.y - rhs.tuple.y,
-                    z: self.tuple.z - rhs.tuple.z,
-                    w: self.tuple.w - rhs.tuple.w,
-                },
+                tuple: self.tuple - rhs.tuple,
             }
         }
     }
@@ -115,12 +105,7 @@ mod Tuples {
         type Output = Self;
         fn sub(self, rhs: Vector) -> Self::Output {
             Point {
-                tuple: Tuple {
-                    x: self.tuple.x - rhs.tuple.x,
-                    y: self.tuple.y - rhs.tuple.y,
-                    z: self.tuple.z - rhs.tuple.z,
-                    w: self.tuple.w - rhs.tuple.w,
-                },
+                tuple: self.tuple - rhs.tuple,
             }
         }
     }
@@ -149,12 +134,7 @@ mod Tuples {
         type Output = Vector;
         fn add(self, rhs: Vector) -> Self::Output {
             Vector {
-                tuple: Tuple {
-                    x: self.tuple.x + rhs.tuple.x,
-                    y: self.tuple.y + rhs.tuple.y,
-                    z: self.tuple.z + rhs.tuple.z,
-                    w: self.tuple.w + rhs.tuple.w,
-                },
+                tuple: self.tuple + rhs.tuple,
             }
         }
     }
@@ -163,12 +143,16 @@ mod Tuples {
         type Output = Point;
         fn add(self, rhs: Point) -> Point {
             Point {
-                tuple: Tuple {
-                    x: self.tuple.x + rhs.tuple.x,
-                    y: self.tuple.y + rhs.tuple.y,
-                    z: self.tuple.z + rhs.tuple.z,
-                    w: self.tuple.w + rhs.tuple.w,
-                },
+                tuple: self.tuple + rhs.tuple,
+            }
+        }
+    }
+
+    impl Sub<Vector> for Vector {
+        type Output = Self;
+        fn sub(self, rhs: Vector) -> Self::Output {
+            Vector {
+                tuple: self.tuple - rhs.tuple,
             }
         }
     }
