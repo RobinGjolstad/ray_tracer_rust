@@ -1,7 +1,7 @@
 mod Tuples {
     use std::{
         f32::EPSILON,
-        ops::{Add, Sub, Neg},
+        ops::{Add, Mul, Neg, Sub},
     };
 
     enum TupleType {
@@ -72,6 +72,17 @@ mod Tuples {
                 y: -self.y,
                 z: -self.z,
                 w: -self.w,
+            }
+        }
+    }
+    impl Mul<f32> for Tuple {
+        type Output = Self;
+        fn mul(self, rhs: f32) -> Self::Output {
+            Tuple {
+                x: self.x * rhs,
+                y: self.y * rhs,
+                z: self.z * rhs,
+                w: self.w * rhs,
             }
         }
     }
@@ -301,6 +312,22 @@ mod Tuples {
             let na = Tuple::new((-1.0, 2.0, -3.0, 4.0));
 
             assert_eq!(-a, na);
+        }
+
+        #[test]
+        fn multiplying_a_tuple_with_a_scalar_multiplies_each_element_by_a_scalar() {
+            let a = Tuple::new((1.0, -2.0, 3.0, -4.0));
+            let ma = Tuple::new((3.5, -7.0, 10.5, -14.0));
+
+            assert_eq!(a * 3.5, ma);
+        }
+
+        #[test]
+        fn multiplying_a_tuple_with_a_fraction_multiplies_each_element_by_a_fraction() {
+            let a = Tuple::new((1.0, -2.0, 3.0, -4.0));
+            let fa = Tuple::new((0.5, -1.0, 1.5, -2.0));
+
+            assert_eq!(a * 0.5, fa);
         }
     }
 }
