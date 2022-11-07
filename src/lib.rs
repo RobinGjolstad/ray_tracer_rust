@@ -1,7 +1,7 @@
 mod Tuples {
     use std::{
         f32::EPSILON,
-        ops::{Add, Mul, Neg, Sub},
+        ops::{Add, Div, Mul, Neg, Sub},
     };
 
     enum TupleType {
@@ -83,6 +83,17 @@ mod Tuples {
                 y: self.y * rhs,
                 z: self.z * rhs,
                 w: self.w * rhs,
+            }
+        }
+    }
+    impl Div<f32> for Tuple {
+        type Output = Self;
+        fn div(self, rhs: f32) -> Self::Output {
+            Tuple {
+                x: self.x / rhs,
+                y: self.y / rhs,
+                z: self.z / rhs,
+                w: self.w / rhs,
             }
         }
     }
@@ -328,6 +339,14 @@ mod Tuples {
             let fa = Tuple::new((0.5, -1.0, 1.5, -2.0));
 
             assert_eq!(a * 0.5, fa);
+        }
+
+        #[test]
+        fn dividing_a_tuple_with_a_scalar_divides_each_element_by_a_scalar() {
+            let a = Tuple::new((1.0, -2.0, 3.0, -4.0));
+            let da = Tuple::new((0.5, -1.0, 1.5, -2.0));
+
+            assert_eq!(a / 2.0, da);
         }
     }
 }
