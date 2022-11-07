@@ -148,6 +148,15 @@ mod Tuples {
         tuple: Tuple,
     }
 
+    impl Vector {
+        fn magnitude(&self) -> f32 {
+            let pow_x = f32::powi(self.tuple.x, 2);
+            let pow_y = f32::powi(self.tuple.y, 2);
+            let pow_z = f32::powi(self.tuple.z, 2);
+            let pow_w = f32::powi(self.tuple.w, 2);
+            f32::sqrt(pow_x + pow_y + pow_z + pow_w)
+        }
+    }
     impl TupleTrait for Vector {
         const TYPE_OF: TupleType = TupleType::Vector;
 
@@ -347,6 +356,41 @@ mod Tuples {
             let da = Tuple::new((0.5, -1.0, 1.5, -2.0));
 
             assert_eq!(a / 2.0, da);
+        }
+
+        #[test]
+        fn magnitude_of_vector_1_0_0_is_1() {
+            let v = vector((1.0, 0.0, 0.0));
+
+            assert_eq!(v.magnitude(), 1.0);
+        }
+
+        #[test]
+        fn magnitude_of_vector_0_1_0_is_1() {
+            let v = vector((0.0, 1.0, 0.0));
+
+            assert_eq!(v.magnitude(), 1.0);
+        }
+
+        #[test]
+        fn magnitude_of_vector_0_0_1_is_1() {
+            let v = vector((0.0, 0.0, 1.0));
+
+            assert_eq!(v.magnitude(), 1.0);
+        }
+
+        #[test]
+        fn magnitude_of_vector_1_2_3_is_sqrt14() {
+            let v = vector((1.0, 2.0, 3.0));
+
+            assert_eq!(v.magnitude(), f32::sqrt(14.0));
+        }
+
+        #[test]
+        fn magnitude_of_vector_neg_1_2_3_is_sqrt14() {
+            let v = vector((-1.0, -2.0, -3.0));
+
+            assert_eq!(v.magnitude(), f32::sqrt(14.0));
         }
     }
 }
