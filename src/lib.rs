@@ -150,11 +150,22 @@ mod Tuples {
 
     impl Vector {
         fn magnitude(&self) -> f32 {
-            let pow_x = f32::powi(self.tuple.x, 2);
-            let pow_y = f32::powi(self.tuple.y, 2);
-            let pow_z = f32::powi(self.tuple.z, 2);
-            let pow_w = f32::powi(self.tuple.w, 2);
-            f32::sqrt(pow_x + pow_y + pow_z + pow_w)
+            let pow_x = f64::powi(self.tuple.x as f64, 2);
+            let pow_y = f64::powi(self.tuple.y as f64, 2);
+            let pow_z = f64::powi(self.tuple.z as f64, 2);
+            let pow_w = f64::powi(self.tuple.w as f64, 2);
+            let sum = pow_x + pow_y + pow_z + pow_w;
+            f64::sqrt(sum) as f32
+        }
+        fn normalize(&self) -> Self {
+            Vector {
+                tuple: Tuple::new((
+                    self.tuple.x / self.magnitude(),
+                    self.tuple.y / self.magnitude(),
+                    self.tuple.z / self.magnitude(),
+                    self.tuple.w / self.magnitude(),
+                )),
+            }
         }
     }
     impl TupleTrait for Vector {
@@ -391,6 +402,38 @@ mod Tuples {
             let v = vector((-1.0, -2.0, -3.0));
 
             assert_eq!(v.magnitude(), f32::sqrt(14.0));
+        }
+
+        #[test]
+        fn normalizing_a_vector_4_0_0_gives_1_0_0() {
+            let v = vector((4.0, 0.0, 0.0));
+            let normalized_v = v.normalize();
+            let unit_v = vector((1.0, 0.0, 0.0));
+
+            assert_eq!(normalized_v, unit_v);
+        }
+
+        #[test]
+        fn normalizing_a_vector_1_2_3_gives_1sqrt14_2sqrt14_3sqrt14() {
+            let v = vector((1.0, 2.0, 3.0));
+            let normalized_v = v.normalize();
+
+            let unit_v = vector((
+                1.0 / 14.0_f32.sqrt(),
+                2.0 / 14.0_f32.sqrt(),
+                3.0 / 14.0_f32.sqrt(),
+            ));
+
+            assert_eq!(normalized_v, unit_v);
+        }
+
+        #[test]
+        fn the_magnitude_of_a_normalized_vector_is_1() {
+            let v = vector((1.0, 2.0, 3.0));
+            let norm = v.normalize();
+            let norm_mag = norm.magnitude();
+
+            assert_eq!(norm_mag, 1.0);
         }
     }
 }
