@@ -167,6 +167,14 @@ mod Tuples {
                 )),
             }
         }
+        fn dot(&self, other: Self) -> f32 {
+            let x = self.tuple.x * other.tuple.x;
+            let y = self.tuple.y * other.tuple.y;
+            let z = self.tuple.z * other.tuple.z;
+            let w = self.tuple.w * other.tuple.w;
+
+            return x + y + z + w;
+        }
     }
     impl TupleTrait for Vector {
         const TYPE_OF: TupleType = TupleType::Vector;
@@ -434,6 +442,14 @@ mod Tuples {
             let norm_mag = norm.magnitude();
 
             assert!(is_float_equal(&norm_mag, 1.0));
+        }
+
+        #[test]
+        fn the_dot_product_of_two_vectors_equals_the_sum_of_each_component_multiplied() {
+            let a = vector((1.0, 2.0, 3.0));
+            let b = vector((2.0, 3.0, 4.0));
+
+            assert!(is_float_equal(&a.dot(b), 20.0));
         }
     }
 }
