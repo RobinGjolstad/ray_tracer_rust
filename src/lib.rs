@@ -433,7 +433,7 @@ mod Tuples {
             let norm = v.normalize();
             let norm_mag = norm.magnitude();
 
-            assert_eq!(norm_mag, 1.0);
+            assert!(is_float_equal(&norm_mag, 1.0));
         }
     }
 }
