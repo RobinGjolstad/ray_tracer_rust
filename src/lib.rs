@@ -15,6 +15,9 @@ mod Tuples {
         fn new(input: (f32, f32, f32)) -> Self;
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Tuple-land
+    ////////////////////////////////////////////////////////////////////////////
     #[derive(Debug, PartialEq)]
     pub struct Tuple {
         x: f32,
@@ -98,6 +101,9 @@ mod Tuples {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Point-land!
+    ////////////////////////////////////////////////////////////////////////////
     #[derive(Debug, PartialEq)]
     pub struct Point {
         tuple: Tuple,
@@ -143,6 +149,9 @@ mod Tuples {
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Vector-land!
+    ////////////////////////////////////////////////////////////////////////////
     #[derive(Debug, PartialEq)]
     pub struct Vector {
         tuple: Tuple,
@@ -167,13 +176,20 @@ mod Tuples {
                 )),
             }
         }
-        fn dot(&self, other: Self) -> f32 {
-            let x = self.tuple.x * other.tuple.x;
-            let y = self.tuple.y * other.tuple.y;
-            let z = self.tuple.z * other.tuple.z;
-            let w = self.tuple.w * other.tuple.w;
+        fn dot(a: &Self, b: &Self) -> f32 {
+            let x = a.tuple.x * b.tuple.x;
+            let y = a.tuple.y * b.tuple.y;
+            let z = a.tuple.z * b.tuple.z;
+            let w = a.tuple.w * b.tuple.w;
 
             return x + y + z + w;
+        }
+        fn cross(a: &Self, b: &Self) -> Self {
+            vector((
+                a.tuple.y * b.tuple.z - a.tuple.z * b.tuple.y,
+                a.tuple.z * b.tuple.x - a.tuple.x * b.tuple.z,
+                a.tuple.x * b.tuple.y - a.tuple.y * b.tuple.x,
+            ))
         }
     }
     impl TupleTrait for Vector {
@@ -449,7 +465,16 @@ mod Tuples {
             let a = vector((1.0, 2.0, 3.0));
             let b = vector((2.0, 3.0, 4.0));
 
-            assert!(is_float_equal(&a.dot(b), 20.0));
+            assert!(is_float_equal(&Vector::dot(&a, &b), 20.0));
+        }
+
+        #[test]
+        fn the_cross_product_of_two_vectors() {
+            let a = vector((1.0, 2.0, 3.0));
+            let b = vector((2.0, 3.0, 4.0));
+
+            assert_eq!(Vector::cross(&a, &b), vector((-1.0, 2.0, -1.0)));
+            assert_eq!(Vector::cross(&b, &a), vector((1.0, -2.0, 1.0)));
         }
     }
 }
