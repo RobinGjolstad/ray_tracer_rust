@@ -18,7 +18,7 @@ pub mod tuples {
     ////////////////////////////////////////////////////////////////////////////
     // Tuple-land
     ////////////////////////////////////////////////////////////////////////////
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Copy, Clone)]
     pub struct Tuple {
         x: f32,
         y: f32,
@@ -161,7 +161,7 @@ pub mod tuples {
     ////////////////////////////////////////////////////////////////////////////
     // Point-land!
     ////////////////////////////////////////////////////////////////////////////
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Copy, Clone)]
     pub struct Point {
         tuple: Tuple,
     }
@@ -249,9 +249,6 @@ pub mod tuples {
         }
     }
 
-
-
-
     impl Sub<Vector> for Point {
         type Output = Point;
         fn sub(self, rhs: Vector) -> Self::Output {
@@ -288,7 +285,7 @@ pub mod tuples {
     ////////////////////////////////////////////////////////////////////////////
     // Vector-land!
     ////////////////////////////////////////////////////////////////////////////
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Copy, Clone)]
     pub struct Vector {
         tuple: Tuple,
     }
@@ -343,8 +340,32 @@ pub mod tuples {
         }
     }
 
+    impl Add<Vector> for Vector {
+        type Output = Vector;
+        fn add(self, rhs: Vector) -> Self::Output {
+            Vector {
+                tuple: self.tuple + rhs.tuple,
+            }
+        }
+    }
     impl Add<&Vector> for Vector {
-        type Output = Self;
+        type Output = Vector;
+        fn add(self, rhs: &Vector) -> Self::Output {
+            Vector {
+                tuple: self.tuple + rhs.tuple,
+            }
+        }
+    }
+    impl Add<Vector> for &Vector {
+        type Output = Vector;
+        fn add(self, rhs: Vector) -> Self::Output {
+            Vector {
+                tuple: self.tuple + rhs.tuple,
+            }
+        }
+    }
+    impl Add<&Vector> for &Vector {
+        type Output = Vector;
         fn add(self, rhs: &Vector) -> Self::Output {
             Vector {
                 tuple: self.tuple + rhs.tuple,
@@ -352,6 +373,14 @@ pub mod tuples {
         }
     }
 
+    impl Add<Point> for Vector {
+        type Output = Point;
+        fn add(self, rhs: Point) -> Point {
+            Point {
+                tuple: self.tuple + rhs.tuple,
+            }
+        }
+    }
     impl Add<&Point> for Vector {
         type Output = Point;
         fn add(self, rhs: &Point) -> Point {
@@ -360,9 +389,49 @@ pub mod tuples {
             }
         }
     }
+    impl Add<Point> for &Vector {
+        type Output = Point;
+        fn add(self, rhs: Point) -> Point {
+            Point {
+                tuple: self.tuple + rhs.tuple,
+            }
+        }
+    }
+    impl Add<&Point> for &Vector {
+        type Output = Point;
+        fn add(self, rhs: &Point) -> Point {
+            Point {
+                tuple: self.tuple + rhs.tuple,
+            }
+        }
+    }
 
+    impl Sub<Vector> for Vector {
+        type Output = Vector;
+        fn sub(self, rhs: Vector) -> Self::Output {
+            Vector {
+                tuple: self.tuple - rhs.tuple,
+            }
+        }
+    }
     impl Sub<&Vector> for Vector {
-        type Output = Self;
+        type Output = Vector;
+        fn sub(self, rhs: &Vector) -> Self::Output {
+            Vector {
+                tuple: self.tuple - rhs.tuple,
+            }
+        }
+    }
+    impl Sub<Vector> for &Vector {
+        type Output = Vector;
+        fn sub(self, rhs: Vector) -> Self::Output {
+            Vector {
+                tuple: self.tuple - rhs.tuple,
+            }
+        }
+    }
+    impl Sub<&Vector> for &Vector {
+        type Output = Vector;
         fn sub(self, rhs: &Vector) -> Self::Output {
             Vector {
                 tuple: self.tuple - rhs.tuple,
