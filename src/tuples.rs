@@ -9,7 +9,7 @@ pub enum TupleType {
     Undefined,
 }
 
-trait TupleTrait {
+pub trait TupleTrait {
     const TYPE_OF: TupleType;
     fn new(input: (f32, f32, f32)) -> Self;
 }
