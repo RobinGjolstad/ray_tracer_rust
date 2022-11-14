@@ -2,12 +2,10 @@ use image::ImageBuffer;
 use image::Rgb;
 use image::RgbImage;
 
-use crate::tuples::Point;
-use crate::tuples::TupleTrait;
-use crate::tuples::Vector;
+use ray_tracer::tuples::Point;
+use ray_tracer::tuples::TupleTrait;
+use ray_tracer::tuples::Vector;
 
-pub mod tuples;
-pub mod utils;
 
 fn main() {
     let proj = Projectile {

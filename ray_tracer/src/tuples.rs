@@ -1,5 +1,4 @@
 use std::{
-    f32::EPSILON,
     ops::{Add, Div, Mul, Neg, Sub},
 };
 use crate::utils::is_float_equal as is_float_equal;
