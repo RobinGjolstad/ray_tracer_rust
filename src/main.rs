@@ -7,6 +7,7 @@ use crate::tuples::TupleTrait;
 use crate::tuples::Vector;
 
 pub mod tuples;
+pub mod utils;
 
 fn main() {
     let proj = Projectile {

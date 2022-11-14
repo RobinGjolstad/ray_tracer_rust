@@ -2,6 +2,7 @@ use std::{
     f32::EPSILON,
     ops::{Add, Div, Mul, Neg, Sub},
 };
+use crate::utils::is_float_equal as is_float_equal;
 
 pub enum TupleType {
     Point,
@@ -452,13 +453,6 @@ pub fn vector(a: (f32, f32, f32)) -> Vector {
 }
 pub fn is_vector(tuple: &Tuple) -> bool {
     if is_float_equal(&tuple.w, 0.0) {
-        true
-    } else {
-        false
-    }
-}
-pub fn is_float_equal(actual: &f32, comparison: f32) -> bool {
-    if (actual - comparison).abs() < EPSILON {
         true
     } else {
         false
