@@ -1,5 +1,4 @@
 use image::ImageBuffer;
-use image::Pixel;
 use image::Rgb;
 use image::RgbImage;
 
@@ -12,11 +11,11 @@ pub mod tuples;
 fn main() {
     let proj = Projectile {
         position: Point::new((0.0, 1.0, 0.0)),
-        velocity: Vector::new((1.0, 1.0, 0.0)),
+        velocity: Vector::new((1.5, 1.2, 0.0)),
     };
     let env = Environment {
         gravity: Vector::new((0.0, -0.1, 0.0)),
-        wind: Vector::new((-0.01, 0.0, 0.0)),
+        wind: Vector::new((-0.05, 0.0, 0.0)),
     };
     fire_cannon(env, proj)
 }
@@ -66,19 +65,21 @@ fn fire_cannon(env: Environment, proj: Projectile) {
 
 fn place_pixel(img: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, proj: &Projectile) {
     // Pixels start in upper left corner.
-    // X is all good, but Y needs to be converted to start in the lower left of the image.
-    let x_pixel_pos: u32 = (proj.position.tuple.x * 10.0).round() as u32;
+
+    // Clamp X to be within the image
+    let mut x_pixel_pos: u32 = (proj.position.tuple.x * 10.0).round() as u32;
+    if x_pixel_pos >= img.width() {
+        x_pixel_pos = img.width() - 1;
+    }
+
+    // To start in the lower left corner, we must "reverse" the Y-position
+    // Clamp y to be within the image
     let mut y_pixel_pos: u32 = img.height() - (proj.position.tuple.y * 10.0).round() as u32;
     if y_pixel_pos >= img.height() {
-        // Clamp the Y position to the final pixel index
         y_pixel_pos = img.height() - 1;
     }
 
     println!("Placing pixel ({},{})", x_pixel_pos, y_pixel_pos);
 
-    img.put_pixel(
-        x_pixel_pos,
-        y_pixel_pos,
-        Rgb([255, 255, 255]),
-    );
+    img.put_pixel(x_pixel_pos, y_pixel_pos, Rgb([255, 255, 255]));
 }
