@@ -1,3 +1,3 @@
 pub mod tuples;
-pub mod image;
+pub mod colors;
 pub mod utils;
