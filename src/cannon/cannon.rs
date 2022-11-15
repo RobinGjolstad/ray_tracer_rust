@@ -2,9 +2,9 @@ use image::ImageBuffer;
 use image::Rgb;
 use image::RgbImage;
 
-use ray_tracer::tuples::Point;
+use ray_tracer::points::Point;
 use ray_tracer::tuples::TupleTrait;
-use ray_tracer::tuples::Vector;
+use ray_tracer::vectors::Vector;
 
 
 fn main() {
