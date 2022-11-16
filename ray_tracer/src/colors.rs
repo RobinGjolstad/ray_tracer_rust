@@ -4,9 +4,9 @@ use crate::utils::is_float_equal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
-    red: f32,
-    green: f32,
-    blue: f32,
+    pub red: f32,
+    pub green: f32,
+    pub blue: f32,
 }
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
@@ -15,6 +15,11 @@ impl Color {
             green: g,
             blue: b,
         }
+    }
+
+    pub fn float_to_u8(color: &f32) -> u8 {
+        let col = 255 as f32 * *color;
+        col as u8
     }
 }
 
@@ -63,7 +68,7 @@ impl Add<Color> for Color {
             blue: self.blue + rhs.blue,
         }
     }
-} 
+}
 
 impl Sub<Color> for Color {
     type Output = Color;
