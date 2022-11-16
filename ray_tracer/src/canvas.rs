@@ -11,3 +11,18 @@ impl Canvas {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn access_nested_vec() {
+        let canvas = Canvas::new(10, 10);
+
+        let element = canvas.pixels.get(2).unwrap().get(4).unwrap();
+        assert_eq!(element, Color::new(0.0, 0.0, 0.0));
+        assert_eq!( Color::new(0.0, 0.0, 0.0), element);
+
+    }
+}

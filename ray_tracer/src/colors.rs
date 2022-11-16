@@ -30,6 +30,30 @@ impl PartialEq<Color> for Color {
         }
     }
 }
+impl PartialEq<Color> for &Color {
+    fn eq(&self, other: &Color) -> bool {
+        if is_float_equal(&self.red, other.red)
+            && is_float_equal(&self.green, other.green)
+            && is_float_equal(&self.blue, other.blue)
+        {
+            true
+        } else {
+            false
+        }
+    }
+}
+impl PartialEq<&Color> for Color {
+    fn eq(&self, other: &&Color) -> bool {
+        if is_float_equal(&self.red, other.red)
+            && is_float_equal(&self.green, other.green)
+            && is_float_equal(&self.blue, other.blue)
+        {
+            true
+        } else {
+            false
+        }
+    }
+}
 impl Add<Color> for Color {
     type Output = Self;
     fn add(self, rhs: Color) -> Self::Output {
