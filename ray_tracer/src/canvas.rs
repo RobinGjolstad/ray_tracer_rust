@@ -1,14 +1,13 @@
 use crate::colors::Color;
 
-pub struct Canvas<'a> {
-    pixels: &'a [Color],
+pub struct Canvas {
+    pixels: Vec<Vec<Color>>,
 }
 
-impl Canvas<'_> {
-    pub fn new(width: i32, height: i32) -> Self {
-        const array_len: usize = width * height;
+impl Canvas {
+    pub fn new(width: usize, height: usize) -> Self {
         Canvas {
-            pixels: &[Color::new(0.0, 0.0, 0.0); array_len],
+            pixels: vec![vec![Color::new(0.0, 0.0, 0.0); width]; height],
         }
     }
 }
