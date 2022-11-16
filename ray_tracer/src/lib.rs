@@ -1,3 +1,4 @@
+pub mod canvas;
 pub mod colors;
 pub mod points;
 pub mod tuples;
