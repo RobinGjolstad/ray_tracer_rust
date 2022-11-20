@@ -8,6 +8,10 @@ edition = "2021"
 name="cannon"
 path="src/cannon/cannon.rs"
 
+[[bin]]
+name="cannon_ppm"
+path="src/cannon_ppm/cannon_ppm.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
 

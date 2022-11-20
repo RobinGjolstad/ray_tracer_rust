@@ -19,7 +19,7 @@ impl Color {
 
     pub fn float_to_u8(color: &f32) -> u8 {
         let col = 255 as f32 * *color;
-        col as u8
+        col.ceil() as u8
     }
 }
 
