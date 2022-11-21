@@ -1,9 +1,6 @@
-use core::num;
 use std::{fs::File, io::Write};
 
 use crate::colors::Color;
-
-struct PixelColorString {}
 
 pub struct Canvas {
     pixels: Vec<Vec<Color>>,
