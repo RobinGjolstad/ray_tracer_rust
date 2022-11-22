@@ -98,7 +98,7 @@ impl Mul for Matrix {
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::is_float_equal;
+    use crate::{tuples::Tuple, utils::is_float_equal};
 
     use super::*;
 
@@ -251,6 +251,22 @@ mod tests {
             vec![16.0, 26.0, 46.0, 42.0],
         ])
         .unwrap();
+
+        assert_eq!(a * b, ab);
+    }
+
+    #[test]
+    fn a_matrix_multiplied_by_a_tuple() {
+        let a = Matrix::new(vec![
+            vec![1.0, 2.0, 3.0, 4.0],
+            vec![2.0, 4.0, 4.0, 2.0],
+            vec![8.0, 6.0, 4.0, 1.0],
+            vec![0.0, 0.0, 0.0, 1.0],
+        ])
+        .unwrap();
+        let b = Tuple::new((1.0, 2.0, 3.0, 1.0));
+
+        let ab = Tuple::new((18.0, 24.0, 33.0, 1.0));
 
         assert_eq!(a * b, ab);
     }
