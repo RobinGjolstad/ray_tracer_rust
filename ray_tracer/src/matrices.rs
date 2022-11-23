@@ -1,5 +1,7 @@
 use std::ops::Mul;
 
+use crate::tuples::Tuple;
+
 #[macro_export]
 macro_rules! vec2d {
     ($($i:expr),+) => { // handle numbers
@@ -47,11 +49,41 @@ impl Matrix {
 
         Ok(Matrix { matrix: input })
     }
+
+    fn new_identity() -> Matrix {
+        Matrix {
+            matrix: vec![
+                vec![1.0, 0.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0, 0.0],
+                vec![0.0, 0.0, 1.0, 0.0],
+                vec![0.0, 0.0, 0.0, 1.0],
+            ],
+        }
+    }
+
     fn get_element(&self, x: usize, y: usize) -> f32 {
         self.matrix[x][y]
     }
+
     fn size(&self) -> usize {
         self.matrix.len()
+    }
+
+    fn transpose(&self) -> Result<Matrix, MatrixError> {
+        let size = self.size();
+        if size != 4 {
+            return Err(MatrixError::InvalidSize);
+        }
+
+        // Start with an identity matrix, just because that doesn't require any input parameters
+        let mut mat = Matrix::new_identity();
+        for row in 0..size {
+            for column in 0..size {
+                mat.matrix[row][column] = self.matrix[column][row];
+            }
+        }
+
+        Ok(mat)
     }
 }
 
@@ -93,6 +125,23 @@ impl Mul for Matrix {
         }
 
         m
+    }
+}
+
+impl Mul<Tuple> for Matrix {
+    type Output = Tuple;
+    fn mul(self, rhs: Tuple) -> Self::Output {
+        let size = self.size();
+        assert_eq!(4, size);
+        let mut tup = vec![0.0; 4];
+        for row in 0..size {
+            tup[row] = self.matrix[row][0] * rhs.x
+                + self.matrix[row][1] * rhs.y
+                + self.matrix[row][2] * rhs.z
+                + self.matrix[row][3] * rhs.w;
+        }
+
+        Tuple::new((tup[0], tup[1], tup[2], tup[3]))
     }
 }
 
@@ -269,5 +318,52 @@ mod tests {
         let ab = Tuple::new((18.0, 24.0, 33.0, 1.0));
 
         assert_eq!(a * b, ab);
+    }
+
+    #[test]
+    fn multiplying_a_matrix_by_the_identity_matrix() {
+        let a = Matrix::new(vec![
+            vec![0.0, 1.0, 2.0, 4.0],
+            vec![1.0, 2.0, 4.0, 8.0],
+            vec![2.0, 4.0, 8.0, 16.0],
+            vec![4.0, 8.0, 16.0, 32.0],
+        ])
+        .unwrap();
+        let ia = a.clone() * Matrix::new_identity();
+        assert_eq!(ia, a);
+    }
+
+    #[test]
+    fn multiplying_a_tuple_by_the_identity_matrix() {
+        let a = Tuple::new((1.0, 2.0, 3.0, 4.0));
+        let ia = Matrix::new_identity() * a.clone();
+        assert_eq!(ia, a);
+    }
+
+    #[test]
+    fn transposing_a_matrix() {
+        let a = Matrix::new(vec![
+            vec![0.0, 9.0, 3.0, 0.0],
+            vec![9.0, 8.0, 0.0, 8.0],
+            vec![1.0, 8.0, 5.0, 3.0],
+            vec![0.0, 0.0, 5.0, 8.0],
+        ])
+        .unwrap();
+        let ta = Matrix::new(vec![
+            vec![0.0, 9.0, 1.0, 0.0],
+            vec![9.0, 8.0, 8.0, 0.0],
+            vec![3.0, 0.0, 5.0, 5.0],
+            vec![0.0, 8.0, 3.0, 8.0],
+        ])
+        .unwrap();
+
+        assert_eq!(a.transpose().unwrap(), ta);
+    }
+
+    #[test]
+    fn transposing_the_identity_matrix() {
+        let a = Matrix::new_identity();
+
+        assert_eq!(a, a.transpose().unwrap());
     }
 }
