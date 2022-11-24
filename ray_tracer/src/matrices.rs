@@ -50,6 +50,21 @@ impl Matrix {
         Ok(Matrix { matrix: input })
     }
 
+    fn new_empty(size: usize) -> Result<Matrix, MatrixError> {
+        match size {
+            2 => Ok(Matrix {
+                matrix: vec![vec![0.0; 2]; 2],
+            }),
+            3 => Ok(Matrix {
+                matrix: vec![vec![0.0; 3]; 3],
+            }),
+            4 => Ok(Matrix {
+                matrix: vec![vec![0.0; 4]; 4],
+            }),
+            _ => Err(MatrixError::InvalidSize),
+        }
+    }
+
     fn new_identity() -> Matrix {
         Matrix {
             matrix: vec![
@@ -84,6 +99,58 @@ impl Matrix {
         }
 
         Ok(mat)
+    }
+
+    fn determinant(&self) -> f32 {
+        // Only 2x2 matrix for determinant currently
+        assert_eq!(self.size(), 2);
+
+        let ad = self.matrix[0][0] * self.matrix[1][1];
+        let bc = self.matrix[0][1] * self.matrix[1][0];
+
+        ad - bc
+    }
+
+    fn submatrix(&self, row: usize, column: usize) -> Matrix {
+        let size = self.size();
+        let mut mat = Matrix::new_empty(size - 1).unwrap();
+        let mut row_ctr = 0;
+        let mut column_ctr = 0;
+
+        for row_id in 0..size {
+            if row_id == row {
+                continue;
+            }
+
+            column_ctr = 0;
+            for column_id in 0..size {
+                if column_id == column {
+                    continue;
+                }
+
+                mat.matrix[row_ctr][column_ctr] = self.matrix[row_id][column_id];
+                column_ctr += 1;
+            }
+            row_ctr += 1;
+        }
+
+        mat
+    }
+
+    fn minor(&self, row: usize, column: usize) -> f32 {
+        let submatrix = self.submatrix(row, column);
+        submatrix.determinant()
+    }
+
+    fn cofactor(&self, row: usize, column: usize) -> f32 {
+        assert_eq!(3, self.size());
+
+        let minor = self.minor(row, column);
+        if (row + column) % 2 == 0 {
+            minor
+        } else {
+            -minor
+        }
     }
 }
 
@@ -365,5 +432,72 @@ mod tests {
         let a = Matrix::new_identity();
 
         assert_eq!(a, a.transpose().unwrap());
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_2x2_matrix() {
+        let a = Matrix::new(vec![vec![1.0, 5.0], vec![-3.0, 2.0]]).unwrap();
+        assert!(is_float_equal(&17.0, a.determinant()));
+    }
+
+    #[test]
+    fn a_submatrix_of_a_3x3_matrix_is_a_2x2_matrix() {
+        let a = Matrix::new(vec![
+            vec![1.0, 5.0, 0.0],
+            vec![-3.0, 2.0, 7.0],
+            vec![0.0, 6.0, -3.0],
+        ])
+        .unwrap();
+        let sub_a = Matrix::new(vec![vec![-3.0, 2.0], vec![0.0, 6.0]]).unwrap();
+
+        assert_eq!(a.submatrix(0, 2), sub_a);
+    }
+
+    #[test]
+    fn a_submatrix_of_a_4x4_matrix_is_a_3x3_matrix() {
+        let a = Matrix::new(vec![
+            vec![-6.0, 1.0, 1.0, 6.0],
+            vec![-8.0, 5.0, 8.0, 6.0],
+            vec![-1.0, 0.0, 8.0, 2.0],
+            vec![-7.0, 1.0, -1.0, 1.0],
+        ])
+        .unwrap();
+        let sub_a = Matrix::new(vec![
+            vec![-6.0, 1.0, 6.0],
+            vec![-8.0, 8.0, 6.0],
+            vec![-7.0, -1.0, 1.0],
+        ])
+        .unwrap();
+
+        assert_eq!(a.submatrix(2, 1), sub_a);
+    }
+
+    #[test]
+    fn calculating_a_minor_of_a_3x3_matrix() {
+        let a = Matrix::new(vec![
+            vec![3.0, 5.0, 0.0],
+            vec![2.0, -1.0, -7.0],
+            vec![6.0, -1.0, 5.0],
+        ])
+        .unwrap();
+        let b = a.submatrix(1, 0);
+
+        assert!(is_float_equal(&25.0, b.determinant()));
+        assert!(is_float_equal(&25.0, a.minor(1, 0)));
+    }
+
+    #[test]
+    fn calculating_a_cofactor_of_a_3x3_matrix() {
+        let a = Matrix::new(vec![
+            vec![3.0, 5.0, 0.0],
+            vec![2.0, -1.0, -7.0],
+            vec![6.0, -1.0, 5.0],
+        ])
+        .unwrap();
+
+        assert!(is_float_equal(&-12.0, a.minor(0, 0)));
+        assert!(is_float_equal(&-12.0, a.cofactor(0, 0)));
+        assert!(is_float_equal(&25.0, a.minor(1, 0)));
+        assert!(is_float_equal(&-25.0, a.cofactor(1, 0)));
     }
 }
