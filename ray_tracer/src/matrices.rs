@@ -102,13 +102,18 @@ impl Matrix {
     }
 
     fn determinant(&self) -> f32 {
-        // Only 2x2 matrix for determinant currently
-        assert_eq!(self.size(), 2);
+        let mut det = 0.0;
+        if self.size() == 2 {
+            let ad = self.matrix[0][0] * self.matrix[1][1];
+            let bc = self.matrix[0][1] * self.matrix[1][0];
+            det = ad - bc;
+        } else {
+            for column in 0..self.size() {
+                det = det + self.matrix[0][column] * self.cofactor(0, column);
+            }
+        }
 
-        let ad = self.matrix[0][0] * self.matrix[1][1];
-        let bc = self.matrix[0][1] * self.matrix[1][0];
-
-        ad - bc
+        det
     }
 
     fn submatrix(&self, row: usize, column: usize) -> Matrix {
@@ -143,7 +148,7 @@ impl Matrix {
     }
 
     fn cofactor(&self, row: usize, column: usize) -> f32 {
-        assert_eq!(3, self.size());
+        assert!(2 < self.size());
 
         let minor = self.minor(row, column);
         if (row + column) % 2 == 0 {
@@ -214,9 +219,8 @@ impl Mul<Tuple> for Matrix {
 
 #[cfg(test)]
 mod tests {
-    use crate::{tuples::Tuple, utils::is_float_equal};
-
     use super::*;
+    use crate::{tuples::Tuple, utils::is_float_equal};
 
     #[test]
     fn constructing_and_inspecting_a_4_x_4_matrix() {
@@ -499,5 +503,37 @@ mod tests {
         assert!(is_float_equal(&-12.0, a.cofactor(0, 0)));
         assert!(is_float_equal(&25.0, a.minor(1, 0)));
         assert!(is_float_equal(&-25.0, a.cofactor(1, 0)));
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_3x3_matrix() {
+        let a = Matrix::new(vec![
+            vec![1.0, 2.0, 6.0],
+            vec![-5.0, 8.0, -4.0],
+            vec![2.0, 6.0, 4.0],
+        ])
+        .unwrap();
+
+        assert!(is_float_equal(&a.cofactor(0, 0), 56.0));
+        assert!(is_float_equal(&a.cofactor(0, 1), 12.0));
+        assert!(is_float_equal(&a.cofactor(0, 2), -46.0));
+        assert!(is_float_equal(&a.determinant(), -196.0));
+    }
+
+    #[test]
+    fn calculating_the_determinant_of_a_4x4_matrix() {
+        let a = Matrix::new(vec![
+            vec![-2.0, -8.0, 3.0, 5.0],
+            vec![-3.0, 1.0, 7.0, 3.0],
+            vec![1.0, 2.0, -9.0, 6.0],
+            vec![-6.0, 7.0, 7.0, -9.0],
+        ])
+        .unwrap();
+
+        assert!(is_float_equal(&a.cofactor(0, 0), 690.0));
+        assert!(is_float_equal(&a.cofactor(0, 1), 447.0));
+        assert!(is_float_equal(&a.cofactor(0, 2), 210.0));
+        assert!(is_float_equal(&a.cofactor(0, 3), 51.0));
+        assert!(is_float_equal(&a.determinant(), -4071.0));
     }
 }
