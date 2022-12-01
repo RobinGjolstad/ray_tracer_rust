@@ -34,7 +34,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    fn new(input: Vec<Vec<f32>>) -> Result<Matrix, MatrixError> {
+    pub fn new(input: Vec<Vec<f32>>) -> Result<Matrix, MatrixError> {
         // Ensure the input is a symmetrical matrix
         let x = input.len();
         for i in 0..x {
@@ -51,7 +51,7 @@ impl Matrix {
         Ok(Matrix { matrix: input })
     }
 
-    fn new_empty(size: usize) -> Result<Matrix, MatrixError> {
+    pub fn new_empty(size: usize) -> Result<Matrix, MatrixError> {
         match size {
             2 => Ok(Matrix {
                 matrix: vec![vec![0.0; 2]; 2],
@@ -66,7 +66,7 @@ impl Matrix {
         }
     }
 
-    fn new_identity() -> Matrix {
+    pub fn new_identity() -> Matrix {
         Matrix {
             matrix: vec![
                 vec![1.0, 0.0, 0.0, 0.0],
@@ -77,15 +77,15 @@ impl Matrix {
         }
     }
 
-    fn get_element(&self, x: usize, y: usize) -> f32 {
+    pub fn get_element(&self, x: usize, y: usize) -> f32 {
         self.matrix[x][y]
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.matrix.len()
     }
 
-    fn transpose(&self) -> Result<Matrix, MatrixError> {
+    pub fn transpose(&self) -> Result<Matrix, MatrixError> {
         let size = self.size();
         if size != 4 {
             return Err(MatrixError::InvalidSize);
@@ -102,7 +102,7 @@ impl Matrix {
         Ok(mat)
     }
 
-    fn determinant(&self) -> f32 {
+    pub fn determinant(&self) -> f32 {
         let mut det = 0.0;
         if self.size() == 2 {
             let ad = self.matrix[0][0] * self.matrix[1][1];
@@ -167,7 +167,7 @@ impl Matrix {
         }
     }
 
-    fn inverse(&self) -> Result<Self, MatrixError> {
+    pub fn inverse(&self) -> Result<Self, MatrixError> {
         if !self.invertible() {
             return Err(MatrixError::NonInvertible);
         }

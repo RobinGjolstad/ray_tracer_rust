@@ -3,6 +3,9 @@ name = "the_ray_tracer_challenge"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name="ch3_pit"
+path="src/ch3_pit/ch3_pit.rs"
 
 [[bin]]
 name="cannon"
