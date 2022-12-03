@@ -28,7 +28,7 @@ fn main() {
     println!("{:?}", mat_trans.inverse().unwrap());
     println!("{:?}", mat_inv.transpose());
 
-    let tup = Tuple::new((1.0, 2.0, 3.0, 4.0));
+    let tup = Tuple::new(1.0, 2.0, 3.0, 4.0);
     let id1 = Matrix::new(vec![
         vec![1.0, 1.0, 0.0, 0.0],
         vec![0.0, 1.0, 0.0, 0.0],

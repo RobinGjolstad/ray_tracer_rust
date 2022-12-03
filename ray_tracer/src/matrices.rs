@@ -239,7 +239,7 @@ impl Mul<Tuple> for Matrix {
                 + self.matrix[row][3] * rhs.w;
         }
 
-        Tuple::new((tup[0], tup[1], tup[2], tup[3]))
+        Tuple::new(tup[0], tup[1], tup[2], tup[3])
     }
 }
 
@@ -412,9 +412,9 @@ mod tests {
             vec![0.0, 0.0, 0.0, 1.0],
         ])
         .unwrap();
-        let b = Tuple::new((1.0, 2.0, 3.0, 1.0));
+        let b = Tuple::new(1.0, 2.0, 3.0, 1.0);
 
-        let ab = Tuple::new((18.0, 24.0, 33.0, 1.0));
+        let ab = Tuple::new(18.0, 24.0, 33.0, 1.0);
 
         assert_eq!(a * b, ab);
     }
@@ -434,7 +434,7 @@ mod tests {
 
     #[test]
     fn multiplying_a_tuple_by_the_identity_matrix() {
-        let a = Tuple::new((1.0, 2.0, 3.0, 4.0));
+        let a = Tuple::new(1.0, 2.0, 3.0, 4.0);
         let ia = Matrix::new_identity() * a.clone();
         assert_eq!(ia, a);
     }
