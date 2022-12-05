@@ -81,6 +81,11 @@ impl Matrix {
         self.matrix[x][y]
     }
 
+
+    pub fn set_element(&mut self, x: usize, y: usize, val: f32) {
+        self.matrix[x][y] = val;
+    }
+
     pub fn size(&self) -> usize {
         self.matrix.len()
     }

@@ -1,7 +1,7 @@
 use crate::utils::is_float_equal;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Tuple {
     pub x: f32,
     pub y: f32,
@@ -169,6 +169,22 @@ impl Div<f32> for Tuple {
     }
 }
 
+impl PartialEq for Tuple {
+    fn eq(&self, other: &Self) -> bool {
+        if is_float_equal(&self.x, other.x)
+            && is_float_equal(&self.y, other.y)
+            && is_float_equal(&self.z, other.z)
+            && is_float_equal(&self.w, other.w)
+        {
+            true
+        } else {
+            false
+        }
+    }
+    fn ne(&self, other: &Self) -> bool {
+        !self.eq(other)
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
