@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
+name="ch4_pit"
+path="src/ch4_pit/ch4_pit.rs"
+
+[[bin]]
 name="ch3_pit"
 path="src/ch3_pit/ch3_pit.rs"
 

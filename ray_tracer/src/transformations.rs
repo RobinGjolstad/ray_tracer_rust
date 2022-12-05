@@ -8,7 +8,7 @@ enum RotationAxis {
 
 pub struct Transform;
 impl Transform {
-    pub fn translation(x: f32, y: f32, z: f32) -> Matrix {
+    pub fn translate(x: f32, y: f32, z: f32) -> Matrix {
         Matrix::new(vec![
             vec![1.0, 0.0, 0.0, x],
             vec![0.0, 1.0, 0.0, y],
@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn multiplying_by_a_translation_matrix() {
-        let transform = Transform::translation(5.0, -3.0, 2.0);
+        let transform = Transform::translate(5.0, -3.0, 2.0);
         let p = Tuple::new_point(-3.0, 4.0, 5.0);
 
         assert_eq!(transform * p, Tuple::new_point(2.0, 1.0, 7.0));
@@ -81,7 +81,7 @@ mod tests {
 
     #[test]
     fn multiplying_by_the_inverse_of_a_translation_matrix() {
-        let transform = Transform::translation(5.0, -3.0, 2.0);
+        let transform = Transform::translate(5.0, -3.0, 2.0);
         let inv = transform.inverse().unwrap();
         let p = Tuple::new_point(-3.0, 4.0, 5.0);
 
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn translation_does_not_affect_vectors() {
-        let transform = Transform::translation(5.0, -3.0, 2.0);
+        let transform = Transform::translate(5.0, -3.0, 2.0);
         let v = Tuple::new_vector(-3.0, 4.0, 5.0);
 
         assert_eq!(transform * v, v);
@@ -222,7 +222,7 @@ mod tests {
         let p = Tuple::new_point(1.0, 0.0, 1.0);
         let a = Transform::rotation_x(PI / 2.0);
         let b = Transform::scaling(5.0, 5.0, 5.0);
-        let c = Transform::translation(10.0, 5.0, 7.0);
+        let c = Transform::translate(10.0, 5.0, 7.0);
         // Apply rotation first
         let p2 = a * p;
         assert_eq!(p2, Tuple::new_point(1.0, -1.0, 0.0));
@@ -238,7 +238,7 @@ mod tests {
         let p = Tuple::new_point(1.0, 0.0, 1.0);
         let a = Transform::rotation_x(PI / 2.0);
         let b = Transform::scaling(5.0, 5.0, 5.0);
-        let c = Transform::translation(10.0, 5.0, 7.0);
+        let c = Transform::translate(10.0, 5.0, 7.0);
         let t = c * b * a;
         assert_eq!(t * p, Tuple::new_point(15.0, 0.0, 7.0));
     }
