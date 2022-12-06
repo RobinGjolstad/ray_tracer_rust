@@ -5,7 +5,7 @@ use ray_tracer::{canvas::Canvas, colors::Color, transformations::Transform, tupl
 fn main() {
     let mut img = Canvas::new(256, 256);
     let p_center = Tuple::new_point(0.0, 0.0, 0.0);
-    let  p_trans = Transform::translate(0.0, 10.0, 0.0) * p_center;
+    let  p_trans = Transform::translate(0.0, 40.0, 0.0) * p_center;
     let white = Color::new(1.0, 1.0, 1.0);
 
     for i in 0..12 {
