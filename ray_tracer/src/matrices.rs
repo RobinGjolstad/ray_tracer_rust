@@ -28,9 +28,10 @@ pub enum MatrixError {
     NonInvertible,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Matrix {
-    matrix: Vec<Vec<f32>>,
+    matrix: [[f32; 4]; 4],
+    size: usize,
 }
 
 impl Matrix {
@@ -48,32 +49,45 @@ impl Matrix {
             return Err(MatrixError::InvalidSize);
         }
 
-        Ok(Matrix { matrix: input })
+        let mut m = Matrix {
+            matrix: [[0.0; 4]; 4],
+            size: 4,
+        };
+        let mut row_idx = 0;
+        let mut col_idx = 0;
+        for row in input {
+            col_idx = 0;
+            for column in row {
+                m.matrix[row_idx][col_idx] = column.try_into().unwrap();
+                col_idx += 1;
+            }
+            row_idx += 1;
+        }
+        m.size = row_idx;
+
+        Ok(m)
     }
 
     pub fn new_empty(size: usize) -> Result<Matrix, MatrixError> {
-        match size {
-            2 => Ok(Matrix {
-                matrix: vec![vec![0.0; 2]; 2],
-            }),
-            3 => Ok(Matrix {
-                matrix: vec![vec![0.0; 3]; 3],
-            }),
-            4 => Ok(Matrix {
-                matrix: vec![vec![0.0; 4]; 4],
-            }),
-            _ => Err(MatrixError::InvalidSize),
+        if size > 1 && size < 5 {
+            Ok(Matrix {
+                matrix: [[0.0; 4]; 4],
+                size: size,
+            })
+        } else {
+            Err(MatrixError::InvalidSize)
         }
     }
 
     pub fn new_identity() -> Matrix {
         Matrix {
-            matrix: vec![
-                vec![1.0, 0.0, 0.0, 0.0],
-                vec![0.0, 1.0, 0.0, 0.0],
-                vec![0.0, 0.0, 1.0, 0.0],
-                vec![0.0, 0.0, 0.0, 1.0],
+            matrix: [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
             ],
+            size: 4,
         }
     }
 
@@ -81,17 +95,16 @@ impl Matrix {
         self.matrix[x][y]
     }
 
-
     pub fn set_element(&mut self, x: usize, y: usize, val: f32) {
         self.matrix[x][y] = val;
     }
 
     pub fn size(&self) -> usize {
-        self.matrix.len()
+        self.size
     }
 
     pub fn transpose(&self) -> Result<Matrix, MatrixError> {
-        let size = self.size();
+        let size = self.size;
         if size != 4 {
             return Err(MatrixError::InvalidSize);
         }
@@ -109,7 +122,7 @@ impl Matrix {
 
     pub fn determinant(&self) -> f32 {
         let mut det = 0.0;
-        if self.size() == 2 {
+        if self.size == 2 {
             let ad = self.matrix[0][0] * self.matrix[1][1];
             let bc = self.matrix[0][1] * self.matrix[1][0];
             det = ad - bc;
@@ -123,7 +136,7 @@ impl Matrix {
     }
 
     fn submatrix(&self, row: usize, column: usize) -> Matrix {
-        let size = self.size();
+        let size = self.size;
         let mut mat = Matrix::new_empty(size - 1).unwrap();
         let mut row_ctr = 0;
         let mut column_ctr = 0;
@@ -154,7 +167,7 @@ impl Matrix {
     }
 
     fn cofactor(&self, row: usize, column: usize) -> f32 {
-        assert!(2 < self.size());
+        assert!(2 < self.size);
 
         let minor = self.minor(row, column);
         if (row + column) % 2 == 0 {
@@ -177,10 +190,10 @@ impl Matrix {
             return Err(MatrixError::NonInvertible);
         }
 
-        let mut m2 = Self::new_empty(self.size())?;
+        let mut m2 = Self::new_empty(self.size).unwrap();
 
-        for row in 0..self.size() {
-            for column in 0..self.size() {
+        for row in 0..self.size {
+            for column in 0..self.size {
                 let c = self.cofactor(row, column);
                 m2.matrix[column][row] = c / self.determinant();
             }
@@ -216,7 +229,8 @@ impl Mul for Matrix {
         let size = self.size();
         assert_eq!(size, 4, "Only 4x4 matrix is supported!"); // Only 4x4 matrix is supported
         let mut m = Matrix {
-            matrix: vec![vec![0.0; 4], vec![0.0; 4], vec![0.0; 4], vec![0.0; 4]],
+            matrix: [[0.0; 4], [0.0; 4], [0.0; 4], [0.0; 4]],
+            size: 4,
         };
         for row in 0..size {
             for column in 0..size {
@@ -672,15 +686,17 @@ mod tests {
             vec![3.0, -9.0, 7.0, 3.0],
             vec![3.0, -8.0, 2.0, -9.0],
             vec![-4.0, 4.0, 4.0, 1.0],
-            vec![-6.0, 5.0, -1.0, 1.0]
-        ]).unwrap();
+            vec![-6.0, 5.0, -1.0, 1.0],
+        ])
+        .unwrap();
         let b = Matrix::new(vec![
             vec![8.0, 2.0, 2.0, 2.0],
             vec![3.0, -1.0, 7.0, 0.0],
             vec![7.0, 0.0, 5.0, 4.0],
-            vec![6.0, -2.0, 0.0, 5.0]
-        ]).unwrap();
+            vec![6.0, -2.0, 0.0, 5.0],
+        ])
+        .unwrap();
         let c = a.clone() * b.clone();
-        assert_eq!(c*b.inverse().unwrap(), a);
+        assert_eq!(c * b.inverse().unwrap(), a);
     }
 }
