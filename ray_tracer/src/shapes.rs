@@ -1,4 +1,4 @@
-use crate::tuples::{Point, Tuple};
+use crate::{tuples::{Point, Tuple}, matrices::Matrix};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum Objects {
@@ -9,13 +9,21 @@ enum Objects {
 pub struct Object {
     pub position: Point,
     object: Objects,
+    transform: Matrix,
 }
 impl Object {
     pub fn sphere() -> Self {
         Object {
             position: Tuple::new_point(0.0, 0.0, 0.0),
             object: Objects::Sphere(1.0, 1.0, 1.0),
+            transform: Matrix::new_identity(),
         }
+    }
+    pub fn set_transform(&mut self, trans: Matrix) {
+        self.transform = trans;
+    }
+    pub fn get_transform(&self) -> Matrix {
+        self.transform
     }
 }
 

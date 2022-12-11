@@ -1,5 +1,6 @@
 use crate::{matrices::Matrix};
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Transform;
 impl Transform {
     pub fn translate(x: f32, y: f32, z: f32) -> Matrix {
