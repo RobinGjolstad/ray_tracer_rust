@@ -1,10 +1,4 @@
-use crate::{matrices::Matrix, tuples::Tuple};
-
-enum RotationAxis {
-    X,
-    Y,
-    Z,
-}
+use crate::{matrices::Matrix};
 
 pub struct Transform;
 impl Transform {
