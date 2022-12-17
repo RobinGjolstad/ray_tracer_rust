@@ -1,20 +1,33 @@
 use std::f32::consts::PI;
 
 use ray_tracer::{
-    canvas::Canvas, colors::Color, rays::Ray, shapes::{sphere::Sphere, Shapes}, transformations::Transform,
+    canvas::Canvas,
+    colors::Color,
+    lights::Light,
+    rays::Ray,
+    shapes::{sphere::Sphere, Shapes},
+    transformations::Transform,
     tuples::Tuple,
 };
 
 fn main() {
-    println!("Hello");
+    let mut sphere = Sphere::new();
+    let mut material = sphere.get_material();
+    material.color = Color::new(1.0, 0.2, 1.0);
+    sphere.set_material(&material);
 
-    let sphere = Sphere::new();
+    let light = Light::point_light(
+        &Tuple::new_point(-10.0, 10.0, -10.0),
+        &Color::new(1.0, 1.0, 1.0),
+    );
+
     let mut squash = sphere;
     let transform = Transform::scaling(1.0, 0.5, 1.0)
         * Transform::scaling(0.5, 1.0, 1.0)
         * Transform::rotation_z(PI / 4.0)
         * Transform::shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     squash.set_transform(&transform);
+
     let ray_origin = Tuple::new_point(0.0, 0.0, -5.0);
     let wall_z = 10.0_f32;
     let wall_size = 7.0_f32;
@@ -22,7 +35,6 @@ fn main() {
     let pixel_size = wall_size / canvas_pixels as f32;
     let half = wall_size / 2.0;
     let mut img = Canvas::new(canvas_pixels, canvas_pixels);
-    let color = Color::new(1.0, 0.0, 0.0);
 
     for y in 0..canvas_pixels {
         // Calculate "world y coordinate"
@@ -40,12 +52,20 @@ fn main() {
             let r = Ray::new(ray_origin, (position - ray_origin).normalize());
             let xs = r.intersect(&squash);
 
-            if let Some(_) = xs.hit() {
+            if let Some(hit) = xs.hit() {
+                let point = r.position(hit.get_time());
+                let normal = hit.get_object().normal(point);
+                let eye = -r.get_direction();
+                let color = hit
+                    .get_object()
+                    .get_material()
+                    .lighting(&light, &point, &eye, &normal);
+
                 img.write_pixel(x, y, color);
             } else {
             }
         }
     }
 
-    img.save("ch5_pit_squash.ppm");
+    img.save("ch6_pit_squash.ppm");
 }

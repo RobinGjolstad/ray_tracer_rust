@@ -1,9 +1,10 @@
 pub mod canvas;
 pub mod colors;
+pub mod lights;
+pub mod materials;
 pub mod matrices;
 pub mod rays;
 pub mod shapes;
-pub mod shapes2;
 pub mod transformations;
 pub mod tuples;
 pub mod utils;

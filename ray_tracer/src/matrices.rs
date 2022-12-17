@@ -54,9 +54,8 @@ impl Matrix {
             size: 4,
         };
         let mut row_idx = 0;
-        let mut col_idx = 0;
         for row in input {
-            col_idx = 0;
+            let mut col_idx = 0;
             for column in row {
                 m.matrix[row_idx][col_idx] = column.try_into().unwrap();
                 col_idx += 1;
@@ -139,14 +138,13 @@ impl Matrix {
         let size = self.size;
         let mut mat = Matrix::new_empty(size - 1).unwrap();
         let mut row_ctr = 0;
-        let mut column_ctr = 0;
 
         for row_id in 0..size {
             if row_id == row {
                 continue;
             }
 
-            column_ctr = 0;
+            let mut column_ctr = 0;
             for column_id in 0..size {
                 if column_id == column {
                     continue;

@@ -1,27 +1,35 @@
 use crate::{
     matrices::Matrix,
-    shapes::Object,
+    shapes::Shapes,
     tuples::{Point, Tuple, Vector},
 };
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Intersection {
+pub struct Intersection<T> {
     t: f32,
-    object: Object,
+    object: T,
 }
-impl Intersection {
-    pub fn new(time: f32, object: Object) -> Self {
+impl<T: Shapes + std::clone::Clone + Copy> Intersection<T> {
+    pub fn new(time: f32, object: T) -> Self {
         Intersection {
             t: time,
             object: object,
         }
     }
+    pub fn get_time(&self) -> f32 {
+        self.t
+    }
+    pub fn get_object(&self) -> T {
+        self.object
+    }
 }
-pub struct Intersections {
-    list: Vec<Intersection>,
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Intersections<T> {
+    list: Vec<Intersection<T>>,
 }
-impl Intersections {
-    pub fn new(intersect_list: &[Intersection]) -> Self {
+impl<T: Shapes + std::clone::Clone + Copy> Intersections<T> {
+    pub fn new(intersect_list: &[Intersection<T>]) -> Self {
         let mut i = Intersections {
             list: intersect_list.to_vec(),
         };
@@ -32,14 +40,14 @@ impl Intersections {
     pub fn count(&self) -> usize {
         self.list.len()
     }
-    pub fn get_element(&self, index: usize) -> Option<Intersection> {
+    pub fn get_element(&self, index: usize) -> Option<Intersection<T>> {
         if index <= self.list.len() {
             Some(self.list[index])
         } else {
             None
         }
     }
-    pub fn hit(&self) -> Option<Intersection> {
+    pub fn hit(&self) -> Option<Intersection<T>> {
         let mut list = self.list.clone();
         list.retain(|&x| x.t.is_sign_positive());
         if let Some(int) = list.iter().min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap()) {
@@ -62,13 +70,19 @@ impl Ray {
             direction: direction,
         }
     }
+    pub fn get_direction(&self) -> Vector {
+        self.direction
+    }
     pub fn position(&self, time: f32) -> Point {
         self.origin + self.direction * time
     }
 
-    pub fn intersect(&self, shape: &Object) -> Intersections {
+    pub fn intersect<T>(&self, shape: &T) -> Intersections<T>
+    where
+        T: Shapes + std::clone::Clone + Copy,
+    {
         let ray = self.transform(shape.get_transform().inverse().unwrap());
-        let sphere_to_ray = ray.origin - shape.position;
+        let sphere_to_ray = ray.origin - shape.get_position();
         let a = Tuple::dot(&ray.direction, &ray.direction);
         let b = 2.0 * Tuple::dot(&ray.direction, &sphere_to_ray);
         let c = Tuple::dot(&sphere_to_ray, &sphere_to_ray) - 1.0;
@@ -104,7 +118,7 @@ impl Ray {
 mod tests {
     use super::*;
     use crate::{
-        matrices::Matrix, transformations::Transform, tuples::Tuple, utils::is_float_equal,
+        matrices::Matrix, transformations::Transform, tuples::Tuple, utils::is_float_equal, shapes::sphere::Sphere,
     };
 
     #[test]
@@ -137,7 +151,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::sphere();
+        let s = Sphere::new();
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, 4.0));
@@ -149,7 +163,7 @@ mod tests {
             Tuple::new_point(0.0, 1.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::sphere();
+        let s = Sphere::new();
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, 5.0));
@@ -161,7 +175,7 @@ mod tests {
             Tuple::new_point(0.0, 2.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::sphere();
+        let s = Sphere::new();
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 0);
     }
@@ -171,7 +185,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, 0.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::sphere();
+        let s = Sphere::new();
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, -1.0));
@@ -183,7 +197,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, 5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::sphere();
+        let s = Sphere::new();
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, -6.0));
@@ -192,7 +206,7 @@ mod tests {
 
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
-        let s = Object::sphere();
+        let s = Sphere::new();
         let i = Intersection::new(3.5, s);
 
         assert!(is_float_equal(&i.t, 3.5));
@@ -200,7 +214,7 @@ mod tests {
     }
     #[test]
     fn aggregating_intersections() {
-        let s = Object::sphere();
+        let s = Sphere::new();
         let i1 = Intersection::new(1.0, s);
         let i2 = Intersection::new(2.0, s);
         let xs = Intersections::new(&[i1, i2]);
@@ -214,7 +228,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::sphere();
+        let s = Sphere::new();
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 2);
         assert_eq!(xs.get_element(0).unwrap().object, s);
@@ -222,7 +236,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
-        let s = Object::sphere();
+        let s = Sphere::new();
         let i1 = Intersection::new(1.0, s);
         let i2 = Intersection::new(2.0, s);
         let xs = Intersections::new(&[i2, i1]);
@@ -231,7 +245,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
-        let s = Object::sphere();
+        let s = Sphere::new();
         let i1 = Intersection::new(-1.0, s);
         let i2 = Intersection::new(1.0, s);
         let xs = Intersections::new(&[i1, i2]);
@@ -240,7 +254,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
-        let s = Object::sphere();
+        let s = Sphere::new();
         let i1 = Intersection::new(-2.0, s);
         let i2 = Intersection::new(-1.0, s);
         let xs = Intersections::new(&[i2, i1]);
@@ -249,7 +263,7 @@ mod tests {
     }
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let s = Object::sphere();
+        let s = Sphere::new();
         let i1 = Intersection::new(5.0, s);
         let i2 = Intersection::new(7.0, s);
         let i3 = Intersection::new(-3.0, s);
@@ -282,14 +296,14 @@ mod tests {
     }
     #[test]
     fn a_spheres_default_transformation() {
-        let s = Object::sphere();
+        let s = Sphere::new();
         assert_eq!(s.get_transform(), Matrix::new_identity());
     }
     #[test]
     fn changing_a_spheres_transformation() {
-        let mut s = Object::sphere();
+        let mut s = Sphere::new();
         let t = Transform::translate(2.0, 3.0, 4.0);
-        s.set_transform(t);
+        s.set_transform(&t);
         assert_eq!(s.get_transform(), t);
     }
     #[test]
@@ -298,8 +312,8 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let mut s = Object::sphere();
-        s.set_transform(Transform::scaling(2.0, 2.0, 2.0));
+        let mut s = Sphere::new();
+        s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, 3.0));
@@ -311,8 +325,8 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let mut s = Object::sphere();
-        s.set_transform(Transform::translate(5.0, 0.0, 0.0));
+        let mut s = Sphere::new();
+        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let xs = r.intersect(&s);
         assert_eq!(xs.count(), 0);
     }

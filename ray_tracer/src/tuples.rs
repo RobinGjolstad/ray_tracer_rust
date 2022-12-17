@@ -93,6 +93,9 @@ impl Tuple {
             a.x * b.y - a.y * b.x,
         )
     }
+    pub fn reflect(vector: &Self, normal: &Self) -> Self {
+        *vector - *normal * 2.0 * Tuple::dot(vector, normal)
+    }
 
     pub fn is_point(&self) -> bool {
         if is_float_equal(&self.w, 1.0) {
@@ -391,5 +394,20 @@ mod tests {
 
         assert_eq!(Tuple::cross(&a, &b), Tuple::new_vector(-1.0, 2.0, -1.0));
         assert_eq!(Tuple::cross(&b, &a), Tuple::new_vector(1.0, -2.0, 1.0));
+    }
+
+    #[test]
+    fn reflecting_a_vector_approaching_at_45_degrees() {
+        let v = Tuple::new_vector(1.0, -1.0, 0.0);
+        let n = Tuple::new_vector(0.0, 1.0, 0.0);
+        let r = Tuple::reflect(&v, &n);
+        assert_eq!(r, Tuple::new_vector(1.0, 1.0, 0.0));
+    }
+    #[test]
+    fn reflecting_a_vector_off_a_slanted_surface() {
+        let v = Tuple::new_vector(0.0, -1.0, 0.0);
+        let n = Tuple::new_vector(f32::sqrt(2.0) / 2.0, f32::sqrt(2.0) / 2.0, 0.0);
+        let r = Tuple::reflect(&v, &n);
+        assert_eq!(r, Tuple::new_vector(1.0, 0.0, 0.0));
     }
 }
