@@ -1,7 +1,11 @@
 use std::f32::consts::PI;
 
 use ray_tracer::{
-    canvas::Canvas, colors::Color, rays::Ray, shapes::{sphere::Sphere, Shapes}, transformations::Transform,
+    canvas::Canvas,
+    colors::Color,
+    rays::{Intersections, Ray},
+    shapes::{sphere::Sphere, Object, Shapes},
+    transformations::Transform,
     tuples::Tuple,
 };
 
@@ -38,7 +42,7 @@ fn main() {
             // Describe the "wall" location the ray will target
             let position = Tuple::new_point(world_x, world_y, wall_z);
             let r = Ray::new(ray_origin, (position - ray_origin).normalize());
-            let xs = r.intersect(&squash);
+            let xs = Intersections::new(&r.intersect(&Object::Sphere(squash)));
 
             if let Some(_) = xs.hit() {
                 img.write_pixel(x, y, color);

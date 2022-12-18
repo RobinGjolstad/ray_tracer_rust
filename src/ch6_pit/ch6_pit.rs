@@ -1,11 +1,11 @@
-use std::f32::consts::PI;
+use std::{f32::consts::PI, ops::Deref};
 
 use ray_tracer::{
     canvas::Canvas,
     colors::Color,
     lights::Light,
-    rays::Ray,
-    shapes::{sphere::Sphere, Shapes},
+    rays::{Intersections, Ray},
+    shapes::{sphere::Sphere, Object, Shapes},
     transformations::Transform,
     tuples::Tuple,
 };
@@ -13,7 +13,7 @@ use ray_tracer::{
 fn main() {
     let mut sphere = Sphere::new();
     let mut material = sphere.get_material();
-    material.color = Color::new(1.0, 0.2, 1.0);
+    material.color = Color::new(1.0, 0.5, 0.2);
     sphere.set_material(&material);
 
     let light = Light::point_light(
@@ -50,14 +50,18 @@ fn main() {
             // Describe the "wall" location the ray will target
             let position = Tuple::new_point(world_x, world_y, wall_z);
             let r = Ray::new(ray_origin, (position - ray_origin).normalize());
-            let xs = r.intersect(&squash);
+            let xs = Intersections::new(&r.intersect(&Object::Sphere(squash)));
 
             if let Some(hit) = xs.hit() {
+                //let object = match hit.get_object() {
+                //    Object::Sphere(s) => s,
+                //};
+                let hit_obj = hit.get_object();
+                let object = hit_obj.deref();
                 let point = r.position(hit.get_time());
-                let normal = hit.get_object().normal(point);
+                let normal = object.normal(point);
                 let eye = -r.get_direction();
-                let color = hit
-                    .get_object()
+                let color = object
                     .get_material()
                     .lighting(&light, &point, &eye, &normal);
 

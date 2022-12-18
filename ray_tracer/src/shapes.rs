@@ -1,6 +1,12 @@
-use crate::{tuples::{Point, Vector}, matrices::Matrix, materials::Material};
+use crate::{
+    materials::Material,
+    matrices::Matrix,
+    tuples::{Point, Vector},
+};
 
 pub mod sphere;
+
+use self::sphere::Sphere;
 
 pub trait Shapes {
     fn get_position(&self) -> Point;
@@ -9,4 +15,9 @@ pub trait Shapes {
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
     fn normal(&self, point: Point) -> Vector;
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum Object {
+    Sphere(Sphere),
 }

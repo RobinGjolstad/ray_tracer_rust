@@ -8,3 +8,4 @@ pub mod shapes;
 pub mod transformations;
 pub mod tuples;
 pub mod utils;
+pub mod world;
