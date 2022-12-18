@@ -1,5 +1,6 @@
 pub mod canvas;
 pub mod colors;
+pub mod intersections;
 pub mod lights;
 pub mod materials;
 pub mod matrices;

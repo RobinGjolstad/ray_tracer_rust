@@ -1,72 +1,10 @@
 use crate::{
+    intersections::{Intersection, Intersections},
     matrices::Matrix,
     shapes::{Object, Shapes},
     tuples::{Point, Tuple, Vector},
     world::World,
 };
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Intersection {
-    t: f32,
-    object: Object,
-}
-impl Intersection {
-    pub fn new(time: f32, object: Object) -> Self {
-        Intersection {
-            t: time,
-            object: object,
-        }
-    }
-    pub fn get_time(&self) -> f32 {
-        self.t
-    }
-    pub fn get_object(&self) -> Box<dyn Shapes> {
-        match self.object {
-            Object::Sphere(s) => Box::new(s),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct Intersections {
-    pub list: Vec<Intersection>,
-}
-impl Intersections {
-    pub fn new(intersect_list: &Vec<Intersection>) -> Self {
-        let mut i = Intersections {
-            list: intersect_list.to_vec(),
-        };
-        i.sort();
-        i
-    }
-    fn sort(&mut self) {
-        self.list
-            .sort_unstable_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
-    }
-    pub fn count(&self) -> usize {
-        self.list.len()
-    }
-    pub fn get_element(&self, index: usize) -> Option<Intersection> {
-        if index <= self.list.len() {
-            Some(self.list[index])
-        } else {
-            None
-        }
-    }
-    pub fn hit(&self) -> Option<Intersection> {
-        let mut list = self.list.clone();
-        list.retain(|&x| x.t.is_sign_positive());
-        if let Some(int) = list.iter().min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap()) {
-            Some(*int)
-        } else {
-            None
-        }
-    }
-    pub fn put_elements(&mut self, intersection: &Vec<Intersection>) {
-        self.list.extend(intersection);
-        self.sort();
-    }
-}
 
 pub struct Ray {
     origin: Point,
@@ -104,14 +42,8 @@ impl Ray {
             Vec::new()
         } else {
             vec![
-                Intersection {
-                    t: (-b - discriminant_sqrt) / (2.0 * a),
-                    object: *shape,
-                },
-                Intersection {
-                    t: (-b + discriminant_sqrt) / (2.0 * a),
-                    object: *shape,
-                },
+                Intersection::new((-b - discriminant_sqrt) / (2.0 * a), *shape),
+                Intersection::new((-b + discriminant_sqrt) / (2.0 * a), *shape),
             ]
         }
     }
@@ -134,6 +66,8 @@ impl Ray {
 
 #[cfg(test)]
 mod tests {
+    use std::ops::Deref;
+
     use super::*;
     use crate::{
         matrices::Matrix, shapes::sphere::Sphere, transformations::Transform, tuples::Tuple,
@@ -173,8 +107,8 @@ mod tests {
         let s = Object::Sphere(Sphere::new());
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
-        assert!(is_float_equal(&xs.get_element(0).unwrap().t, 4.0));
-        assert!(is_float_equal(&xs.get_element(1).unwrap().t, 6.0));
+        assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 4.0));
+        assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 6.0));
     }
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
@@ -185,8 +119,8 @@ mod tests {
         let s = Object::Sphere(Sphere::new());
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
-        assert!(is_float_equal(&xs.get_element(0).unwrap().t, 5.0));
-        assert!(is_float_equal(&xs.get_element(1).unwrap().t, 5.0));
+        assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 5.0));
+        assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 5.0));
     }
     #[test]
     fn a_ray_misses_a_square() {
@@ -207,8 +141,8 @@ mod tests {
         let s = Object::Sphere(Sphere::new());
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
-        assert!(is_float_equal(&xs.get_element(0).unwrap().t, -1.0));
-        assert!(is_float_equal(&xs.get_element(1).unwrap().t, 1.0));
+        assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), -1.0));
+        assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 1.0));
     }
     #[test]
     fn a_sphere_is_behind_a_ray() {
@@ -219,28 +153,10 @@ mod tests {
         let s = Object::Sphere(Sphere::new());
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
-        assert!(is_float_equal(&xs.get_element(0).unwrap().t, -6.0));
-        assert!(is_float_equal(&xs.get_element(1).unwrap().t, -4.0));
+        assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), -6.0));
+        assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), -4.0));
     }
 
-    #[test]
-    fn an_intersection_encapsulates_t_and_object() {
-        let s = Object::Sphere(Sphere::new());
-        let i = Intersection::new(3.5, s);
-
-        assert!(is_float_equal(&i.t, 3.5));
-        assert_eq!(i.object, s);
-    }
-    #[test]
-    fn aggregating_intersections() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(1.0, s);
-        let i2 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i1, i2]);
-        assert_eq!(xs.count(), 2);
-        assert!(is_float_equal(&xs.get_element(0).unwrap().t, 1.0));
-        assert!(is_float_equal(&xs.get_element(1).unwrap().t, 2.0));
-    }
     #[test]
     fn intersect_sets_the_object_on_the_intersection() {
         let r = Ray::new(
@@ -250,46 +166,8 @@ mod tests {
         let s = Object::Sphere(Sphere::new());
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
-        assert_eq!(xs.get_element(0).unwrap().object, s);
-        assert_eq!(xs.get_element(1).unwrap().object, s);
-    }
-    #[test]
-    fn the_hit_when_all_intersections_have_positive_t() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(1.0, s);
-        let i2 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i2, i1]);
-        let i = xs.hit();
-        assert_eq!(i, Some(i1));
-    }
-    #[test]
-    fn the_hit_when_some_intersections_have_negative_t() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(-1.0, s);
-        let i2 = Intersection::new(1.0, s);
-        let xs = Intersections::new(&vec![i1, i2]);
-        let i = xs.hit();
-        assert_eq!(i, Some(i2));
-    }
-    #[test]
-    fn the_hit_when_all_intersections_have_negative_t() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(-2.0, s);
-        let i2 = Intersection::new(-1.0, s);
-        let xs = Intersections::new(&vec![i2, i1]);
-        let i = xs.hit();
-        assert_eq!(i, None);
-    }
-    #[test]
-    fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(5.0, s);
-        let i2 = Intersection::new(7.0, s);
-        let i3 = Intersection::new(-3.0, s);
-        let i4 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i1, i2, i3, i4]);
-        let i = xs.hit();
-        assert_eq!(i, Some(i4));
+        assert_eq!(xs.get_element(0).unwrap().get_object_raw(), s);
+        assert_eq!(xs.get_element(1).unwrap().get_object_raw(), s);
     }
     #[test]
     fn translating_a_ray() {
@@ -335,8 +213,8 @@ mod tests {
         s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
         let xs = Intersections::new(&r.intersect(&Object::Sphere(s)));
         assert_eq!(xs.count(), 2);
-        assert!(is_float_equal(&xs.get_element(0).unwrap().t, 3.0));
-        assert!(is_float_equal(&xs.get_element(1).unwrap().t, 7.0));
+        assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 3.0));
+        assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 7.0));
     }
     #[test]
     fn intersecting_a_translated_sphere_with_a_ray() {
