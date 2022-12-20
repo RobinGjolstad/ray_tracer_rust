@@ -3,6 +3,17 @@ name = "the_ray_tracer_challenge"
 version = "0.1.0"
 edition = "2021"
 
+[build]
+rustflags = ["-C", "target-cpu=native"]
+
+[profile.release]
+lto = true
+panic = "abort"
+
+[[bin]]
+name="ch7_pit"
+path="src/ch7_pit/ch7_pit.rs"
+
 [[bin]]
 name="ch6_pit"
 path="src/ch6_pit/ch6_pit.rs"

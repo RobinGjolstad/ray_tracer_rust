@@ -2,25 +2,6 @@ use std::ops::Mul;
 
 use crate::{tuples::Tuple, utils::is_float_equal};
 
-#[macro_export]
-macro_rules! vec2d {
-    ($($i:expr),+) => { // handle numbers
-        {
-            let mut ret = Vec::new();
-            $(ret.push($i);)*
-            ret
-        }
-    };
-
-    //([$($arr:tt),+]) => { // handle sets
-    //    {
-    //        let mut ret = Vec::new();
-    //        $(ret.push(vec!($arr));)*
-    //        ret
-    //    }
-    //};
-}
-
 #[derive(Debug)]
 pub enum MatrixError {
     AsymmetricMatrix,

@@ -3,7 +3,9 @@ use crate::{
     extract_object,
     intersections::{prepare_computations, IntersectComp},
     lights::Light,
-    shapes::{Object, Shapes},
+    shapes::{sphere::Sphere, Object, Shapes},
+    transformations::Transform,
+    tuples::Tuple,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -17,6 +19,25 @@ impl World {
         World {
             objects: Vec::new(),
             lights: Vec::new(),
+        }
+    }
+    pub fn new_default_world() -> World {
+        let mut s1 = Sphere::new();
+        let mut s1_mat = s1.get_material();
+        s1_mat.color = Color::new(0.8, 1.0, 0.6);
+        s1_mat.diffuse = 0.7;
+        s1_mat.specular = 0.2;
+        s1.set_material(&s1_mat);
+
+        let mut s2 = Sphere::new();
+        s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
+
+        World {
+            objects: vec![Object::Sphere(s1), Object::Sphere(s2)],
+            lights: vec![Light::point_light(
+                &Tuple::new_point(-10.0, 10.0, -10.0),
+                &Color::new(1.0, 1.0, 1.0),
+            )],
         }
     }
     pub fn shade_hit(&self, comps: &IntersectComp) -> Color {
@@ -57,23 +78,7 @@ mod tests {
     };
 
     fn default_world() -> World {
-        let mut s1 = Sphere::new();
-        let mut s1_mat = s1.get_material();
-        s1_mat.color = Color::new(0.8, 1.0, 0.6);
-        s1_mat.diffuse = 0.7;
-        s1_mat.specular = 0.2;
-        s1.set_material(&s1_mat);
-
-        let mut s2 = Sphere::new();
-        s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
-
-        World {
-            objects: vec![Object::Sphere(s1), Object::Sphere(s2)],
-            lights: vec![Light::point_light(
-                &Tuple::new_point(-10.0, 10.0, -10.0),
-                &Color::new(1.0, 1.0, 1.0),
-            )],
-        }
+        World::new_default_world()
     }
 
     #[test]
