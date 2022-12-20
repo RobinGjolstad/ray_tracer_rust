@@ -3,7 +3,8 @@ use std::f32::consts::PI;
 use ray_tracer::{
     canvas::Canvas,
     colors::Color,
-    rays::{Intersections, Ray},
+    intersections::Intersections,
+    rays::Ray,
     shapes::{sphere::Sphere, Object, Shapes},
     transformations::Transform,
     tuples::Tuple,

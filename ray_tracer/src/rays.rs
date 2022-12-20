@@ -1,4 +1,5 @@
 use crate::{
+    extract_object,
     intersections::{Intersection, Intersections},
     matrices::Matrix,
     shapes::{Object, Shapes},
@@ -26,9 +27,7 @@ impl Ray {
     }
 
     pub fn intersect(&self, shape: &Object) -> Vec<Intersection> {
-        let object = match shape {
-            Object::Sphere(s) => s,
-        };
+        let object = extract_object!(shape);
         let ray = self.transform(object.get_transform().inverse().unwrap());
         let sphere_to_ray = ray.origin - object.get_position();
         let a = Tuple::dot(&ray.direction, &ray.direction);
@@ -66,8 +65,6 @@ impl Ray {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Deref;
-
     use super::*;
     use crate::{
         matrices::Matrix, shapes::sphere::Sphere, transformations::Transform, tuples::Tuple,

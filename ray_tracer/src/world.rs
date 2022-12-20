@@ -1,5 +1,6 @@
 use crate::{
     colors::Color,
+    extract_object,
     intersections::{prepare_computations, IntersectComp},
     lights::Light,
     shapes::{Object, Shapes},
@@ -20,14 +21,10 @@ impl World {
     }
     pub fn shade_hit(&self, comps: &IntersectComp) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
-        match comps.object {
-            Object::Sphere(s) => {
-                let mat = s.get_material();
-                for lights in &self.lights {
-                    color =
-                        color + mat.lighting(&lights, &comps.point, &comps.eyev, &comps.normalv);
-                }
-            }
+        let s = extract_object!(comps.object);
+        let mat = s.get_material();
+        for lights in &self.lights {
+            color = color + mat.lighting(&lights, &comps.point, &comps.eyev, &comps.normalv);
         }
         color
     }
