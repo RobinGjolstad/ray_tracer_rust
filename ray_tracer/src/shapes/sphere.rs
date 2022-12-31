@@ -29,7 +29,8 @@ impl Shapes for Sphere {
         self.transform
     }
     fn set_transform(&mut self, trans: &Matrix) {
-        self.transform = *trans
+        self.transform = *trans;
+        self.transform.inverse().unwrap();
     }
     fn set_material(&mut self, material: &Material) {
         self.material = *material;
@@ -38,7 +39,7 @@ impl Shapes for Sphere {
         self.material
     }
     fn normal(&self, point: Point) -> Vector {
-        let transform_inverse = self.get_transform().inverse().unwrap();
+        let transform_inverse = self.get_transform().get_inverted().unwrap();
         let object_point = transform_inverse * point;
         let object_normal = object_point - Point::new_point(0.0, 0.0, 0.0);
         let mut world_normal = transform_inverse.transpose().unwrap() * object_normal;

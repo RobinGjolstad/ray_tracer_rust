@@ -28,7 +28,7 @@ impl Ray {
 
     pub fn intersect(&self, shape: &Object) -> Vec<Intersection> {
         let object = extract_object!(shape);
-        let ray = self.transform(object.get_transform().inverse().unwrap());
+        let ray = self.transform(object.get_transform().get_inverted().unwrap());
         let sphere_to_ray = ray.origin - object.get_position();
         let a = Tuple::dot(&ray.direction, &ray.direction);
         let b = 2.0 * Tuple::dot(&ray.direction, &sphere_to_ray);

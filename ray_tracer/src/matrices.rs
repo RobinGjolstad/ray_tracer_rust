@@ -13,6 +13,8 @@ pub enum MatrixError {
 pub struct Matrix {
     matrix: [[f32; 4]; 4],
     size: usize,
+    inverse: [[f32; 4]; 4],
+    is_inverted: bool,
 }
 
 impl Matrix {
@@ -33,6 +35,8 @@ impl Matrix {
         let mut m = Matrix {
             matrix: [[0.0; 4]; 4],
             size: 4,
+            inverse: [[0.0; 4]; 4],
+            is_inverted: false,
         };
         let mut row_idx = 0;
         for row in input {
@@ -53,6 +57,8 @@ impl Matrix {
             Ok(Matrix {
                 matrix: [[0.0; 4]; 4],
                 size: size,
+                inverse: [[0.0; 4]; 4],
+                is_inverted: false,
             })
         } else {
             Err(MatrixError::InvalidSize)
@@ -68,6 +74,8 @@ impl Matrix {
                 [0.0, 0.0, 0.0, 1.0],
             ],
             size: 4,
+            inverse: [[0.0; 4]; 4],
+            is_inverted: false,
         }
     }
 
@@ -81,6 +89,30 @@ impl Matrix {
 
     pub fn size(&self) -> usize {
         self.size
+    }
+
+    pub fn get_matrix(&self) -> [[f32; 4]; 4] {
+        self.matrix
+    }
+
+    pub fn is_inverted(&self) -> bool {
+        self.is_inverted
+    }
+
+    pub fn get_inverse(&self) -> [[f32; 4]; 4] {
+        self.inverse
+    }
+
+    pub fn get_inverted(&mut self) -> Result<Matrix, MatrixError> {
+        if !self.is_inverted {
+            self.inverse()?;
+        }
+        Ok(Matrix {
+            matrix: self.inverse,
+            size: self.size,
+            inverse: [[0.0; 4]; 4],
+            is_inverted: false,
+        })
     }
 
     pub fn transpose(&self) -> Result<Matrix, MatrixError> {
@@ -164,20 +196,26 @@ impl Matrix {
         }
     }
 
-    pub fn inverse(&self) -> Result<Self, MatrixError> {
-        if !self.invertible() {
-            return Err(MatrixError::NonInvertible);
-        }
-
-        let mut m2 = Self::new_empty(self.size).unwrap();
-
-        for row in 0..self.size {
-            for column in 0..self.size {
-                let c = self.cofactor(row, column);
-                m2.matrix[column][row] = c / self.determinant();
+    pub fn inverse(&mut self) -> Result<Self, MatrixError> {
+        if self.is_inverted {
+            Ok(*self)
+        } else {
+            if !self.invertible() {
+                return Err(MatrixError::NonInvertible);
             }
+
+            let mut m2 = Self::new_empty(self.size).unwrap();
+
+            for row in 0..self.size {
+                for column in 0..self.size {
+                    let c = self.cofactor(row, column);
+                    m2.matrix[column][row] = c / self.determinant();
+                }
+            }
+            self.inverse = m2.matrix;
+            self.is_inverted = true;
+            Ok(*self)
         }
-        Ok(m2)
     }
 }
 
@@ -210,6 +248,8 @@ impl Mul for Matrix {
         let mut m = Matrix {
             matrix: [[0.0; 4], [0.0; 4], [0.0; 4], [0.0; 4]],
             size: 4,
+            inverse: [[0.0; 4]; 4],
+            is_inverted: false,
         };
         for row in 0..size {
             for column in 0..size {
@@ -593,7 +633,7 @@ mod tests {
 
     #[test]
     fn calculating_the_inverse_of_a_matrix() {
-        let a = Matrix::new(vec![
+        let mut a = Matrix::new(vec![
             vec![-5.0, 2.0, 6.0, -8.0],
             vec![1.0, -5.0, 1.0, 8.0],
             vec![7.0, 7.0, -6.0, -7.0],
@@ -601,7 +641,12 @@ mod tests {
         ])
         .unwrap();
 
-        let b = a.inverse().unwrap();
+        let b = Matrix {
+            matrix: a.inverse().unwrap().inverse,
+            size: a.size(),
+            inverse: Matrix::new_empty(a.size()).unwrap().matrix,
+            is_inverted: false,
+        };
 
         let b_comp = Matrix::new(vec![
             vec![0.21805, 0.45113, 0.24060, -0.04511],
@@ -621,7 +666,7 @@ mod tests {
 
     #[test]
     fn calculating_the_inverse_of_another_matrix() {
-        let a = Matrix::new(vec![
+        let mut a = Matrix::new(vec![
             vec![8.0, -5.0, 9.0, 2.0],
             vec![7.0, 5.0, 6.0, 1.0],
             vec![-6.0, 0.0, 9.0, 6.0],
@@ -636,12 +681,19 @@ mod tests {
         ])
         .unwrap();
 
-        assert_eq!(a.inverse().unwrap(), inv_a);
+        let b = Matrix {
+            matrix: a.inverse().unwrap().inverse,
+            size: a.size(),
+            inverse: Matrix::new_empty(a.size()).unwrap().matrix,
+            is_inverted: false,
+        };
+
+        assert_eq!(b, inv_a);
     }
 
     #[test]
     fn calculating_the_inverse_of_a_third_matrix() {
-        let a = Matrix::new(vec![
+        let mut a = Matrix::new(vec![
             vec![9.0, 3.0, 0.0, 9.0],
             vec![-5.0, -2.0, -6.0, -3.0],
             vec![-4.0, 9.0, 6.0, 4.0],
@@ -656,19 +708,26 @@ mod tests {
         ])
         .unwrap();
 
-        assert_eq!(a.inverse().unwrap(), inv_a);
+        let b = Matrix {
+            matrix: a.inverse().unwrap().inverse,
+            size: a.size(),
+            inverse: Matrix::new_empty(a.size()).unwrap().matrix,
+            is_inverted: false,
+        };
+
+        assert_eq!(b, inv_a);
     }
 
     #[test]
     fn multiplying_a_product_by_its_inverse() {
-        let a = Matrix::new(vec![
+        let mut a = Matrix::new(vec![
             vec![3.0, -9.0, 7.0, 3.0],
             vec![3.0, -8.0, 2.0, -9.0],
             vec![-4.0, 4.0, 4.0, 1.0],
             vec![-6.0, 5.0, -1.0, 1.0],
         ])
         .unwrap();
-        let b = Matrix::new(vec![
+        let mut b = Matrix::new(vec![
             vec![8.0, 2.0, 2.0, 2.0],
             vec![3.0, -1.0, 7.0, 0.0],
             vec![7.0, 0.0, 5.0, 4.0],
@@ -676,6 +735,14 @@ mod tests {
         ])
         .unwrap();
         let c = a.clone() * b.clone();
-        assert_eq!(c * b.inverse().unwrap(), a);
+
+        let b_inv = Matrix {
+            matrix: a.inverse().unwrap().inverse,
+            size: a.size(),
+            inverse: Matrix::new_empty(a.size()).unwrap().matrix,
+            is_inverted: false,
+        };
+
+        assert_eq!(c * b.get_inverted().unwrap(), a);
     }
 }

@@ -1,8 +1,9 @@
 use crate::{
     colors::Color,
     extract_object,
-    intersections::{prepare_computations, IntersectComp},
+    intersections::{prepare_computations, IntersectComp, Intersections},
     lights::Light,
+    rays::Ray,
     shapes::{sphere::Sphere, Object, Shapes},
     transformations::Transform,
     tuples::Tuple,
@@ -45,7 +46,14 @@ impl World {
         let s = extract_object!(comps.object);
         let mat = s.get_material();
         for lights in &self.lights {
-            color = color + mat.lighting(&lights, &comps.point, &comps.eyev, &comps.normalv);
+            color = color
+                + mat.lighting(
+                    &lights,
+                    &comps.over_point,
+                    &comps.eyev,
+                    &comps.normalv,
+                    self.is_shadowed(&comps.over_point),
+                );
         }
         color
     }
@@ -60,6 +68,23 @@ impl World {
             }
         };
         color
+    }
+
+    pub fn is_shadowed(&self, point: &Tuple) -> bool {
+        let v = self.lights.first().unwrap().get_position() - *point; // TODO: Support multiple lights
+        let distance = v.magnitude();
+        let direction = v.normalize();
+
+        let r = Ray::new(*point, direction);
+        let intersections = r.intersect_world(self);
+        let h = intersections.hit();
+
+        if let Some(hit) = h {
+            if hit.get_time() < distance {
+                return true;
+            }
+        }
+        false
     }
 }
 
@@ -158,6 +183,30 @@ mod tests {
         assert_eq!(c, Color::new(0.90498, 0.90498, 0.90498));
     }
     #[test]
+    fn shade_hit_is_given_an_intersection_in_shadow() {
+        let mut w = World::new();
+        w.lights = vec![Light::point_light(
+            &Tuple::new_point(0.0, 0.0, -10.0),
+            &Color::new(1.0, 1.0, 1.0),
+        )];
+
+        let s1 = Sphere::new();
+        w.objects.push(Object::Sphere(s1));
+
+        let mut s2 = Sphere::new();
+        s2.set_transform(&Transform::translate(0.0, 0.0, 10.0));
+        w.objects.push(Object::Sphere(s2));
+
+        let r = Ray::new(
+            Tuple::new_point(0.0, 0.0, 5.0),
+            Tuple::new_vector(0.0, 0.0, 1.0),
+        );
+        let i = Intersection::new(4.0, Object::Sphere(s2));
+        let comps = prepare_computations(&i, &r);
+        let c = w.shade_hit(&comps);
+        assert_eq!(c, Color::new(0.1, 0.1, 0.1));
+    }
+    #[test]
     fn the_color_when_a_ray_misses() {
         let w = default_world();
         let r = Ray::new(
@@ -213,5 +262,30 @@ mod tests {
         );
         let c = new_world.color_at(&r);
         assert_eq!(c, inner_sphere.get_material().color);
+    }
+
+    #[test]
+    fn there_is_no_shadow_when_nothing_is_collinear_with_point_and_light() {
+        let w = World::new_default_world();
+        let p = Tuple::new_point(0.0, 10.0, 0.0);
+        assert_eq!(w.is_shadowed(&p), false);
+    }
+    #[test]
+    fn the_shadow_when_an_object_is_between_the_point_and_the_light() {
+        let w = World::new_default_world();
+        let p = Tuple::new_point(10.0, -10.0, 10.0);
+        assert_eq!(w.is_shadowed(&p), true);
+    }
+    #[test]
+    fn there_is_no_shadow_when_an_object_is_behind_the_light() {
+        let w = World::new_default_world();
+        let p = Tuple::new_point(-20.0, 20.0, -20.0);
+        assert_eq!(w.is_shadowed(&p), false);
+    }
+    #[test]
+    fn there_is_no_shadow_when_an_object_is_behind_the_point() {
+        let w = World::new_default_world();
+        let p = Tuple::new_point(-2.0, 2.0, -2.0);
+        assert_eq!(w.is_shadowed(&p), false);
     }
 }

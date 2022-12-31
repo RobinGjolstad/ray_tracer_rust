@@ -2,8 +2,8 @@ use ray_tracer::{matrices::Matrix, tuples::Tuple};
 
 fn main() {
     //
-    let id = Matrix::new_identity();
-    let id_inv = id.inverse().unwrap();
+    let mut id = Matrix::new_identity();
+    let id_inv = id.get_inverted().unwrap();
 
     println!("\nInverse of ID");
     println!("{:?}", id);
@@ -16,8 +16,8 @@ fn main() {
         vec![2.0, 3.0, 4.0, 4.0],
     ])
     .unwrap();
-    let mat_trans = mat.clone().transpose().unwrap();
-    let mat_inv = mat.clone().inverse().unwrap();
+    let mut mat_trans = mat.clone().transpose().unwrap();
+    let mat_inv = mat.clone().get_inverted().unwrap();
     let mat_mul_inverse = mat.clone() * mat_inv.clone();
 
     println!("\nMultiply inverse mat");
@@ -25,7 +25,7 @@ fn main() {
     println!("{:?}", mat_mul_inverse);
 
     println!("\nInv trans trans inv");
-    println!("{:?}", mat_trans.inverse().unwrap());
+    println!("{:?}", mat_trans.get_inverted().unwrap());
     println!("{:?}", mat_inv.transpose());
 
     let tup = Tuple::new(1.0, 2.0, 3.0, 4.0);

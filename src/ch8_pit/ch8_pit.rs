@@ -67,15 +67,15 @@ fn main() {
         &Color::new(1.0, 1.0, 1.0),
     ));
     world.objects = vec![
-        Object::Sphere(floor),
-        Object::Sphere(left_wall),
+        //Object::Sphere(floor),
+        //Object::Sphere(left_wall),
         Object::Sphere(right_wall),
-        Object::Sphere(left),
-        Object::Sphere(middle),
-        Object::Sphere(right),
+        //Object::Sphere(left),
+        //Object::Sphere(middle),
+        //Object::Sphere(right),
     ];
 
-    let mut camera = Camera::new(680, 680, PI / 3.0);
+    let mut camera = Camera::new(240, 240, PI / 3.0);
     camera.set_transform(Transform::view_transform(
         &Tuple::new_point(0.0, 1.5, -5.0),
         &Tuple::new_point(0.0, 1.0, 0.0),
@@ -85,7 +85,7 @@ fn main() {
     let mut img = camera.render(&world);
 
     img.save(&String::from(format!(
-        "images/ch7_pit/ch7_pit_{}x{}.ppm",
+        "images/ch8_pit/ch8_pit_{}x{}.ppm",
         img.width(),
         img.height()
     )));

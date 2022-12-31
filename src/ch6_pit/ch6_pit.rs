@@ -64,7 +64,7 @@ fn main() {
                 let eye = -r.get_direction();
                 let color = object
                     .get_material()
-                    .lighting(&light, &point, &eye, &normal);
+                    .lighting(&light, &point, &eye, &normal, false);
 
                 img.write_pixel(x, y, color);
             } else {

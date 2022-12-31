@@ -25,6 +25,7 @@ impl Material {
         position: &Tuple,
         eyev: &Tuple,
         normalv: &Tuple,
+        in_shadow: bool
     ) -> Color {
         // Variables to combine and return
         let mut diffuse = Color::new(0.0, 0.0, 0.0);
@@ -65,8 +66,13 @@ impl Material {
             }
         }
 
-        // add the three contributions together to get the final shading
-        ambient + diffuse + specular
+        if false == in_shadow {
+            // add the three contributions together to get the final shading
+            ambient + diffuse + specular
+        } else {
+            // Only ambient lighting applies if the zone is in shadow
+            ambient
+        }
     }
 }
 
@@ -100,7 +106,7 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = m.lighting(&light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
     #[test]
@@ -112,7 +118,7 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = m.lighting(&light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
     #[test]
@@ -124,7 +130,7 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = m.lighting(&light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.7364, 0.7364, 0.7364));
     }
     #[test]
@@ -136,7 +142,7 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = m.lighting(&light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.63639, 1.63639, 1.63639));
     }
     #[test]
@@ -148,7 +154,21 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, 10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv);
+        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        assert_eq!(result, Color::new(0.1, 0.1, 0.1));
+    }
+
+    #[test]
+    fn lighting_with_the_surface_in_shadow() {
+        let (m, position) = setup_lighting();
+        let eyev = Tuple::new_vector(0.0, 0.0, -1.0);
+        let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(
+            &Tuple::new_point(0.0, 0.0, -10.0),
+            &Color::new(1.0, 1.0, 1.0),
+        );
+        let in_shadow = true;
+        let result = m.lighting(&light, &position, &eyev, &normalv, in_shadow);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 }

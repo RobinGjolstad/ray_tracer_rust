@@ -4,6 +4,7 @@ use crate::{
     rays::Ray,
     shapes::{Object, Shapes},
     tuples::{Point, Tuple, Vector},
+    utils,
 };
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -80,28 +81,41 @@ pub struct IntersectComp {
     pub eyev: Vector,
     pub normalv: Vector,
     pub inside: bool,
+    pub over_point: Tuple,
 }
 pub fn prepare_computations(intersection: &Intersection, ray: &Ray) -> IntersectComp {
     let mut comps = IntersectComp {
         t: intersection.t,
         object: intersection.object,
         point: ray.position(intersection.t),
-        eyev: -ray.get_direction(),
+        eyev: -(ray.get_direction()),
         normalv: intersection
             .get_object()
             .normal(ray.position(intersection.t)),
         inside: false,
+        over_point: Tuple::new(0.0, 0.0, 0.0, 0.0),
     };
-    if Tuple::dot(&comps.normalv, &comps.eyev) < 0.0 {
+    let point = ray.position(intersection.t);
+    let normalv = intersection.get_object().normal(point);
+    let eyev = -(ray.get_direction());
+    if Tuple::dot(&normalv, &eyev) < 0.0 {
         comps.inside = true;
         comps.normalv = -comps.normalv;
     }
+    comps.over_point = comps.point + comps.normalv * utils::EPSILON;
+
     comps
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{rays::Ray, shapes::sphere::Sphere, tuples::Tuple, utils::is_float_equal};
+    use crate::{
+        rays::Ray,
+        shapes::sphere::Sphere,
+        transformations::Transform,
+        tuples::Tuple,
+        utils::{self, is_float_equal},
+    };
 
     use super::*;
 
@@ -200,5 +214,19 @@ mod tests {
         assert_eq!(comps.eyev, Tuple::new_vector(0.0, 0.0, -1.0));
         assert_eq!(comps.normalv, Tuple::new_vector(0.0, 0.0, -1.0));
         assert_eq!(comps.inside, true);
+    }
+
+    #[test]
+    fn the_hit_should_offset_the_point() {
+        let r = Ray::new(
+            Tuple::new_point(0.0, 0.0, -5.0),
+            Tuple::new_vector(0.0, 0.0, 1.0),
+        );
+        let mut shape = Sphere::new();
+        shape.set_transform(&Transform::translate(0.0, 0.0, 1.0));
+        let i = Intersection::new(5.0, Object::Sphere(shape));
+        let comps = prepare_computations(&i, &r);
+        assert!(comps.over_point.z < -utils::EPSILON / 2.0);
+        assert!(comps.point.z > comps.over_point.z);
     }
 }

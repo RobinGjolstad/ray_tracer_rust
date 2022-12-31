@@ -39,7 +39,7 @@ impl Camera {
         self.transform = transformation;
     }
 
-    pub fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
+    pub fn ray_for_pixel(&mut self, px: usize, py: usize) -> Ray {
         // The offset from the edge of the canvas to the pixel's center
         let xoffset = (px as f32 + 0.5) * self.pixel_size;
         let yoffset = (py as f32 + 0.5) * self.pixel_size;
@@ -52,14 +52,15 @@ impl Camera {
         // Using the camera matrix, transform the canvas point and the origin,
         // and then compute the ray's direction vector.
         // (remember that the canvas is at z=-1)
-        let pixel = self.transform.inverse().unwrap() * Tuple::new_point(world_x, world_y, -1.0);
-        let origin = self.transform.inverse().unwrap() * Tuple::new_point(0.0, 0.0, 0.0);
+        let pixel =
+            self.transform.get_inverted().unwrap() * Tuple::new_point(world_x, world_y, -1.0);
+        let origin = self.transform.get_inverted().unwrap() * Tuple::new_point(0.0, 0.0, 0.0);
         let direction = (pixel - origin).normalize();
 
         Ray::new(origin, direction)
     }
 
-    pub fn render(&self, w: &World) -> Canvas {
+    pub fn render(&mut self, w: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
 
         for y in 0..self.vsize {
@@ -109,14 +110,14 @@ mod tests {
     }
     #[test]
     fn constructing_a_ray_through_the_center_of_the_canvas() {
-        let c = Camera::new(201, 101, PI / 2.0);
+        let mut c = Camera::new(201, 101, PI / 2.0);
         let r = c.ray_for_pixel(100, 50);
         assert_eq!(r.origin, Tuple::new_point(0.0, 0.0, 0.0));
         assert_eq!(r.direction, Tuple::new_vector(0.0, 0.0, -1.0));
     }
     #[test]
     fn constructing_a_ray_through_a_corner_of_the_canvas() {
-        let c = Camera::new(201, 101, PI / 2.0);
+        let mut c = Camera::new(201, 101, PI / 2.0);
         let r = c.ray_for_pixel(0, 0);
         assert_eq!(r.origin, Tuple::new_point(0.0, 0.0, 0.0));
         assert_eq!(r.direction, Tuple::new_vector(0.66519, 0.33259, -0.66851));
