@@ -3,10 +3,10 @@ use crate::{colors::Color, lights::Light, tuples::Tuple};
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Material {
     pub color: Color,
-    pub ambient: f32,
-    pub diffuse: f32,
-    pub specular: f32,
-    pub shininess: f32,
+    pub ambient: f64,
+    pub diffuse: f64,
+    pub specular: f64,
+    pub shininess: f64,
 }
 impl Material {
     pub fn new() -> Material {
@@ -61,7 +61,7 @@ impl Material {
                 // Do nothing since it is already initialized to black.
             } else {
                 // Compute the specular contribution
-                let factor = f32::powf(reflect_dot_eye, self.shininess);
+                let factor = f64::powf(reflect_dot_eye, self.shininess);
                 specular = light.get_intensity() * self.specular * factor;
             }
         }
@@ -112,7 +112,7 @@ mod tests {
     #[test]
     fn lighting_with_the_eye_between_light_and_surface_eye_offset_45_degrees() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, f32::sqrt(2.0) / 2.0, -f32::sqrt(2.0) / 2.0);
+        let eyev = Tuple::new_vector(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
         let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(
             &Tuple::new_point(0.0, 0.0, -10.0),
@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn lighting_with_eye_in_the_path_of_the_reflection_vector() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, -f32::sqrt(2.0) / 2.0, -f32::sqrt(2.0) / 2.0);
+        let eyev = Tuple::new_vector(0.0, -f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
         let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(
             &Tuple::new_point(0.0, 10.0, -10.0),

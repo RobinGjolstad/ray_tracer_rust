@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 
 use ray_tracer::{
     camera::Camera,
@@ -67,12 +67,12 @@ fn main() {
         &Color::new(1.0, 1.0, 1.0),
     ));
     world.objects = vec![
-        //Object::Sphere(floor),
-        //Object::Sphere(left_wall),
+        Object::Sphere(floor),
+        Object::Sphere(left_wall),
         Object::Sphere(right_wall),
-        //Object::Sphere(left),
-        //Object::Sphere(middle),
-        //Object::Sphere(right),
+        Object::Sphere(left),
+        Object::Sphere(middle),
+        Object::Sphere(right),
     ];
 
     let mut camera = Camera::new(240, 240, PI / 3.0);

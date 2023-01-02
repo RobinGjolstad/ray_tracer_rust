@@ -4,24 +4,24 @@ use crate::{canvas::Canvas, matrices::Matrix, rays::Ray, tuples::Tuple, world::W
 pub struct Camera {
     hsize: usize,
     vsize: usize,
-    field_of_view: f32,
+    field_of_view: f64,
     transform: Matrix,
-    pixel_size: f32,
-    half_width: f32,
-    half_height: f32,
+    pixel_size: f64,
+    half_width: f64,
+    half_height: f64,
 }
 
 impl Camera {
-    pub fn new(horizontal_size: usize, vertical_size: usize, field_of_view: f32) -> Self {
-        let half_view = f32::tan(field_of_view / 2.0);
-        let aspect: f32 = horizontal_size as f32 / vertical_size as f32;
+    pub fn new(horizontal_size: usize, vertical_size: usize, field_of_view: f64) -> Self {
+        let half_view = f64::tan(field_of_view / 2.0);
+        let aspect: f64 = horizontal_size as f64 / vertical_size as f64;
         let mut half_width = 0.0;
         let mut half_height = 0.0;
         if aspect >= 1.0 {
             half_width = half_view;
-            half_height = half_view / aspect as f32;
+            half_height = half_view / aspect;
         } else {
-            half_width = half_view * aspect as f32;
+            half_width = half_view * aspect;
             half_height = half_view;
         }
         Camera {
@@ -29,7 +29,7 @@ impl Camera {
             vsize: vertical_size,
             field_of_view: field_of_view,
             transform: Matrix::new_identity(),
-            pixel_size: (half_width * 2.0) / horizontal_size as f32,
+            pixel_size: (half_width * 2.0) / horizontal_size as f64,
             half_height: half_height,
             half_width: half_width,
         }
@@ -41,8 +41,8 @@ impl Camera {
 
     pub fn ray_for_pixel(&mut self, px: usize, py: usize) -> Ray {
         // The offset from the edge of the canvas to the pixel's center
-        let xoffset = (px as f32 + 0.5) * self.pixel_size;
-        let yoffset = (py as f32 + 0.5) * self.pixel_size;
+        let xoffset = (px as f64 + 0.5) * self.pixel_size; 
+        let yoffset = (py as f64 + 0.5) * self.pixel_size;
 
         // The untransformed coordinates of the pixel in world space.
         // (Remember that the camera looks toward -z, so +x is to the *left*)
@@ -77,7 +77,7 @@ impl Camera {
 
 #[cfg(test)]
 mod tests {
-    use std::f32::consts::PI;
+    use std::f64::consts::PI;
 
     use crate::{
         canvas::Canvas, colors::Color, matrices::Matrix, transformations::Transform, tuples::Tuple,
@@ -130,7 +130,7 @@ mod tests {
         assert_eq!(r.origin, Tuple::new_point(0.0, 2.0, -5.0));
         assert_eq!(
             r.direction,
-            Tuple::new_vector(f32::sqrt(2.0) / 2.0, 0.0, -f32::sqrt(2.0) / 2.0)
+            Tuple::new_vector(f64::sqrt(2.0) / 2.0, 0.0, -f64::sqrt(2.0) / 2.0)
         );
     }
     #[test]

@@ -9,17 +9,17 @@ use crate::{
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Intersection {
-    t: f32,
+    t: f64,
     object: Object,
 }
 impl Intersection {
-    pub fn new(time: f32, object: Object) -> Self {
+    pub fn new(time: f64, object: Object) -> Self {
         Intersection {
             t: time,
             object: object,
         }
     }
-    pub fn get_time(&self) -> f32 {
+    pub fn get_time(&self) -> f64 {
         self.t
     }
     pub fn get_object_raw(&self) -> Object {
@@ -75,7 +75,7 @@ impl Intersections {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct IntersectComp {
-    pub t: f32,
+    pub t: f64,
     pub object: Object,
     pub point: Point,
     pub eyev: Vector,

@@ -4,12 +4,12 @@ use crate::utils::is_float_equal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32,
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64,
 }
 impl Color {
-    pub fn new(r: f32, g: f32, b: f32) -> Self {
+    pub fn new(r: f64, g: f64, b: f64) -> Self {
         Color {
             red: r,
             green: g,
@@ -17,8 +17,8 @@ impl Color {
         }
     }
 
-    pub fn float_to_u8(color: &f32) -> u8 {
-        let col = 255 as f32 * *color;
+    pub fn float_to_u8(color: &f64) -> u8 {
+        let col = 255 as f64 * *color;
         col.ceil() as u8
     }
 }
@@ -92,9 +92,9 @@ impl Mul<Color> for Color {
     }
 }
 
-impl Mul<f32> for Color {
+impl Mul<f64> for Color {
     type Output = Color;
-    fn mul(self, rhs: f32) -> Self::Output {
+    fn mul(self, rhs: f64) -> Self::Output {
         Color {
             red: self.red * rhs,
             green: self.green * rhs,

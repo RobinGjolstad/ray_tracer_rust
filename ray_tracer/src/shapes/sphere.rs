@@ -53,7 +53,7 @@ impl Shapes for Sphere {
 mod tests {
     use super::*;
     use crate::{transformations::Transform, tuples::Tuple};
-    use std::f32::consts::PI;
+    use std::f64::consts::PI;
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
@@ -77,16 +77,16 @@ mod tests {
     fn the_normal_on_a_sphere_at_a_nonaxial_point() {
         let s = Sphere::new();
         let n = s.normal(Tuple::new_point(
-            f32::sqrt(3.0) / 3.0,
-            f32::sqrt(3.0) / 3.0,
-            f32::sqrt(3.0) / 3.0,
+            f64::sqrt(3.0) / 3.0,
+            f64::sqrt(3.0) / 3.0,
+            f64::sqrt(3.0) / 3.0,
         ));
         assert_eq!(
             n,
             Tuple::new_vector(
-                f32::sqrt(3.0) / 3.0,
-                f32::sqrt(3.0) / 3.0,
-                f32::sqrt(3.0) / 3.0
+                f64::sqrt(3.0) / 3.0,
+                f64::sqrt(3.0) / 3.0,
+                f64::sqrt(3.0) / 3.0
             )
         );
     }
@@ -94,9 +94,9 @@ mod tests {
     fn the_normal_is_a_normalized_vector() {
         let s = Sphere::new();
         let n = s.normal(Tuple::new_point(
-            f32::sqrt(3.0) / 3.0,
-            f32::sqrt(3.0) / 3.0,
-            f32::sqrt(3.0) / 3.0,
+            f64::sqrt(3.0) / 3.0,
+            f64::sqrt(3.0) / 3.0,
+            f64::sqrt(3.0) / 3.0,
         ));
         assert_eq!(n, n.normalize())
     }
@@ -114,8 +114,8 @@ mod tests {
         s.set_transform(&m);
         let n = s.normal(Point::new_point(
             0.0,
-            f32::sqrt(2.0) / 2.0,
-            -(f32::sqrt(2.0) / 2.0),
+            f64::sqrt(2.0) / 2.0,
+            -(f64::sqrt(2.0) / 2.0),
         ));
         assert_eq!(n, Vector::new_vector(0.0, 0.97014, -0.24254));
     }

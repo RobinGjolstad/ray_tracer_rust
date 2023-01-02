@@ -3,10 +3,10 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Tuple {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub w: f32,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub w: f64,
 }
 
 pub type Vector = Tuple;
@@ -16,7 +16,7 @@ impl Tuple {
     ////////////////////////////////////////////////////////////////////////////
     // Generic tuple things
     ////////////////////////////////////////////////////////////////////////////
-    pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
+    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
         Tuple {
             x: x,
             y: y,
@@ -24,7 +24,7 @@ impl Tuple {
             w: w,
         }
     }
-    pub fn new_tuple(input: (f32, f32, f32, f32)) -> Self {
+    pub fn new_tuple(input: (f64, f64, f64, f64)) -> Self {
         Tuple {
             x: input.0,
             y: input.1,
@@ -36,7 +36,7 @@ impl Tuple {
     ////////////////////////////////////////////////////////////////////////////
     // Point-land!
     ////////////////////////////////////////////////////////////////////////////
-    pub fn new_point(x: f32, y: f32, z: f32) -> Self {
+    pub fn new_point(x: f64, y: f64, z: f64) -> Self {
         Tuple {
             x: x,
             y: y,
@@ -48,7 +48,7 @@ impl Tuple {
     ////////////////////////////////////////////////////////////////////////////
     // Vector-land!
     ////////////////////////////////////////////////////////////////////////////
-    pub fn new_vector(x: f32, y: f32, z: f32) -> Self {
+    pub fn new_vector(x: f64, y: f64, z: f64) -> Self {
         Tuple {
             x: x,
             y: y,
@@ -56,14 +56,14 @@ impl Tuple {
             w: 0.0,
         }
     }
-    pub fn magnitude(&self) -> f32 {
+    pub fn magnitude(&self) -> f64 {
         assert_eq!(self.w, 0.0, "Magnitude is only valid for vectors!");
-        let pow_x = f64::powi(self.x as f64, 2);
-        let pow_y = f64::powi(self.y as f64, 2);
-        let pow_z = f64::powi(self.z as f64, 2);
-        let pow_w = f64::powi(self.w as f64, 2);
+        let pow_x = f64::powi(self.x, 2);
+        let pow_y = f64::powi(self.y, 2);
+        let pow_z = f64::powi(self.z, 2);
+        let pow_w = f64::powi(self.w, 2);
         let sum = pow_x + pow_y + pow_z + pow_w;
-        f64::sqrt(sum) as f32
+        f64::sqrt(sum)
     }
     pub fn normalize(&self) -> Self {
         assert_eq!(self.w, 0.0, "Normalize is only valid for vectors!");
@@ -74,7 +74,7 @@ impl Tuple {
             self.w / self.magnitude(),
         )
     }
-    pub fn dot(a: &Self, b: &Self) -> f32 {
+    pub fn dot(a: &Self, b: &Self) -> f64 {
         assert_eq!(a.w, 0.0, "Dot-product is only valid for vectors!");
         assert_eq!(b.w, 0.0, "Dot-product is only valid for vectors!");
         let x = a.x * b.x;
@@ -149,9 +149,9 @@ impl Neg for Tuple {
         }
     }
 }
-impl Mul<f32> for Tuple {
+impl Mul<f64> for Tuple {
     type Output = Self;
-    fn mul(self, rhs: f32) -> Self::Output {
+    fn mul(self, rhs: f64) -> Self::Output {
         Tuple {
             x: self.x * rhs,
             y: self.y * rhs,
@@ -160,9 +160,9 @@ impl Mul<f32> for Tuple {
         }
     }
 }
-impl Div<f32> for Tuple {
+impl Div<f64> for Tuple {
     type Output = Self;
-    fn div(self, rhs: f32) -> Self::Output {
+    fn div(self, rhs: f64) -> Self::Output {
         Tuple {
             x: self.x / rhs,
             y: self.y / rhs,
@@ -337,14 +337,14 @@ mod tests {
     fn magnitude_of_vector_1_2_3_is_sqrt14() {
         let v = Tuple::new_vector(1.0, 2.0, 3.0);
 
-        assert_eq!(v.magnitude(), f32::sqrt(14.0));
+        assert_eq!(v.magnitude(), f64::sqrt(14.0));
     }
 
     #[test]
     fn magnitude_of_vector_neg_1_2_3_is_sqrt14() {
         let v = Tuple::new_vector(-1.0, -2.0, -3.0);
 
-        assert_eq!(v.magnitude(), f32::sqrt(14.0));
+        assert_eq!(v.magnitude(), f64::sqrt(14.0));
     }
 
     #[test]
@@ -362,9 +362,9 @@ mod tests {
         let normalized_v = v.normalize();
 
         let unit_v = Tuple::new_vector(
-            1.0 / 14.0_f32.sqrt(),
-            2.0 / 14.0_f32.sqrt(),
-            3.0 / 14.0_f32.sqrt(),
+            1.0 / 14.0_f64.sqrt(),
+            2.0 / 14.0_f64.sqrt(),
+            3.0 / 14.0_f64.sqrt(),
         );
 
         assert_eq!(normalized_v, unit_v);
@@ -406,7 +406,7 @@ mod tests {
     #[test]
     fn reflecting_a_vector_off_a_slanted_surface() {
         let v = Tuple::new_vector(0.0, -1.0, 0.0);
-        let n = Tuple::new_vector(f32::sqrt(2.0) / 2.0, f32::sqrt(2.0) / 2.0, 0.0);
+        let n = Tuple::new_vector(f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0, 0.0);
         let r = Tuple::reflect(&v, &n);
         assert_eq!(r, Tuple::new_vector(1.0, 0.0, 0.0));
     }

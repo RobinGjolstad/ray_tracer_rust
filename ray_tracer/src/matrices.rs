@@ -11,14 +11,14 @@ pub enum MatrixError {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Matrix {
-    matrix: [[f32; 4]; 4],
+    matrix: [[f64; 4]; 4],
     size: usize,
-    inverse: [[f32; 4]; 4],
+    inverse: [[f64; 4]; 4],
     is_inverted: bool,
 }
 
 impl Matrix {
-    pub fn new(input: Vec<Vec<f32>>) -> Result<Matrix, MatrixError> {
+    pub fn new(input: Vec<Vec<f64>>) -> Result<Matrix, MatrixError> {
         // Ensure the input is a symmetrical matrix
         let x = input.len();
         for i in 0..x {
@@ -79,11 +79,11 @@ impl Matrix {
         }
     }
 
-    pub fn get_element(&self, x: usize, y: usize) -> f32 {
+    pub fn get_element(&self, x: usize, y: usize) -> f64 {
         self.matrix[x][y]
     }
 
-    pub fn set_element(&mut self, x: usize, y: usize, val: f32) {
+    pub fn set_element(&mut self, x: usize, y: usize, val: f64) {
         self.matrix[x][y] = val;
     }
 
@@ -91,7 +91,7 @@ impl Matrix {
         self.size
     }
 
-    pub fn get_matrix(&self) -> [[f32; 4]; 4] {
+    pub fn get_matrix(&self) -> [[f64; 4]; 4] {
         self.matrix
     }
 
@@ -99,7 +99,7 @@ impl Matrix {
         self.is_inverted
     }
 
-    pub fn get_inverse(&self) -> [[f32; 4]; 4] {
+    pub fn get_inverse(&self) -> [[f64; 4]; 4] {
         self.inverse
     }
 
@@ -132,7 +132,7 @@ impl Matrix {
         Ok(mat)
     }
 
-    pub fn determinant(&self) -> f32 {
+    pub fn determinant(&self) -> f64 {
         let mut det = 0.0;
         if self.size == 2 {
             let ad = self.matrix[0][0] * self.matrix[1][1];
@@ -172,12 +172,12 @@ impl Matrix {
         mat
     }
 
-    fn minor(&self, row: usize, column: usize) -> f32 {
+    fn minor(&self, row: usize, column: usize) -> f64 {
         let submatrix = self.submatrix(row, column);
         submatrix.determinant()
     }
 
-    fn cofactor(&self, row: usize, column: usize) -> f32 {
+    fn cofactor(&self, row: usize, column: usize) -> f64 {
         assert!(2 < self.size);
 
         let minor = self.minor(row, column);
