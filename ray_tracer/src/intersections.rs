@@ -7,7 +7,7 @@ use crate::{
     utils,
 };
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Intersection {
     t: f64,
     object: Object,
@@ -23,16 +23,14 @@ impl Intersection {
         self.t
     }
     pub fn get_object_raw(&self) -> Object {
-        self.object
+        self.object.clone()
     }
-    pub fn get_object(&self) -> Box<dyn Shapes> {
-        match self.object {
-            Object::Sphere(s) => Box::new(s),
-        }
+    pub fn get_object(&self) -> Object {
+        self.object.clone()
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct Intersections {
     pub list: Vec<Intersection>,
 }
@@ -53,27 +51,27 @@ impl Intersections {
     }
     pub fn get_element(&self, index: usize) -> Option<Intersection> {
         if index <= self.list.len() {
-            Some(self.list[index])
+            Some(self.list[index].clone())
         } else {
             None
         }
     }
     pub fn hit(&self) -> Option<Intersection> {
         let mut list = self.list.clone();
-        list.retain(|&x| x.t.is_sign_positive());
+        list.retain(|x| x.t.is_sign_positive());
         if let Some(int) = list.iter().min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap()) {
-            Some(*int)
+            Some(int.clone())
         } else {
             None
         }
     }
     pub fn put_elements(&mut self, intersection: &Vec<Intersection>) {
-        self.list.extend(intersection);
+        self.list.extend(*intersection.clone());
         self.sort();
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct IntersectComp {
     pub t: f64,
     pub object: Object,

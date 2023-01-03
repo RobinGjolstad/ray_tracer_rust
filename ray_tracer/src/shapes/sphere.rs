@@ -47,6 +47,9 @@ impl Shapes for Sphere {
 
         world_normal.normalize()
     }
+    fn get_shape_type(&self) -> super::ShapeType {
+        super::ShapeType::Sphere
+    }
 }
 
 #[cfg(test)]

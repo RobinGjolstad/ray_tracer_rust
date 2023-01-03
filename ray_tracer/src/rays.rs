@@ -1,5 +1,4 @@
 use crate::{
-    extract_object,
     intersections::{Intersection, Intersections},
     matrices::Matrix,
     shapes::{Object, Shapes},
@@ -27,7 +26,7 @@ impl Ray {
     }
 
     pub fn intersect(&self, shape: &Object) -> Vec<Intersection> {
-        let object = extract_object!(shape);
+        let object = *shape;
         let ray = self.transform(object.get_transform().get_inverted().unwrap());
         let sphere_to_ray = ray.origin - object.get_position();
         let a = Tuple::dot(&ray.direction, &ray.direction);

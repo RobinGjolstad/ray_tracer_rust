@@ -1,6 +1,5 @@
 use crate::{
     colors::Color,
-    extract_object,
     intersections::{prepare_computations, IntersectComp, Intersections},
     lights::Light,
     rays::Ray,
@@ -9,7 +8,7 @@ use crate::{
     tuples::Tuple,
 };
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct World {
     pub objects: Vec<Object>,
     pub lights: Vec<Light>,
@@ -34,7 +33,7 @@ impl World {
         s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
 
         World {
-            objects: vec![Object::Sphere(s1), Object::Sphere(s2)],
+            objects: vec![Object::new(Box::new(s1)), Object::new(Box::new(s2))],
             lights: vec![Light::point_light(
                 &Tuple::new_point(-10.0, 10.0, -10.0),
                 &Color::new(1.0, 1.0, 1.0),
@@ -43,7 +42,7 @@ impl World {
     }
     pub fn shade_hit(&self, comps: &IntersectComp) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
-        let s = extract_object!(comps.object);
+        let s = comps.object.clone();
         let mat = s.get_material();
         for lights in &self.lights {
             color = color
