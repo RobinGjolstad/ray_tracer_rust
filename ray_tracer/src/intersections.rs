@@ -30,7 +30,8 @@ impl Intersection {
     }
 }
 
-#[derive(Debug, PartialEq)]
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct Intersections {
     pub list: Vec<Intersection>,
 }
@@ -66,7 +67,7 @@ impl Intersections {
         }
     }
     pub fn put_elements(&mut self, intersection: &Vec<Intersection>) {
-        self.list.extend(*intersection.clone());
+        self.list.extend(intersection.clone());
         self.sort();
     }
 }
@@ -84,7 +85,7 @@ pub struct IntersectComp {
 pub fn prepare_computations(intersection: &Intersection, ray: &Ray) -> IntersectComp {
     let mut comps = IntersectComp {
         t: intersection.t,
-        object: intersection.object,
+        object: intersection.object.clone(),
         point: ray.position(intersection.t),
         eyev: -(ray.get_direction()),
         normalv: intersection
@@ -119,17 +120,17 @@ mod tests {
 
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
-        let s = Object::Sphere(Sphere::new());
-        let i = Intersection::new(3.5, s);
+        let s = Object::new(Box::new(Sphere::new()));
+        let i = Intersection::new(3.5, s.clone());
 
         assert!(is_float_equal(&i.t, 3.5));
-        assert_eq!(i.object, s);
+        assert_eq!(i.object, s.clone());
     }
     #[test]
     fn aggregating_intersections() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(1.0, s);
-        let i2 = Intersection::new(2.0, s);
+        let s = Object::new(Box::new(Sphere::new()));
+        let i1 = Intersection::new(1.0, s.clone());
+        let i2 = Intersection::new(2.0, s.clone());
         let xs = Intersections::new(&vec![i1, i2]);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, 1.0));
@@ -137,39 +138,39 @@ mod tests {
     }
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(1.0, s);
-        let i2 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i2, i1]);
+        let s = Object::new(Box::new(Sphere::new()));
+        let i1 = Intersection::new(1.0, s.clone());
+        let i2 = Intersection::new(2.0, s.clone());
+        let xs = Intersections::new(&vec![i2, i1.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i1));
     }
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(-1.0, s);
-        let i2 = Intersection::new(1.0, s);
-        let xs = Intersections::new(&vec![i1, i2]);
+        let s = Object::new(Box::new(Sphere::new()));
+        let i1 = Intersection::new(-1.0, s.clone());
+        let i2 = Intersection::new(1.0, s.clone());
+        let xs = Intersections::new(&vec![i1, i2.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i2));
     }
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(-2.0, s);
-        let i2 = Intersection::new(-1.0, s);
+        let s = Object::new(Box::new(Sphere::new()));
+        let i1 = Intersection::new(-2.0, s.clone());
+        let i2 = Intersection::new(-1.0, s.clone());
         let xs = Intersections::new(&vec![i2, i1]);
         let i = xs.hit();
         assert_eq!(i, None);
     }
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let s = Object::Sphere(Sphere::new());
-        let i1 = Intersection::new(5.0, s);
-        let i2 = Intersection::new(7.0, s);
-        let i3 = Intersection::new(-3.0, s);
-        let i4 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i1, i2, i3, i4]);
+        let s = Object::new(Box::new(Sphere::new()));
+        let i1 = Intersection::new(5.0, s.clone());
+        let i2 = Intersection::new(7.0, s.clone());
+        let i3 = Intersection::new(-3.0, s.clone());
+        let i4 = Intersection::new(2.0, s.clone());
+        let xs = Intersections::new(&vec![i1, i2, i3, i4.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i4));
     }
@@ -180,7 +181,7 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let shape = Sphere::new();
-        let i = Intersection::new(4.0, Object::Sphere(shape));
+        let i = Intersection::new(4.0, Object::new(Box::new(shape)));
         let comps = prepare_computations(&i, &r);
         assert!(is_float_equal(&comps.t, i.t));
         assert_eq!(comps.object, i.object);
@@ -195,7 +196,7 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let shape = Sphere::new();
-        let i = Intersection::new(4.0, Object::Sphere(shape));
+        let i = Intersection::new(4.0, Object::new(Box::new(shape)));
         let comps = prepare_computations(&i, &r);
         assert_eq!(comps.inside, false);
     }
@@ -206,7 +207,7 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let shape = Sphere::new();
-        let i = Intersection::new(1.0, Object::Sphere(shape));
+        let i = Intersection::new(1.0, Object::new(Box::new(shape)));
         let comps = prepare_computations(&i, &r);
         assert_eq!(comps.point, Tuple::new_point(0.0, 0.0, 1.0));
         assert_eq!(comps.eyev, Tuple::new_vector(0.0, 0.0, -1.0));
@@ -222,7 +223,7 @@ mod tests {
         );
         let mut shape = Sphere::new();
         shape.set_transform(&Transform::translate(0.0, 0.0, 1.0));
-        let i = Intersection::new(5.0, Object::Sphere(shape));
+        let i = Intersection::new(5.0, Object::new(Box::new(shape)));
         let comps = prepare_computations(&i, &r);
         assert!(comps.over_point.z < -utils::EPSILON / 2.0);
         assert!(comps.point.z > comps.over_point.z);

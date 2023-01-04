@@ -26,7 +26,7 @@ impl Ray {
     }
 
     pub fn intersect(&self, shape: &Object) -> Vec<Intersection> {
-        let object = *shape;
+        let object = shape.clone();
         let ray = self.transform(object.get_transform().get_inverted().unwrap());
         let sphere_to_ray = ray.origin - object.get_position();
         let a = Tuple::dot(&ray.direction, &ray.direction);
@@ -40,8 +40,8 @@ impl Ray {
             Vec::new()
         } else {
             vec![
-                Intersection::new((-b - discriminant_sqrt) / (2.0 * a), *shape),
-                Intersection::new((-b + discriminant_sqrt) / (2.0 * a), *shape),
+                Intersection::new((-b - discriminant_sqrt) / (2.0 * a), shape.clone()),
+                Intersection::new((-b + discriminant_sqrt) / (2.0 * a), shape.clone()),
             ]
         }
     }
@@ -100,7 +100,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::Sphere(Sphere::new());
+        let s = Object::new(Box::new(Sphere::new()));
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 4.0));
@@ -112,7 +112,7 @@ mod tests {
             Tuple::new_point(0.0, 1.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::Sphere(Sphere::new());
+        let s = Object::new(Box::new(Sphere::new()));
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 5.0));
@@ -124,7 +124,7 @@ mod tests {
             Tuple::new_point(0.0, 2.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::Sphere(Sphere::new());
+        let s = Object::new(Box::new(Sphere::new()));
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 0);
     }
@@ -134,7 +134,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, 0.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::Sphere(Sphere::new());
+        let s = Object::new(Box::new(Sphere::new()));
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), -1.0));
@@ -146,7 +146,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, 5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::Sphere(Sphere::new());
+        let s = Object::new(Box::new(Sphere::new()));
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), -6.0));
@@ -159,7 +159,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let s = Object::Sphere(Sphere::new());
+        let s = Object::new(Box::new(Sphere::new()));
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
         assert_eq!(xs.get_element(0).unwrap().get_object_raw(), s);
@@ -207,7 +207,7 @@ mod tests {
         );
         let mut s = Sphere::new();
         s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
-        let xs = Intersections::new(&r.intersect(&Object::Sphere(s)));
+        let xs = Intersections::new(&r.intersect(&Object::new(Box::new(s))));
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 3.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 7.0));
@@ -220,7 +220,7 @@ mod tests {
         );
         let mut s = Sphere::new();
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
-        let xs = Intersections::new(&r.intersect(&Object::Sphere(s)));
+        let xs = Intersections::new(&r.intersect(&Object::new(Box::new(s))));
         assert_eq!(xs.count(), 0);
     }
 }

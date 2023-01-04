@@ -50,6 +50,10 @@ impl Object {
     pub fn get_material(&self) -> Material {
         self.object.get_material()
     }
+
+    pub fn set_material(&mut self, mat: Material) {
+        self.object.set_material(&mat);
+    }
 }
 
 impl PartialEq for Object {

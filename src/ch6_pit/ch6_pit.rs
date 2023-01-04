@@ -51,14 +51,13 @@ fn main() {
             // Describe the "wall" location the ray will target
             let position = Tuple::new_point(world_x, world_y, wall_z);
             let r = Ray::new(ray_origin, (position - ray_origin).normalize());
-            let xs = Intersections::new(&r.intersect(&Object::Sphere(squash)));
+            let xs = Intersections::new(&r.intersect(&Object::new(Box::new(squash))));
 
             if let Some(hit) = xs.hit() {
                 //let object = match hit.get_object() {
                 //    Object::Sphere(s) => s,
                 //};
-                let hit_obj = hit.get_object();
-                let object = hit_obj.deref();
+                let object = hit.get_object();
                 let point = r.position(hit.get_time());
                 let normal = object.normal(point);
                 let eye = -r.get_direction();
@@ -72,5 +71,5 @@ fn main() {
         }
     }
 
-    img.save("ch6_pit_squash.ppm");
+    img.save("images/ch6_pit/ch6_pit_squash.ppm");
 }

@@ -131,8 +131,8 @@ mod tests {
         let w = default_world();
 
         assert!(w.lights.contains(&light));
-        assert!(w.objects.contains(&Object::Sphere(s1)));
-        assert!(w.objects.contains(&Object::Sphere(s2)));
+        assert!(w.objects.contains(&Object::new(Box::new(s1))));
+        assert!(w.objects.contains(&Object::new(Box::new(s2))));
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let shape = w.objects.first().unwrap();
-        let i = Intersection::new(4.0, *shape);
+        let i = Intersection::new(4.0, shape.clone());
         let comps = prepare_computations(&i, &r);
         let c = w.shade_hit(&comps);
         assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855));
@@ -175,7 +175,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, 0.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let shape = w.objects[1];
+        let shape = w.objects[1].clone();
         let i = Intersection::new(0.5, shape);
         let comps = prepare_computations(&i, &r);
         let c = w.shade_hit(&comps);
@@ -190,17 +190,17 @@ mod tests {
         )];
 
         let s1 = Sphere::new();
-        w.objects.push(Object::Sphere(s1));
+        w.objects.push(Object::new(Box::new(s1)));
 
         let mut s2 = Sphere::new();
         s2.set_transform(&Transform::translate(0.0, 0.0, 10.0));
-        w.objects.push(Object::Sphere(s2));
+        w.objects.push(Object::new(Box::new(s2)));
 
         let r = Ray::new(
             Tuple::new_point(0.0, 0.0, 5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let i = Intersection::new(4.0, Object::Sphere(s2));
+        let i = Intersection::new(4.0, Object::new(Box::new(s2)));
         let comps = prepare_computations(&i, &r);
         let c = w.shade_hit(&comps);
         assert_eq!(c, Color::new(0.1, 0.1, 0.1));
@@ -229,28 +229,22 @@ mod tests {
     fn the_color_with_an_intersection_behind_the_ray() {
         let w = default_world();
         let mut objects = w.objects.iter();
-        let mut outer = *objects.next().unwrap();
-        match outer {
-            Object::Sphere(s) => {
-                let mut s = s;
-                let mut mat = s.get_material();
-                mat.ambient = 1.0;
-                s.set_material(&mat);
-                outer = Object::Sphere(s).clone();
-            }
-        }
-        let mut inner = *objects.next().unwrap();
-        let mut inner_sphere = Sphere::new();
-        match inner {
-            Object::Sphere(s) => {
-                let mut s = s;
-                let mut mat = s.get_material();
-                mat.ambient = 1.0;
-                s.set_material(&mat);
-                inner_sphere = s;
-                inner = Object::Sphere(s);
-            }
-        }
+
+        // Grabs the outer sphere
+        let mut outer = objects.next().unwrap().clone();
+
+        let mut mat = outer.get_material();
+        mat.ambient = 1.0;
+        outer.set_material(mat);
+
+        // Grabs the inner sphere
+        let mut inner = objects.next().unwrap().clone();
+        let mut inner_sphere = Object::new(Box::new(Sphere::new()));
+        let mut mat = inner.get_material();
+        mat.ambient = 1.0;
+        inner.set_material(mat);
+        inner_sphere = inner.clone();
+
         let new_world = World {
             lights: default_world().lights,
             objects: vec![outer, inner],
