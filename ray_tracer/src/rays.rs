@@ -1,7 +1,7 @@
 use crate::{
     intersections::{Intersection, Intersections},
     matrices::Matrix,
-    shapes::{Object, Shapes},
+    shapes::Object,
     tuples::{Point, Tuple, Vector},
     world::World,
 };
@@ -66,7 +66,10 @@ impl Ray {
 mod tests {
     use super::*;
     use crate::{
-        matrices::Matrix, shapes::sphere::Sphere, transformations::Transform, tuples::Tuple,
+        matrices::Matrix,
+        shapes::{sphere::Sphere, Shapes},
+        transformations::Transform,
+        tuples::Tuple,
         utils::is_float_equal,
     };
 

@@ -22,6 +22,9 @@ impl Sphere {
 }
 
 impl Shapes for Sphere {
+    fn set_position(&mut self, pos: &Point) {
+        self.position = *pos;
+    }
     fn get_position(&self) -> Point {
         self.position
     }

@@ -1,6 +1,6 @@
 use crate::{
     colors::Color,
-    intersections::{prepare_computations, IntersectComp, Intersections},
+    intersections::{prepare_computations, IntersectComp},
     lights::Light,
     rays::Ray,
     shapes::{sphere::Sphere, Object, Shapes},
@@ -235,15 +235,15 @@ mod tests {
 
         let mut mat = outer.get_material();
         mat.ambient = 1.0;
-        outer.set_material(mat);
+        outer.set_material(&mat);
 
         // Grabs the inner sphere
         let mut inner = objects.next().unwrap().clone();
-        let mut inner_sphere = Object::new(Box::new(Sphere::new()));
+        let mut _inner_sphere = Object::new(Box::new(Sphere::new()));
         let mut mat = inner.get_material();
         mat.ambient = 1.0;
-        inner.set_material(mat);
-        inner_sphere = inner.clone();
+        inner.set_material(&mat);
+        _inner_sphere = inner.clone();
 
         let new_world = World {
             lights: default_world().lights,
@@ -254,7 +254,7 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, -1.0),
         );
         let c = new_world.color_at(&r);
-        assert_eq!(c, inner_sphere.get_material().color);
+        assert_eq!(c, _inner_sphere.get_material().color);
     }
 
     #[test]

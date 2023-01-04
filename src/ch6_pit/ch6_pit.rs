@@ -1,4 +1,4 @@
-use std::{f64::consts::PI, ops::Deref};
+use std::f64::consts::PI;
 
 use ray_tracer::{
     canvas::Canvas,

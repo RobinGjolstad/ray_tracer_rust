@@ -25,6 +25,9 @@ impl Shapes for TestShape {
     fn set_material(&mut self, material: &crate::materials::Material) {
         self.material = *material;
     }
+    fn set_position(&mut self, pos: &crate::tuples::Point) {
+        self.position = *pos;
+    }
     fn get_position(&self) -> crate::tuples::Point {
         self.position
     }

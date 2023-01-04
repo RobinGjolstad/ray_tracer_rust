@@ -4,13 +4,11 @@ use std::fmt::Debug;
 use crate::{
     materials::Material,
     matrices::Matrix,
-    tuples::{Point, Vector},
+    tuples::{Point, Tuple, Vector},
 };
 
 pub mod sphere;
 mod test_shape;
-
-use self::{sphere::Sphere, test_shape::TestShape};
 
 #[derive(Debug, PartialEq)]
 pub enum ShapeType {
@@ -20,6 +18,7 @@ pub enum ShapeType {
 
 #[clonable]
 pub trait Shapes: Debug + Clone {
+    fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
     fn set_transform(&mut self, trans: &Matrix);
     fn get_transform(&self) -> Matrix;
@@ -41,6 +40,9 @@ impl Object {
     pub fn normal(&self, point: Point) -> Vector {
         self.object.normal(point)
     }
+    pub fn set_transform(&mut self, trans: &Matrix) {
+        self.object.set_transform(trans);
+    }
     pub fn get_transform(&self) -> Matrix {
         self.object.get_transform()
     }
@@ -50,9 +52,14 @@ impl Object {
     pub fn get_material(&self) -> Material {
         self.object.get_material()
     }
-
-    pub fn set_material(&mut self, mat: Material) {
-        self.object.set_material(&mat);
+    pub fn set_material(&mut self, mat: &Material) {
+        self.object.set_material(mat);
+    }
+    pub fn get_shape_type(&self) -> ShapeType {
+        self.object.get_shape_type()
+    }
+    pub fn set_position(&mut self, pos: &Tuple) {
+        self.object.set_position(pos);
     }
 }
 
@@ -74,8 +81,33 @@ impl PartialEq for Object {
 
 #[cfg(test)]
 mod tests {
+
+    use crate::{
+        shapes::{sphere::Sphere, test_shape::TestShape},
+        transformations::Transform,
+    };
+
     use super::*;
 
+    #[test]
+    fn different_object_types_are_different_even_with_same_parameters() {
+        let trans =
+            Transform::scaling(1.0, 2.0, 3.0) * Transform::rotation_x(180.0_f64.to_radians());
+        let mut mat = Material::new();
+        mat.ambient = 0.7;
+        let pos = Tuple::new_point(1.0, 0.0, 1.0);
+
+        let mut sphere = Object::new(Box::new(Sphere::new()));
+        let mut testshape = Object::new(Box::new(TestShape::new()));
+        sphere.set_material(&mat);
+        testshape.set_material(&mat);
+        sphere.set_transform(&trans);
+        testshape.set_transform(&trans);
+        sphere.set_position(&pos);
+        testshape.set_position(&pos);
+
+        assert_ne!(sphere, testshape);
+    }
     #[test]
     fn the_default_transformation() {
         let s = TestShape::new();

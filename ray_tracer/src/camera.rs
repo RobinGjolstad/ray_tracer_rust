@@ -15,23 +15,23 @@ impl Camera {
     pub fn new(horizontal_size: usize, vertical_size: usize, field_of_view: f64) -> Self {
         let half_view = f64::tan(field_of_view / 2.0);
         let aspect: f64 = horizontal_size as f64 / vertical_size as f64;
-        let mut half_width = 0.0;
-        let mut half_height = 0.0;
+        let mut _half_width = 0.0;
+        let mut _half_height = 0.0;
         if aspect >= 1.0 {
-            half_width = half_view;
-            half_height = half_view / aspect;
+            _half_width = half_view;
+            _half_height = half_view / aspect;
         } else {
-            half_width = half_view * aspect;
-            half_height = half_view;
+            _half_width = half_view * aspect;
+            _half_height = half_view;
         }
         Camera {
             hsize: horizontal_size,
             vsize: vertical_size,
             field_of_view: field_of_view,
             transform: Matrix::new_identity(),
-            pixel_size: (half_width * 2.0) / horizontal_size as f64,
-            half_height: half_height,
-            half_width: half_width,
+            pixel_size: (_half_width * 2.0) / horizontal_size as f64,
+            half_height: _half_height,
+            half_width: _half_width,
         }
     }
 
@@ -41,7 +41,7 @@ impl Camera {
 
     pub fn ray_for_pixel(&mut self, px: usize, py: usize) -> Ray {
         // The offset from the edge of the canvas to the pixel's center
-        let xoffset = (px as f64 + 0.5) * self.pixel_size; 
+        let xoffset = (px as f64 + 0.5) * self.pixel_size;
         let yoffset = (py as f64 + 0.5) * self.pixel_size;
 
         // The untransformed coordinates of the pixel in world space.

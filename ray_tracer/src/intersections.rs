@@ -1,8 +1,6 @@
-use std::ops::Deref;
-
 use crate::{
     rays::Ray,
-    shapes::{Object, Shapes},
+    shapes::Object,
     tuples::{Point, Tuple, Vector},
     utils,
 };
@@ -29,7 +27,6 @@ impl Intersection {
         self.object.clone()
     }
 }
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Intersections {
@@ -110,7 +107,7 @@ pub fn prepare_computations(intersection: &Intersection, ray: &Ray) -> Intersect
 mod tests {
     use crate::{
         rays::Ray,
-        shapes::sphere::Sphere,
+        shapes::{sphere::Sphere, Shapes},
         transformations::Transform,
         tuples::Tuple,
         utils::{self, is_float_equal},
