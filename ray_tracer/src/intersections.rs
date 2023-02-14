@@ -87,12 +87,12 @@ pub fn prepare_computations(intersection: &Intersection, ray: &Ray) -> Intersect
         eyev: -(ray.get_direction()),
         normalv: intersection
             .get_object()
-            .normal(ray.position(intersection.t)),
+            .normal_at(ray.position(intersection.t)),
         inside: false,
         over_point: Tuple::new(0.0, 0.0, 0.0, 0.0),
     };
     let point = ray.position(intersection.t);
-    let normalv = intersection.get_object().normal(point);
+    let normalv = intersection.get_object().normal_at(point);
     let eyev = -(ray.get_direction());
     if Tuple::dot(&normalv, &eyev) < 0.0 {
         comps.inside = true;

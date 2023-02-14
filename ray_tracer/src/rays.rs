@@ -6,6 +6,7 @@ use crate::{
     world::World,
 };
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector,
@@ -24,26 +25,13 @@ impl Ray {
     pub fn position(&self, time: f64) -> Point {
         self.origin + self.direction * time
     }
+    fn global_to_local(&self, object: &Object) -> Ray {
+        self.transform(object.get_transform().get_inverted().unwrap())
+    }
 
-    pub fn intersect(&self, shape: &Object) -> Vec<Intersection> {
-        let object = shape.clone();
-        let ray = self.transform(object.get_transform().get_inverted().unwrap());
-        let sphere_to_ray = ray.origin - object.get_position();
-        let a = Tuple::dot(&ray.direction, &ray.direction);
-        let b = 2.0 * Tuple::dot(&ray.direction, &sphere_to_ray);
-        let c = Tuple::dot(&sphere_to_ray, &sphere_to_ray) - 1.0;
-
-        let discriminant = b.powi(2) - 4.0 * a * c;
-        let discriminant_sqrt = discriminant.sqrt();
-
-        if discriminant < 0.0 {
-            Vec::new()
-        } else {
-            vec![
-                Intersection::new((-b - discriminant_sqrt) / (2.0 * a), shape.clone()),
-                Intersection::new((-b + discriminant_sqrt) / (2.0 * a), shape.clone()),
-            ]
-        }
+    pub fn intersect(&self, object: &Object) -> Vec<Intersection> {
+        let local_ray = self.global_to_local(object);
+        object.local_intersect(local_ray)
     }
 
     pub fn intersect_world(&self, world: &World) -> Intersections {

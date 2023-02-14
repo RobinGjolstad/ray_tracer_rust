@@ -59,7 +59,7 @@ fn main() {
                 //};
                 let object = hit.get_object();
                 let point = r.position(hit.get_time());
-                let normal = object.normal(point);
+                let normal = object.normal_at(point);
                 let eye = -r.get_direction();
                 let color = object
                     .get_material()

@@ -1,7 +1,15 @@
-use crate::{materials::Material, matrices::Matrix, tuples::Tuple};
+use crate::{
+    materials::Material, matrices::Matrix, rays::Ray, shapes::test_shape::saved_ray::SAVED_RAY,
+    tuples::Tuple,
+};
 
 use super::Shapes;
 
+mod saved_ray {
+    use crate::rays::Ray;
+
+    pub static mut SAVED_RAY: Option<Ray> = None;
+}
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct TestShape {
     position: Tuple,
@@ -15,6 +23,9 @@ impl TestShape {
             transform: Matrix::new_identity(),
             material: Material::new(),
         }
+    }
+    pub(super) fn get_saved_ray() -> Option<Ray> {
+        unsafe { SAVED_RAY }
     }
 }
 
@@ -37,10 +48,19 @@ impl Shapes for TestShape {
     fn set_transform(&mut self, trans: &crate::matrices::Matrix) {
         self.transform = *trans;
     }
-    fn normal(&self, point: crate::tuples::Point) -> crate::tuples::Vector {
+    fn normal_at(&self, point: crate::tuples::Point) -> crate::tuples::Vector {
         todo!()
     }
     fn get_shape_type(&self) -> super::ShapeType {
         super::ShapeType::TestShape
+    }
+    fn local_intersect(
+        &self,
+        local_ray: crate::rays::Ray,
+    ) -> Vec<crate::intersections::Intersection> {
+        unsafe {
+            SAVED_RAY = Some(local_ray);
+        }
+        Vec::new()
     }
 }

@@ -2,8 +2,10 @@ use dyn_clonable::*;
 use std::fmt::Debug;
 
 use crate::{
+    intersections::Intersection,
     materials::Material,
     matrices::Matrix,
+    rays::Ray,
     tuples::{Point, Tuple, Vector},
 };
 
@@ -24,8 +26,9 @@ pub trait Shapes: Debug + Clone {
     fn get_transform(&self) -> Matrix;
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
-    fn normal(&self, point: Point) -> Vector;
+    fn normal_at(&self, point: Point) -> Vector;
     fn get_shape_type(&self) -> ShapeType;
+    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
 }
 
 #[derive(Debug, Clone)]
@@ -37,8 +40,8 @@ impl Object {
     pub fn new(obj: Box<dyn Shapes>) -> Object {
         Object { object: obj }
     }
-    pub fn normal(&self, point: Point) -> Vector {
-        self.object.normal(point)
+    pub fn normal_at(&self, point: Point) -> Vector {
+        self.object.normal_at(point)
     }
     pub fn set_transform(&mut self, trans: &Matrix) {
         self.object.set_transform(trans);
@@ -61,8 +64,10 @@ impl Object {
     pub fn set_position(&mut self, pos: &Tuple) {
         self.object.set_position(pos);
     }
+    pub fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+        self.object.local_intersect(local_ray)
+    }
 }
-
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
         if self.object.get_shape_type() != other.object.get_shape_type() {
@@ -108,9 +113,60 @@ mod tests {
 
         assert_ne!(sphere, testshape);
     }
+
     #[test]
     fn the_default_transformation() {
         let s = TestShape::new();
-        assert_eq!(s.get_transform(), Matrix::new_identity());
+        let s_obj = Object::new(Box::new(s));
+        assert_eq!(s_obj.get_transform(), Matrix::new_identity());
+    }
+    #[test]
+    fn assigning_a_transformation() {
+        let s = TestShape::new();
+        let mut s_obj = Object::new(Box::new(s));
+        s_obj.set_transform(&Transform::translate(2.0, 3.0, 4.0));
+        assert_eq!(s_obj.get_transform(), Transform::translate(2.0, 3.0, 4.0));
+    }
+    #[test]
+    fn the_default_material() {
+        let s = TestShape::new();
+        let s_obj = Object::new(Box::new(s));
+        let m = s_obj.get_material();
+        assert_eq!(m, Material::new());
+    }
+    #[test]
+    fn assigning_a_material() {
+        let s = TestShape::new();
+        let mut s_obj = Object::new(Box::new(s));
+        let mut m = Material::new();
+        m.ambient = 1.0;
+        s_obj.set_material(&m);
+        assert_eq!(s_obj.get_material(), m);
+    }
+    #[test]
+    fn intersecting_a_scaled_shape_with_a_ray() {
+        let r = Ray::new(
+            Tuple::new_point(0.0, 0.0, -5.0),
+            Tuple::new_vector(0.0, 0.0, 1.0),
+        );
+        let mut s = Object::new(Box::new(TestShape::new()));
+        s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
+        let _xs = r.intersect(&s);
+        let saved_ray = TestShape::get_saved_ray().unwrap();
+        assert_eq!(saved_ray.origin, Tuple::new_point(0.0, 0.0, -2.5));
+        assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 0.5));
+    }
+    #[test]
+    fn intersecting_a_translated_shape_with_a_ray() {
+        let r = Ray::new(
+            Tuple::new_point(0.0, 0.0, -5.0),
+            Tuple::new_vector(0.0, 0.0, 1.0),
+        );
+        let mut s = Object::new(Box::new(TestShape::new()));
+        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        let _xs = r.intersect(&s);
+        let saved_ray = TestShape::get_saved_ray().unwrap();
+        assert_eq!(saved_ray.origin, Tuple::new_point(-5.0, 0.0, -5.0));
+        assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 1.0));
     }
 }
