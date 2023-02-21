@@ -17,7 +17,7 @@ pub struct TestShape {
     material: Material,
 }
 impl TestShape {
-    pub(crate) fn new() -> TestShape {
+    pub(super) fn new() -> TestShape {
         TestShape {
             position: Tuple::new_point(0.0, 0.0, 0.0),
             transform: Matrix::new_identity(),
