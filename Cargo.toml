@@ -12,6 +12,10 @@ inherits = "release"
 debug = true
 
 [[bin]]
+name="ch9_pit"
+path="src/ch9_pit/ch9_pit.rs"
+
+[[bin]]
 name="ch8_pit"
 path="src/ch8_pit/ch8_pit.rs"
 

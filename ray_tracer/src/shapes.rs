@@ -11,6 +11,7 @@ use crate::{
 
 use self::sphere::Sphere;
 
+pub mod plane;
 pub mod sphere;
 mod test_shape;
 
@@ -18,6 +19,7 @@ mod test_shape;
 pub enum ShapeType {
     Sphere,
     TestShape,
+    Plane,
 }
 
 #[clonable]
