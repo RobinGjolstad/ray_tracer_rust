@@ -9,6 +9,8 @@ use crate::{
     tuples::{Point, Tuple, Vector},
 };
 
+use self::sphere::Sphere;
+
 pub mod sphere;
 mod test_shape;
 
@@ -39,6 +41,9 @@ pub struct Object {
 impl Object {
     pub fn new(obj: Box<dyn Shapes>) -> Object {
         Object { object: obj }
+    }
+    pub fn new_sphere() -> Object {
+        Object::new(Box::new(Sphere::new()))
     }
     pub fn normal_at(&self, point: Point) -> Vector {
         let local_point = self.object.get_transform().get_inverted().unwrap() * point;

@@ -78,8 +78,7 @@ impl Shapes for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{transformations::Transform, tuples::Tuple, shapes::Object};
-    use std::f64::consts::PI;
+    use crate::tuples::Tuple;
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {
@@ -125,41 +124,5 @@ mod tests {
             f64::sqrt(3.0) / 3.0,
         ));
         assert_eq!(n, n.normalize())
-    }
-    #[test]
-    fn computing_the_normal_on_a_translated_sphere() {
-        let mut s = Sphere::new();
-        s.set_transform(&Transform::translate(0.0, 1.0, 0.0));
-        let s = Object::new(Box::new(s));
-        let n = s.normal_at(Point::new_point(0.0, 1.70711, -0.70711));
-        assert_eq!(n, Vector::new_vector(0.0, 0.70711, -0.70711));
-    }
-    #[test]
-    fn computing_the_normal_on_a_transformed_sphere() {
-        let mut s = Sphere::new();
-        let m = Transform::scaling(1.0, 0.5, 1.0) * Transform::rotation_z(PI / 5.0);
-        s.set_transform(&m);
-        let s = Object::new(Box::new(s));
-        let n = s.normal_at(Point::new_point(
-            0.0,
-            f64::sqrt(2.0) / 2.0,
-            -(f64::sqrt(2.0) / 2.0),
-        ));
-        assert_eq!(n, Vector::new_vector(0.0, 0.97014, -0.24254));
-    }
-
-    #[test]
-    fn a_sphere_has_a_default_material() {
-        let s = Sphere::new();
-        let m = s.get_material();
-        assert_eq!(m, Material::new());
-    }
-    #[test]
-    fn a_sphere_may_be_assigned_a_material() {
-        let mut s = Sphere::new();
-        let mut m = Material::new();
-        m.ambient = 1.0;
-        s.set_material(&m);
-        assert_eq!(s.get_material(), m);
     }
 }

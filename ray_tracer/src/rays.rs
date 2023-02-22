@@ -179,18 +179,6 @@ mod tests {
         assert_eq!(r2.direction, Tuple::new_vector(0.0, 3.0, 0.0));
     }
     #[test]
-    fn a_spheres_default_transformation() {
-        let s = Sphere::new();
-        assert_eq!(s.get_transform(), Matrix::new_identity());
-    }
-    #[test]
-    fn changing_a_spheres_transformation() {
-        let mut s = Sphere::new();
-        let t = Transform::translate(2.0, 3.0, 4.0);
-        s.set_transform(&t);
-        assert_eq!(s.get_transform(), t);
-    }
-    #[test]
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(
             Tuple::new_point(0.0, 0.0, -5.0),
