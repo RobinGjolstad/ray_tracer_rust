@@ -26,7 +26,7 @@ pub trait Shapes: Debug + Clone {
     fn get_transform(&self) -> Matrix;
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
-    fn normal_at(&self, point: Point) -> Vector;
+    fn local_normal_at(&self, point: Point) -> Vector;
     fn get_shape_type(&self) -> ShapeType;
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
 }
@@ -41,7 +41,19 @@ impl Object {
         Object { object: obj }
     }
     pub fn normal_at(&self, point: Point) -> Vector {
-        self.object.normal_at(point)
+        let local_point = self.object.get_transform().get_inverted().unwrap() * point;
+        let local_normal = self.object.local_normal_at(local_point);
+        let mut world_normal = self
+            .object
+            .get_transform()
+            .get_inverted()
+            .unwrap()
+            .transpose()
+            .unwrap()
+            * local_normal;
+        world_normal.w = 0.0;
+
+        world_normal.normalize()
     }
     pub fn set_transform(&mut self, trans: &Matrix) {
         self.object.set_transform(trans);
@@ -86,6 +98,8 @@ impl PartialEq for Object {
 
 #[cfg(test)]
 mod tests {
+
+    use std::f64::consts::PI;
 
     use crate::{
         shapes::{sphere::Sphere, test_shape::TestShape},
@@ -168,5 +182,24 @@ mod tests {
         let saved_ray = TestShape::get_saved_ray().unwrap();
         assert_eq!(saved_ray.origin, Tuple::new_point(-5.0, 0.0, -5.0));
         assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 1.0));
+    }
+    #[test]
+    fn computing_the_normal_on_a_translated_shape() {
+        let mut s = Object::new(Box::new(TestShape::new()));
+        s.set_transform(&Transform::translate(0.0, 1.0, 0.0));
+        let n = s.normal_at(Tuple::new_point(0.0, 1.70711, -0.70711));
+        assert_eq!(n, Tuple::new_vector(0.0, 0.70711, -0.70711));
+    }
+    #[test]
+    fn computing_the_normal_on_a_transformed_shape() {
+        let mut s = Object::new(Box::new(TestShape::new()));
+        let m = Transform::scaling(1.0, 0.5, 1.0) * Transform::rotation_z(PI / 5.0);
+        s.set_transform(&m);
+        let n = s.normal_at(Tuple::new_point(
+            0.0,
+            f64::sqrt(2.0) / 2.0,
+            -f64::sqrt(2.0) / 2.0,
+        ));
+        assert_eq!(n, Tuple::new_vector(0.0, 0.97014, -0.24254));
     }
 }

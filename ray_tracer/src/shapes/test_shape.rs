@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crate::{
     materials::Material, matrices::Matrix, rays::Ray, shapes::test_shape::saved_ray::SAVED_RAY,
     tuples::Tuple,
@@ -48,8 +49,8 @@ impl Shapes for TestShape {
     fn set_transform(&mut self, trans: &crate::matrices::Matrix) {
         self.transform = *trans;
     }
-    fn normal_at(&self, point: crate::tuples::Point) -> crate::tuples::Vector {
-        todo!()
+    fn local_normal_at(&self, point: crate::tuples::Point) -> crate::tuples::Vector {
+        Tuple::new_vector(point.x, point.y, point.z)
     }
     fn get_shape_type(&self) -> super::ShapeType {
         super::ShapeType::TestShape
