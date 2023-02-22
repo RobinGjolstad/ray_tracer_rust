@@ -720,7 +720,7 @@ mod tests {
 
     #[test]
     fn multiplying_a_product_by_its_inverse() {
-        let mut a = Matrix::new(vec![
+        let a = Matrix::new(vec![
             vec![3.0, -9.0, 7.0, 3.0],
             vec![3.0, -8.0, 2.0, -9.0],
             vec![-4.0, 4.0, 4.0, 1.0],
@@ -735,13 +735,6 @@ mod tests {
         ])
         .unwrap();
         let c = a.clone() * b.clone();
-
-        let b_inv = Matrix {
-            matrix: a.inverse().unwrap().inverse,
-            size: a.size(),
-            inverse: Matrix::new_empty(a.size()).unwrap().matrix,
-            is_inverted: false,
-        };
 
         assert_eq!(c * b.get_inverted().unwrap(), a);
     }

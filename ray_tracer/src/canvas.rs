@@ -42,7 +42,7 @@ impl Canvas {
             .push_str(format!("{} {}\n", self.width, self.height).as_str());
         self.ppm.push_str("255\n");
 
-        let mut color_str_array: [String; 3] = [
+        let mut _color_str_array: [String; 3] = [
             String::with_capacity(5),
             String::with_capacity(5),
             String::with_capacity(5),
@@ -52,7 +52,7 @@ impl Canvas {
         for row in &self.pixels {
             let mut num_chars = 0;
             for column in row {
-                color_str_array = [
+                _color_str_array = [
                     format!("{} ", Color::float_to_u8(&column.red)),
                     format!("{} ", Color::float_to_u8(&column.green)),
                     format!("{} ", Color::float_to_u8(&column.blue)),
@@ -60,13 +60,13 @@ impl Canvas {
 
                 // PPM lines should stop at 70 characters
                 for i in 0..3 {
-                    if num_chars + color_str_array[i].len() >= 70 {
+                    if num_chars + _color_str_array[i].len() >= 70 {
                         self.ppm = self.ppm.trim().to_string();
                         self.ppm.push_str("\n");
                         num_chars = 0;
                     }
-                    self.ppm.push_str(color_str_array[i].as_str());
-                    num_chars += color_str_array[i].len();
+                    self.ppm.push_str(_color_str_array[i].as_str());
+                    num_chars += _color_str_array[i].len();
                 }
             }
             self.ppm = self.ppm.trim().to_string();
