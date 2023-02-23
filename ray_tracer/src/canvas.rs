@@ -61,7 +61,8 @@ impl Canvas {
                 // PPM lines should stop at 70 characters
                 for i in 0..3 {
                     if num_chars + _color_str_array[i].len() >= 70 {
-                        self.ppm = self.ppm.trim().to_string();
+                        // Replace trailing whitespace with a newline
+                        self.ppm.pop().unwrap();
                         self.ppm.push_str("\n");
                         num_chars = 0;
                     }
@@ -69,7 +70,9 @@ impl Canvas {
                     num_chars += _color_str_array[i].len();
                 }
             }
-            self.ppm = self.ppm.trim().to_string();
+
+            // Replace trailing whitespace with a newline
+            self.ppm.pop().unwrap();
             self.ppm.push_str("\n");
         }
     }
