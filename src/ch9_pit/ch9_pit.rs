@@ -5,7 +5,7 @@ use ray_tracer::{
     colors::Color,
     lights::Light,
     materials::Material,
-    shapes::{sphere::Sphere, Object, plane::Plane, Shapes},
+    shapes::{plane::Plane, sphere::Sphere, Object, Shapes},
     transformations::Transform,
     tuples::Tuple,
     world::World,
@@ -56,28 +56,28 @@ fn main() {
         &Tuple::new_point(-10.0, 10.0, -10.0),
         &Color::new(1.0, 1.0, 1.0),
     ));
-    world.objects = vec![
-        floor_obj,
-        left_obj,
-        middle_obj,
-        right_obj,
-    ];
+    world.objects = vec![floor_obj, left_obj, middle_obj, right_obj];
 
-    let mut camera = Camera::new(240, 240, PI / 3.0);
+    let mut camera = Camera::new(680, 680, PI / 3.0);
     camera.set_transform(Transform::view_transform(
         &Tuple::new_point(0.0, 1.5, -5.0),
         &Tuple::new_point(0.0, 1.0, 0.0),
         &Tuple::new_vector(0.0, 1.0, 0.0),
     ));
 
+    let mut elapsed = start.elapsed();
+    println!("Starting render: {:?}", elapsed);
+
     let mut img = camera.render(&world);
 
+    elapsed = start.elapsed();
+    println!("Saving render: {:?}", elapsed);
     img.save(&String::from(format!(
         "images/ch9_pit/ch9_pit_{}x{}.ppm",
         img.width(),
         img.height()
     )));
 
-    let elapsed = start.elapsed();
+    elapsed = start.elapsed();
     println!("Time elapsed: {:?}", elapsed);
 }
