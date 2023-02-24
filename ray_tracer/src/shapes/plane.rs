@@ -2,21 +2,20 @@ use crate::{
     intersections::Intersection,
     materials::Material,
     matrices::Matrix,
-    transformations::Transform,
     tuples::{Point, Vector},
-    utils::{is_float_equal, EPSILON},
+    utils::EPSILON,
 };
 
 use super::{Object, Shapes};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Plane {
+pub(super) struct Plane {
     position: Point,
     transform: Matrix,
     material: Material,
 }
 impl Plane {
-    pub fn new() -> Plane {
+    pub(super) fn new() -> Plane {
         Plane {
             position: Point::new_point(0.0, 0.0, 0.0),
             transform: Matrix::new_identity(),
@@ -35,14 +34,8 @@ impl Shapes for Plane {
     fn set_material(&mut self, material: &Material) {
         self.material = *material;
     }
-    fn get_material(&self) -> Material {
-        self.material
-    }
     fn set_transform(&mut self, trans: &Matrix) {
         self.transform = *trans;
-    }
-    fn get_transform(&self) -> Matrix {
-        self.transform
     }
     fn get_shape_type(&self) -> super::ShapeType {
         super::ShapeType::Plane
@@ -112,7 +105,7 @@ mod tests {
         let xs = p.local_intersect(r);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs.get(0).unwrap().get_time(), 1.0);
-        assert_eq!(xs.get(0).unwrap().get_object(), p_o);
+        assert_eq!(*xs.get(0).unwrap().get_object(), p_o);
     }
 
     #[test]
@@ -126,6 +119,6 @@ mod tests {
         let xs = p.local_intersect(r);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs.get(0).unwrap().get_time(), 1.0);
-        assert_eq!(xs.get(0).unwrap().get_object(), p_o);
+        assert_eq!(*xs.get(0).unwrap().get_object(), p_o);
     }
 }

@@ -9,7 +9,7 @@ use crate::{
     tuples::{Point, Tuple, Vector},
 };
 
-use self::sphere::Sphere;
+use self::{plane::Plane, sphere::Sphere};
 
 pub mod plane;
 pub mod sphere;
@@ -26,10 +26,8 @@ pub enum ShapeType {
 pub trait Shapes: Debug + Clone {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
-    fn set_transform(&mut self, trans: &Matrix);
-    fn get_transform(&self) -> Matrix;
     fn set_material(&mut self, material: &Material);
-    fn get_material(&self) -> Material;
+    fn set_transform(&mut self, trans: &Matrix);
     fn local_normal_at(&self, point: Point) -> Vector;
     fn get_shape_type(&self) -> ShapeType;
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
@@ -38,53 +36,81 @@ pub trait Shapes: Debug + Clone {
 #[derive(Debug, Clone)]
 pub struct Object {
     object: Box<dyn Shapes>,
+    transform: Matrix,
+    material: Material,
 }
 
 impl Object {
     pub fn new(obj: Box<dyn Shapes>) -> Object {
-        Object { object: obj }
+        Object {
+            object: obj,
+            transform: Matrix::new_identity(),
+            material: Material::new(),
+        }
     }
     pub fn new_sphere() -> Object {
         Object::new(Box::new(Sphere::new()))
     }
-    pub fn normal_at(&self, point: Point) -> Vector {
-        let local_point = self.object.get_transform().get_inverted().unwrap() * point;
-        let local_normal = self.object.local_normal_at(local_point);
-        let mut world_normal = self
-            .object
+    pub fn new_plane() -> Object {
+        Object::new(Box::new(Plane::new()))
+    }
+    fn world_point_to_local(&self, point: &Point) -> Point {
+        self.get_transform().get_inverted().unwrap() * *point
+    }
+    fn local_vector_to_world(&self, vector: &Vector) -> Vector {
+        let mut world_vector = self
             .get_transform()
             .get_inverted()
             .unwrap()
             .transpose()
             .unwrap()
-            * local_normal;
-        world_normal.w = 0.0;
+            * *vector;
+        world_vector.w = 0.0;
 
-        world_normal.normalize()
+        world_vector.normalize()
+    }
+    pub fn normal_at(&self, point: Point) -> Vector {
+        let local_point = self.world_point_to_local(&point);
+        let local_normal = self.object.local_normal_at(local_point);
+        self.local_vector_to_world(&local_normal)
     }
     pub fn set_transform(&mut self, trans: &Matrix) {
-        self.object.set_transform(trans);
+        self.transform = *trans;
+        self.transform.calculate_inverse().unwrap();
+        self.object.set_transform(&self.transform);
     }
     pub fn get_transform(&self) -> Matrix {
-        self.object.get_transform()
+        self.transform
     }
     pub fn get_position(&self) -> Point {
         self.object.get_position()
     }
     pub fn get_material(&self) -> Material {
-        self.object.get_material()
+        self.material
     }
     pub fn set_material(&mut self, mat: &Material) {
-        self.object.set_material(mat);
+        self.material = *mat;
+        self.object.set_material(&self.material);
     }
-    pub fn get_shape_type(&self) -> ShapeType {
+    // Used in comparisons between objects
+    #[allow(unused)]
+    fn get_shape_type(&self) -> ShapeType {
         self.object.get_shape_type()
     }
     pub fn set_position(&mut self, pos: &Tuple) {
         self.object.set_position(pos);
     }
     pub fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
-        self.object.local_intersect(local_ray)
+        let detected_intersections = self.object.local_intersect(local_ray);
+        let mut return_intersections: Vec<Intersection> = Vec::new();
+        for intersection in 0..detected_intersections.len() {
+            return_intersections.push(Intersection::new(
+                detected_intersections[intersection].get_time(),
+                self.clone(),
+            ));
+        }
+
+        return_intersections
     }
 }
 impl PartialEq for Object {
@@ -93,9 +119,9 @@ impl PartialEq for Object {
             return false;
         } else if self.object.get_position() != other.object.get_position() {
             return false;
-        } else if self.object.get_transform() != other.object.get_transform() {
+        } else if self.get_transform() != other.get_transform() {
             return false;
-        } else if self.object.get_material() != other.object.get_material() {
+        } else if self.get_material() != other.get_material() {
             return false;
         }
 

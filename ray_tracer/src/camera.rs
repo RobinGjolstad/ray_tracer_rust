@@ -37,6 +37,7 @@ impl Camera {
 
     pub fn set_transform(&mut self, transformation: Matrix) {
         self.transform = transformation;
+        self.transform.calculate_inverse().unwrap();
     }
 
     pub fn ray_for_pixel(&mut self, px: usize, py: usize) -> Ray {

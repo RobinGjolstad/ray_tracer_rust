@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Sphere {
+pub(super) struct Sphere {
     position: Point,
     transform: Matrix,
     material: Material,
@@ -21,6 +21,9 @@ impl Sphere {
             material: Material::new(),
         }
     }
+    pub(super) fn set_transform(&mut self, trans: &Matrix) {
+        self.transform = *trans;
+    }
 }
 
 impl Shapes for Sphere {
@@ -30,24 +33,17 @@ impl Shapes for Sphere {
     fn get_position(&self) -> Point {
         self.position
     }
-    fn get_transform(&self) -> Matrix {
-        self.transform
-    }
-    fn set_transform(&mut self, trans: &Matrix) {
-        self.transform = *trans;
-        self.transform.inverse().unwrap();
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.material = *material;
-    }
-    fn get_material(&self) -> Material {
-        self.material
-    }
     fn local_normal_at(&self, point: Point) -> Vector {
         point - Point::new_point(0.0, 0.0, 0.0)
     }
     fn get_shape_type(&self) -> super::ShapeType {
         super::ShapeType::Sphere
+    }
+    fn set_material(&mut self, material: &Material) {
+        self.material = *material;
+    }
+    fn set_transform(&mut self, trans: &Matrix) {
+        self.transform = *trans;
     }
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         let sphere_to_ray = local_ray.origin - self.get_position();

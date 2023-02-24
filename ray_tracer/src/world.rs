@@ -3,7 +3,7 @@ use crate::{
     intersections::{prepare_computations, IntersectComp},
     lights::Light,
     rays::Ray,
-    shapes::{sphere::Sphere, Object, Shapes},
+    shapes::Object,
     transformations::Transform,
     tuples::Tuple,
 };
@@ -22,18 +22,18 @@ impl World {
         }
     }
     pub fn new_default_world() -> World {
-        let mut s1 = Sphere::new();
+        let mut s1 = Object::new_sphere();
         let mut s1_mat = s1.get_material();
         s1_mat.color = Color::new(0.8, 1.0, 0.6);
         s1_mat.diffuse = 0.7;
         s1_mat.specular = 0.2;
         s1.set_material(&s1_mat);
 
-        let mut s2 = Sphere::new();
+        let mut s2 = Object::new_sphere();
         s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
 
         World {
-            objects: vec![Object::new(Box::new(s1)), Object::new(Box::new(s2))],
+            objects: vec![s1, s2],
             lights: vec![Light::point_light(
                 &Tuple::new_point(-10.0, 10.0, -10.0),
                 &Color::new(1.0, 1.0, 1.0),
@@ -118,21 +118,21 @@ mod tests {
             &Tuple::new_point(-10.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let mut s1 = Sphere::new();
+        let mut s1 = Object::new_sphere();
         let mut s1_mat = s1.get_material();
         s1_mat.color = Color::new(0.8, 1.0, 0.6);
         s1_mat.diffuse = 0.7;
         s1_mat.specular = 0.2;
         s1.set_material(&s1_mat);
 
-        let mut s2 = Sphere::new();
+        let mut s2 = Object::new_sphere();
         s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
 
         let w = default_world();
 
         assert!(w.lights.contains(&light));
-        assert!(w.objects.contains(&Object::new(Box::new(s1))));
-        assert!(w.objects.contains(&Object::new(Box::new(s2))));
+        assert!(w.objects.contains(&s1));
+        assert!(w.objects.contains(&s2));
     }
 
     #[test]
@@ -189,18 +189,18 @@ mod tests {
             &Color::new(1.0, 1.0, 1.0),
         )];
 
-        let s1 = Sphere::new();
-        w.objects.push(Object::new(Box::new(s1)));
+        let s1 = Object::new_sphere();
+        w.objects.push(s1);
 
-        let mut s2 = Sphere::new();
+        let mut s2 = Object::new_sphere();
         s2.set_transform(&Transform::translate(0.0, 0.0, 10.0));
-        w.objects.push(Object::new(Box::new(s2)));
+        w.objects.push(s2);
 
         let r = Ray::new(
             Tuple::new_point(0.0, 0.0, 5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let i = Intersection::new(4.0, Object::new(Box::new(s2)));
+        let i = Intersection::new(4.0, s2);
         let comps = prepare_computations(&i, &r);
         let c = w.shade_hit(&comps);
         assert_eq!(c, Color::new(0.1, 0.1, 0.1));

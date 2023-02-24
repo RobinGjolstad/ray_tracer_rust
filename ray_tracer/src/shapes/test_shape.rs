@@ -31,22 +31,16 @@ impl TestShape {
 }
 
 impl Shapes for TestShape {
-    fn get_material(&self) -> crate::materials::Material {
-        self.material
-    }
-    fn set_material(&mut self, material: &crate::materials::Material) {
-        self.material = *material;
-    }
     fn set_position(&mut self, pos: &crate::tuples::Point) {
         self.position = *pos;
     }
     fn get_position(&self) -> crate::tuples::Point {
         self.position
     }
-    fn get_transform(&self) -> crate::matrices::Matrix {
-        self.transform
+    fn set_material(&mut self, material: &Material) {
+        self.material = *material;
     }
-    fn set_transform(&mut self, trans: &crate::matrices::Matrix) {
+    fn set_transform(&mut self, trans: &Matrix) {
         self.transform = *trans;
     }
     fn local_normal_at(&self, point: crate::tuples::Point) -> crate::tuples::Vector {

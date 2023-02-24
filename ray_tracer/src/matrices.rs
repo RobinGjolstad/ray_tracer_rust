@@ -99,13 +99,9 @@ impl Matrix {
         self.is_inverted
     }
 
-    pub fn get_inverse(&self) -> [[f64; 4]; 4] {
-        self.inverse
-    }
-
     pub fn get_inverted(&mut self) -> Result<Matrix, MatrixError> {
-        if !self.is_inverted {
-            self.inverse()?;
+        if self.is_inverted == false {
+            self.calculate_inverse()?;
         }
         Ok(Matrix {
             matrix: self.inverse,
@@ -196,8 +192,8 @@ impl Matrix {
         }
     }
 
-    pub fn inverse(&mut self) -> Result<Self, MatrixError> {
-        if self.is_inverted {
+    pub fn calculate_inverse(&mut self) -> Result<Self, MatrixError> {
+        if self.is_inverted == true {
             Ok(*self)
         } else {
             if !self.invertible() {
@@ -642,7 +638,7 @@ mod tests {
         .unwrap();
 
         let b = Matrix {
-            matrix: a.inverse().unwrap().inverse,
+            matrix: a.calculate_inverse().unwrap().inverse,
             size: a.size(),
             inverse: Matrix::new_empty(a.size()).unwrap().matrix,
             is_inverted: false,
@@ -682,7 +678,7 @@ mod tests {
         .unwrap();
 
         let b = Matrix {
-            matrix: a.inverse().unwrap().inverse,
+            matrix: a.calculate_inverse().unwrap().inverse,
             size: a.size(),
             inverse: Matrix::new_empty(a.size()).unwrap().matrix,
             is_inverted: false,
@@ -709,7 +705,7 @@ mod tests {
         .unwrap();
 
         let b = Matrix {
-            matrix: a.inverse().unwrap().inverse,
+            matrix: a.calculate_inverse().unwrap().inverse,
             size: a.size(),
             inverse: Matrix::new_empty(a.size()).unwrap().matrix,
             is_inverted: false,
