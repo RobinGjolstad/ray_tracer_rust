@@ -95,7 +95,6 @@ mod tests {
         colors::Color,
         intersections::{prepare_computations, Intersection},
         rays::Ray,
-        shapes::sphere::Sphere,
         transformations::Transform,
         tuples::Tuple,
         utils::is_float_equal,
@@ -194,7 +193,7 @@ mod tests {
 
         let mut s2 = Object::new_sphere();
         s2.set_transform(&Transform::translate(0.0, 0.0, 10.0));
-        w.objects.push(s2);
+        w.objects.push(s2.clone());
 
         let r = Ray::new(
             Tuple::new_point(0.0, 0.0, 5.0),
@@ -239,7 +238,7 @@ mod tests {
 
         // Grabs the inner sphere
         let mut inner = objects.next().unwrap().clone();
-        let mut _inner_sphere = Object::new(Box::new(Sphere::new()));
+        let mut _inner_sphere = Object::new_sphere();
         let mut mat = inner.get_material();
         mat.ambient = 1.0;
         inner.set_material(&mat);

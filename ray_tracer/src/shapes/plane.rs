@@ -31,12 +31,6 @@ impl Shapes for Plane {
     fn get_position(&self) -> Point {
         self.position
     }
-    fn set_material(&mut self, material: &Material) {
-        self.material = *material;
-    }
-    fn set_transform(&mut self, trans: &Matrix) {
-        self.transform = *trans;
-    }
     fn get_shape_type(&self) -> super::ShapeType {
         super::ShapeType::Plane
     }

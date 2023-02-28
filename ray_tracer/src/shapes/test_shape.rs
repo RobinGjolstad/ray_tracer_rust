@@ -37,12 +37,6 @@ impl Shapes for TestShape {
     fn get_position(&self) -> crate::tuples::Point {
         self.position
     }
-    fn set_material(&mut self, material: &Material) {
-        self.material = *material;
-    }
-    fn set_transform(&mut self, trans: &Matrix) {
-        self.transform = *trans;
-    }
     fn local_normal_at(&self, point: crate::tuples::Point) -> crate::tuples::Vector {
         Tuple::new_vector(point.x, point.y, point.z)
     }

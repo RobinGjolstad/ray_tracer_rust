@@ -26,8 +26,6 @@ pub enum ShapeType {
 pub trait Shapes: Debug + Clone {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
-    fn set_material(&mut self, material: &Material);
-    fn set_transform(&mut self, trans: &Matrix);
     fn local_normal_at(&self, point: Point) -> Vector;
     fn get_shape_type(&self) -> ShapeType;
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
@@ -77,7 +75,6 @@ impl Object {
     pub fn set_transform(&mut self, trans: &Matrix) {
         self.transform = *trans;
         self.transform.calculate_inverse().unwrap();
-        self.object.set_transform(&self.transform);
     }
     pub fn get_transform(&self) -> Matrix {
         self.transform
@@ -90,7 +87,6 @@ impl Object {
     }
     pub fn set_material(&mut self, mat: &Material) {
         self.material = *mat;
-        self.object.set_material(&self.material);
     }
     // Used in comparisons between objects
     #[allow(unused)]
