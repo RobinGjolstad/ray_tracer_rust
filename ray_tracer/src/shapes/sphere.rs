@@ -21,9 +21,6 @@ impl Sphere {
             material: Material::new(),
         }
     }
-    pub(super) fn set_transform(&mut self, trans: &Matrix) {
-        self.transform = *trans;
-    }
 }
 
 impl Shapes for Sphere {

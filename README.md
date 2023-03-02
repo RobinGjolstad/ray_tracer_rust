@@ -7,19 +7,23 @@ In this project I intend to learn Rust, which I have no real knowledge of from e
 ## Progress
 
 - Chapter 1 completed
-- Chapter 2 started
+- Chapter 2 completed
+- Chapter 3 completed
+- Chapter 4 completed
+- Chapter 5 completed
+- Chapter 6 completed
+- Chapter 7 completed
+- Chapter 8 completed
+- Chapter 9 completed
+- Chapter 10 started
 
 ## Todo list
 
-- Revisit Chapter 1 to restructure the tuples, points, and vectors.  
-  These are currently uncomfortably intertwined and prevent usage of things like tuples in other modules, such as the colors introduced in chapter 2.
-  A possible fix could be to convert the `tuples` to be generic, with a three- and four-element tuple, each with defined operators which could be used for all tuple-types. Points and vectors could then use the four-element variety, and colors could use the three-elements.  
-  - This appears to be a bit more useful eventually. Should definitely be done. Will need to restructure tests and such for _all_ basic modules though.
-- Idea for other matrix construction:
-  - Always use 4x4 matrix as an array. This allows use of `Copy` trait. 
-  - Only fill with the used data.
-  - Use a `size` field to keep track of the matrix size.
-  - ? How to initialize with several sizes? 
-    - `Matrix::new_2x2()` etc?
-    - Use `Matrix::new()` with vector and "translate" into a 4x4 matrix?
-- All matrices should have their "fancy" data calculated on creation and stored privately in the struct.
+- Add support for a different image file format. An external crate should be used for this.
+- Add support for text-based world definitions. Will make it easier to have a single "main" with just different config files. Will also make it easier to share a world with someone else.
+- Implement multithreading. Should be done early to avoid major re-writes if things are implemented in a way which is incompatible with multithreading.
+
+## Ambitious expansions
+
+After the ray tracer is implemented I intend to create a GUI for easier configuration of the world and "live" rendering.
+
