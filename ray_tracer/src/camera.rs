@@ -92,21 +92,27 @@ impl Camera {
         if thread_num > 0 {
             pixels_per_thread = self.vsize / thread_num;
         }
+        let mut pixels_left = self.hsize * pixels_per_thread * thread_num;
+        let (tx, rx) = mpsc::channel();
         thread::scope(|s| {
-            let (tx, rx) = mpsc::channel();
-
             // Spawn "saving" thread first to ensure the "receiver" is running before any messages
             // are sent.
             let thread_image = Arc::clone(&image);
-            s.spawn(move || {
-                //
-                let values: (usize, usize, Color) = rx.recv().unwrap();
-                let mut internal_image = thread_image.lock().unwrap();
-                internal_image.write_pixel(values.0, values.1, values.2);
+            s.spawn(move || loop {
+                if pixels_left > 0 {
+                    let values: (usize, usize, Color) = rx.recv().unwrap();
+                    let mut internal_image = thread_image.lock().unwrap();
+                    internal_image.write_pixel(values.0, values.1, values.2);
+                    pixels_left -= 1;
+                } else {
+                    break;
+                }
             });
 
             // Spawn render threads.
             // Share rendering load between each thread.
+            //
+            // TODO: Fix calculations for pixel bounds for the image!
             for thread in 0..thread_num {
                 let tx_clone = tx.clone();
                 let start_pixels = thread * pixels_per_thread;
@@ -207,6 +213,17 @@ mod tests {
         let up = Tuple::new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
         let image: Canvas = c.render_multithreaded(&w, 1);
+        assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
+    }
+    #[test]
+    fn rendering_a_world_with_a_camera_with_two_threads() {
+        let w = World::new_default_world();
+        let mut c = Camera::new(11, 11, PI / 2.0);
+        let from = Tuple::new_point(0.0, 0.0, -5.0);
+        let to = Tuple::new_point(0.0, 0.0, 0.0);
+        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        c.set_transform(Transform::view_transform(&from, &to, &up));
+        let image: Canvas = c.render_multithreaded(&w, 2);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
     }
 }
