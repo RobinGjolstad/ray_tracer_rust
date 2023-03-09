@@ -93,7 +93,11 @@ mod tests {
     #[test]
     fn multiplying_by_the_inverse_of_a_translation_matrix() {
         let mut transform = Transform::translate(5.0, -3.0, 2.0);
-        let inv = transform.get_inverted().unwrap();
+        let inv = transform
+            .calculate_inverse()
+            .unwrap()
+            .get_inverted()
+            .unwrap();
         let p = Tuple::new_point(-3.0, 4.0, 5.0);
 
         assert_eq!(inv * p, Tuple::new_point(-8.0, 7.0, 3.0));
@@ -126,7 +130,11 @@ mod tests {
     #[test]
     fn multiplying_by_the_inverse_of_a_scaling_matrix() {
         let mut transform = Transform::scaling(2.0, 3.0, 4.0);
-        let inv = transform.get_inverted().unwrap();
+        let inv = transform
+            .calculate_inverse()
+            .unwrap()
+            .get_inverted()
+            .unwrap();
         let v = Tuple::new_vector(-4.0, 6.0, 8.0);
 
         assert_eq!(inv * v, Tuple::new_vector(-2.0, 2.0, 2.0));
@@ -157,7 +165,11 @@ mod tests {
     fn the_inverse_of_an_x_rotation_rotates_in_the_opposite_direction() {
         let p = Tuple::new_point(0.0, 1.0, 0.0);
         let mut half_quarter = Transform::rotation_x(PI / 4.0);
-        let inv = half_quarter.get_inverted().unwrap();
+        let inv = half_quarter
+            .calculate_inverse()
+            .unwrap()
+            .get_inverted()
+            .unwrap();
 
         assert_eq!(
             inv * p,

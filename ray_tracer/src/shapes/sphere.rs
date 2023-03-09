@@ -10,14 +10,12 @@ use crate::{
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub(super) struct Sphere {
     position: Point,
-    transform: Matrix,
     material: Material,
 }
 impl Sphere {
     pub fn new() -> Self {
         Sphere {
             position: Point::new_point(0.0, 0.0, 0.0),
-            transform: Matrix::new_identity(),
             material: Material::new(),
         }
     }

@@ -23,7 +23,7 @@ pub enum ShapeType {
 }
 
 #[clonable]
-pub trait Shapes: Debug + Clone {
+pub trait Shapes: Debug + Clone + Sync {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
     fn local_normal_at(&self, point: Point) -> Vector;
@@ -42,15 +42,19 @@ impl Object {
     pub fn new(obj: Box<dyn Shapes>) -> Object {
         Object {
             object: obj,
-            transform: Matrix::new_identity(),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
             material: Material::new(),
         }
     }
     pub fn new_sphere() -> Object {
-        Object::new(Box::new(Sphere::new()))
+        let mut sphere = Object::new(Box::new(Sphere::new()));
+        sphere.transform = sphere.transform.calculate_inverse().unwrap();
+        sphere
     }
     pub fn new_plane() -> Object {
-        Object::new(Box::new(Plane::new()))
+        let mut plane = Object::new(Box::new(Plane::new()));
+        plane.transform = plane.transform.calculate_inverse().unwrap();
+        plane
     }
     fn world_point_to_local(&self, point: &Point) -> Point {
         self.get_transform().get_inverted().unwrap() * *point

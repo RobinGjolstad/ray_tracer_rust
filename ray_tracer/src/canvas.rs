@@ -2,6 +2,7 @@ use std::{fs::File, io::Write};
 
 use crate::colors::Color;
 
+#[derive(Debug, Clone)]
 pub struct Canvas {
     pixels: Vec<Vec<Color>>,
     width: usize,
