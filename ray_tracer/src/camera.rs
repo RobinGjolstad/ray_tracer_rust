@@ -1,8 +1,5 @@
 use std::{
-    sync::{
-        mpsc::{self, TryRecvError},
-        Arc, Mutex,
-    },
+    sync::{mpsc, Arc, Mutex},
     thread,
 };
 
@@ -149,8 +146,9 @@ impl Camera {
 
             let thread_image = Arc::clone(&image);
             s.spawn(move || loop {
-                if thread_handles.len() > thread_handles.iter().filter(|x| x.is_finished()).count() {
-                    let values: Result<(usize, usize, Color), TryRecvError> = rx.try_recv();
+                if thread_handles.len() > thread_handles.iter().filter(|x| x.is_finished()).count()
+                {
+                    let values: Result<(usize, usize, Color), mpsc::TryRecvError> = rx.try_recv();
                     match values {
                         Ok((x, y, color)) => {
                             let mut internal_image = thread_image.lock().unwrap();

@@ -14,11 +14,11 @@ struct Args {
 
     /// Horizontal number of pixels
     #[arg(short, long, default_value_t = 480)]
-    horizontal: usize,
+    x_axis: usize,
 
     /// Vertical number of pixels
     #[arg(short, long, default_value_t = 480)]
-    vertical: usize,
+    y_axis: usize,
 }
 
 fn main() {
@@ -68,7 +68,7 @@ fn main() {
     ));
     world.objects = vec![floor, left, middle, right];
 
-    let mut camera = Camera::new(args.horizontal, args.vertical, PI / 3.0);
+    let mut camera = Camera::new(args.x_axis, args.y_axis, PI / 3.0);
     camera.set_transform(Transform::view_transform(
         &Tuple::new_point(0.0, 1.5, -5.0),
         &Tuple::new_point(0.0, 1.0, 0.0),

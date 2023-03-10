@@ -46,6 +46,13 @@ impl Object {
             material: Material::new(),
         }
     }
+    fn new_raw(obj: Box<dyn Shapes>) -> Object {
+        Object {
+            object: obj,
+            transform: Matrix::new_identity(),
+            material: Material::new(),
+        }
+    }
     pub fn new_sphere() -> Object {
         let mut sphere = Object::new(Box::new(Sphere::new()));
         sphere.transform = sphere.transform.calculate_inverse().unwrap();

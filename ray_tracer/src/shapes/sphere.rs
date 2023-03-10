@@ -48,11 +48,11 @@ impl Shapes for Sphere {
             vec![
                 Intersection::new(
                     (-b - discriminant_sqrt) / (2.0 * a),
-                    super::Object::new(Box::new(*self)),
+                    super::Object::new_raw(Box::new(*self)),
                 ),
                 Intersection::new(
                     (-b + discriminant_sqrt) / (2.0 * a),
-                    super::Object::new(Box::new(*self)),
+                    super::Object::new_raw(Box::new(*self)),
                 ),
             ]
         }
