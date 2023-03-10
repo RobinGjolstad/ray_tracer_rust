@@ -49,7 +49,7 @@ fn main() {
     ));
     world.objects = vec![floor, left, middle, right];
 
-    let mut camera = Camera::new(680, 680, PI / 3.0);
+    let mut camera = Camera::new(2048, 2048, PI / 3.0);
     camera.set_transform(Transform::view_transform(
         &Tuple::new_point(0.0, 1.5, -5.0),
         &Tuple::new_point(0.0, 1.0, 0.0),
@@ -59,6 +59,7 @@ fn main() {
     let mut elapsed = start.elapsed();
     println!("Starting render: {:?}", elapsed);
 
+    /*
     let mut img = camera.render(&world);
 
     elapsed = start.elapsed();
@@ -68,6 +69,22 @@ fn main() {
         img.width(),
         img.height()
     )));
+    */
+
+    
+    
+    let thread_number = 12;
+    let mut img = camera.render_multithreaded(&world, thread_number.clone());
+
+    elapsed = start.elapsed();
+    println!("Saving render: {:?}", elapsed);
+    img.save(&String::from(format!(
+        "images/ch9_pit/ch9_pit_{}x{}_{}-threads.ppm",
+        img.width(),
+        img.height(),
+        thread_number
+    )));
+    
 
     elapsed = start.elapsed();
     println!("Time elapsed: {:?}", elapsed);

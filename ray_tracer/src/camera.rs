@@ -1,5 +1,8 @@
 use std::{
-    sync::{mpsc, Arc, Mutex},
+    sync::{
+        mpsc::{self, TryRecvError},
+        Arc, Mutex,
+    },
     thread,
 };
 
@@ -19,9 +22,9 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(horizontal_size: usize, vertical_size: usize, field_of_view: f64) -> Self {
+    pub fn new(hsize: usize, vsize: usize, field_of_view: f64) -> Self {
         let half_view = f64::tan(field_of_view / 2.0);
-        let aspect: f64 = horizontal_size as f64 / vertical_size as f64;
+        let aspect: f64 = hsize as f64 / vsize as f64;
         let mut _half_width = 0.0;
         let mut _half_height = 0.0;
         if aspect >= 1.0 {
@@ -34,11 +37,11 @@ impl Camera {
         let mut transform = Matrix::new_identity();
         transform.calculate_inverse().unwrap();
         Camera {
-            hsize: horizontal_size,
-            vsize: vertical_size,
-            field_of_view: field_of_view,
-            transform: transform,
-            pixel_size: (_half_width * 2.0) / horizontal_size as f64,
+            hsize,
+            vsize,
+            field_of_view,
+            transform,
+            pixel_size: (_half_width * 2.0) / hsize as f64,
             half_height: _half_height,
             half_width: _half_width,
         }
@@ -85,39 +88,33 @@ impl Camera {
     }
 
     pub fn render_multithreaded(&self, w: &World, thread_num: usize) -> Canvas {
-        //let mut image = Canvas::new(self.hsize, self.vsize);
         let image = Arc::new(Mutex::new(Canvas::new(self.hsize, self.vsize)));
 
         let mut pixels_per_thread = self.vsize;
         if thread_num > 0 {
             pixels_per_thread = self.vsize / thread_num;
         }
-        let mut pixels_left = self.hsize * pixels_per_thread * thread_num;
+        dbg!(pixels_per_thread);
         let (tx, rx) = mpsc::channel();
         thread::scope(|s| {
-            // Spawn "saving" thread first to ensure the "receiver" is running before any messages
-            // are sent.
-            let thread_image = Arc::clone(&image);
-            s.spawn(move || loop {
-                if pixels_left > 0 {
-                    let values: (usize, usize, Color) = rx.recv().unwrap();
-                    let mut internal_image = thread_image.lock().unwrap();
-                    internal_image.write_pixel(values.0, values.1, values.2);
-                    pixels_left -= 1;
-                } else {
-                    break;
-                }
-            });
-
             // Spawn render threads.
             // Share rendering load between each thread.
             //
             // TODO: Fix calculations for pixel bounds for the image!
+            let mut thread_handles = Vec::new();
+            let mut pixels_not_allocated = self.vsize;
+            let mut last_allocated_pixels = 0;
+
             for thread in 0..thread_num {
                 let tx_clone = tx.clone();
                 let start_pixels = thread * pixels_per_thread;
                 let end_pixels = start_pixels + pixels_per_thread;
-                s.spawn(move || {
+                last_allocated_pixels = end_pixels;
+                pixels_not_allocated -= pixels_per_thread;
+                dbg!(thread);
+                dbg!(start_pixels);
+                dbg!(end_pixels);
+                let handle = s.spawn(move || {
                     //
                     for y in start_pixels..end_pixels {
                         for x in 0..self.hsize {
@@ -127,7 +124,46 @@ impl Camera {
                         }
                     }
                 });
+                thread_handles.push(handle);
             }
+
+            // If there are more pixels left to start a thread for, create one for that.
+            if pixels_not_allocated > 0 {
+                let start_pixels = last_allocated_pixels;
+                let end_pixels = last_allocated_pixels + pixels_not_allocated;
+                dbg!(start_pixels);
+                dbg!(end_pixels);
+                let tx_clone = tx.clone();
+                let handle = s.spawn(move || {
+                    //
+                    for y in start_pixels..end_pixels {
+                        for x in 0..self.hsize {
+                            let ray = self.ray_for_pixel(x, y);
+                            let color = w.color_at(&ray);
+                            tx_clone.send((x, y, color)).unwrap();
+                        }
+                    }
+                });
+                thread_handles.push(handle);
+            }
+
+            let thread_image = Arc::clone(&image);
+            s.spawn(move || loop {
+                if thread_handles.len() > thread_handles.iter().filter(|x| x.is_finished()).count() {
+                    let values: Result<(usize, usize, Color), TryRecvError> = rx.try_recv();
+                    match values {
+                        Ok((x, y, color)) => {
+                            let mut internal_image = thread_image.lock().unwrap();
+                            internal_image.write_pixel(x, y, color);
+                        }
+                        _ => {
+                            continue;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            });
         });
 
         let ret_img = image.lock().unwrap().clone();

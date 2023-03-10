@@ -1,7 +1,6 @@
 use crate::{
     intersections::Intersection,
     materials::Material,
-    matrices::Matrix,
     rays::Ray,
     shapes::Shapes,
     tuples::{Point, Tuple, Vector},
