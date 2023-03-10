@@ -1,13 +1,32 @@
-use std::{f64::consts::PI, time::Instant};
-
+use clap::Parser;
 use ray_tracer::{
     camera::Camera, colors::Color, lights::Light, materials::Material, shapes::Object,
     transformations::Transform, tuples::Tuple, world::World,
 };
+use std::{f64::consts::PI, time::Instant};
+
+#[derive(Debug, Clone, Copy, clap::Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Number of parallell jobs
+    #[arg(short, long, default_value_t = 1)]
+    jobs: usize,
+
+    /// Horizontal number of pixels
+    #[arg(short, long, default_value_t = 480)]
+    horizontal: usize,
+
+    /// Vertical number of pixels
+    #[arg(short, long, default_value_t = 480)]
+    vertical: usize,
+}
 
 fn main() {
     // Start measuring runtime
     let start = Instant::now();
+
+    let args = Args::parse();
+    dbg!(args);
 
     let mut floor = Object::new_plane();
     floor.set_transform(&Transform::scaling(1.0, 1.0, 1.0));
@@ -49,7 +68,7 @@ fn main() {
     ));
     world.objects = vec![floor, left, middle, right];
 
-    let mut camera = Camera::new(2048, 2048, PI / 3.0);
+    let mut camera = Camera::new(args.horizontal, args.vertical, PI / 3.0);
     camera.set_transform(Transform::view_transform(
         &Tuple::new_point(0.0, 1.5, -5.0),
         &Tuple::new_point(0.0, 1.0, 0.0),
@@ -71,9 +90,7 @@ fn main() {
     )));
     */
 
-    
-    
-    let thread_number = 12;
+    let thread_number = args.jobs;
     let mut img = camera.render_multithreaded(&world, thread_number.clone());
 
     elapsed = start.elapsed();
@@ -84,7 +101,6 @@ fn main() {
         img.height(),
         thread_number
     )));
-    
 
     elapsed = start.elapsed();
     println!("Time elapsed: {:?}", elapsed);
