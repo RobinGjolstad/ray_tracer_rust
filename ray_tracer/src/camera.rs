@@ -94,10 +94,6 @@ impl Camera {
         dbg!(pixels_per_thread);
         let (tx, rx) = mpsc::channel();
         thread::scope(|s| {
-            // Spawn render threads.
-            // Share rendering load between each thread.
-            //
-            // TODO: Fix calculations for pixel bounds for the image!
             let mut thread_handles = Vec::new();
             let mut pixels_not_allocated = self.vsize;
             let mut last_allocated_pixels = 0;
