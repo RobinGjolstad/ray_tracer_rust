@@ -1,4 +1,11 @@
-use crate::{canvas::Canvas, matrices::Matrix, rays::Ray, tuples::Tuple, world::World};
+use std::{
+    sync::{mpsc, Arc, Mutex},
+    thread,
+};
+
+use crate::{
+    canvas::Canvas, colors::Color, matrices::Matrix, rays::Ray, tuples::Tuple, world::World,
+};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Camera {
@@ -12,9 +19,9 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(horizontal_size: usize, vertical_size: usize, field_of_view: f64) -> Self {
+    pub fn new(hsize: usize, vsize: usize, field_of_view: f64) -> Self {
         let half_view = f64::tan(field_of_view / 2.0);
-        let aspect: f64 = horizontal_size as f64 / vertical_size as f64;
+        let aspect: f64 = hsize as f64 / vsize as f64;
         let mut _half_width = 0.0;
         let mut _half_height = 0.0;
         if aspect >= 1.0 {
@@ -24,12 +31,14 @@ impl Camera {
             _half_width = half_view * aspect;
             _half_height = half_view;
         }
+        let mut transform = Matrix::new_identity();
+        transform.calculate_inverse().unwrap();
         Camera {
-            hsize: horizontal_size,
-            vsize: vertical_size,
-            field_of_view: field_of_view,
-            transform: Matrix::new_identity(),
-            pixel_size: (_half_width * 2.0) / horizontal_size as f64,
+            hsize,
+            vsize,
+            field_of_view,
+            transform,
+            pixel_size: (_half_width * 2.0) / hsize as f64,
             half_height: _half_height,
             half_width: _half_width,
         }
@@ -40,7 +49,7 @@ impl Camera {
         self.transform.calculate_inverse().unwrap();
     }
 
-    pub fn ray_for_pixel(&mut self, px: usize, py: usize) -> Ray {
+    pub fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
         // The offset from the edge of the canvas to the pixel's center
         let xoffset = (px as f64 + 0.5) * self.pixel_size;
         let yoffset = (py as f64 + 0.5) * self.pixel_size;
@@ -61,7 +70,7 @@ impl Camera {
         Ray::new(origin, direction)
     }
 
-    pub fn render(&mut self, w: &World) -> Canvas {
+    pub fn render(&self, w: &World) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
 
         for y in 0..self.vsize {
@@ -73,6 +82,86 @@ impl Camera {
         }
 
         image
+    }
+
+    pub fn render_multithreaded(&self, w: &World, thread_num: usize) -> Canvas {
+        let image = Arc::new(Mutex::new(Canvas::new(self.hsize, self.vsize)));
+
+        let mut pixels_per_thread = self.vsize;
+        if thread_num > 0 {
+            pixels_per_thread = self.vsize / thread_num;
+        }
+        dbg!(pixels_per_thread);
+        let (tx, rx) = mpsc::channel();
+        thread::scope(|s| {
+            let mut thread_handles = Vec::new();
+            let mut pixels_not_allocated = self.vsize;
+            let mut last_allocated_pixels = 0;
+
+            for thread in 0..thread_num {
+                let tx_clone = tx.clone();
+                let start_pixels = thread * pixels_per_thread;
+                let end_pixels = start_pixels + pixels_per_thread;
+                last_allocated_pixels = end_pixels;
+                pixels_not_allocated -= pixels_per_thread;
+                dbg!(thread);
+                dbg!(start_pixels);
+                dbg!(end_pixels);
+                let handle = s.spawn(move || {
+                    //
+                    for y in start_pixels..end_pixels {
+                        for x in 0..self.hsize {
+                            let ray = self.ray_for_pixel(x, y);
+                            let color = w.color_at(&ray);
+                            tx_clone.send((x, y, color)).unwrap();
+                        }
+                    }
+                });
+                thread_handles.push(handle);
+            }
+
+            // If there are more pixels left to start a thread for, create one for that.
+            if pixels_not_allocated > 0 {
+                let start_pixels = last_allocated_pixels;
+                let end_pixels = last_allocated_pixels + pixels_not_allocated;
+                dbg!(start_pixels);
+                dbg!(end_pixels);
+                let tx_clone = tx.clone();
+                let handle = s.spawn(move || {
+                    //
+                    for y in start_pixels..end_pixels {
+                        for x in 0..self.hsize {
+                            let ray = self.ray_for_pixel(x, y);
+                            let color = w.color_at(&ray);
+                            tx_clone.send((x, y, color)).unwrap();
+                        }
+                    }
+                });
+                thread_handles.push(handle);
+            }
+
+            let thread_image = Arc::clone(&image);
+            s.spawn(move || loop {
+                if thread_handles.len() > thread_handles.iter().filter(|x| x.is_finished()).count()
+                {
+                    let values: Result<(usize, usize, Color), mpsc::TryRecvError> = rx.try_recv();
+                    match values {
+                        Ok((x, y, color)) => {
+                            let mut internal_image = thread_image.lock().unwrap();
+                            internal_image.write_pixel(x, y, color);
+                        }
+                        _ => {
+                            continue;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            });
+        });
+
+        let ret_img = image.lock().unwrap().clone();
+        ret_img.clone()
     }
 }
 
@@ -111,14 +200,14 @@ mod tests {
     }
     #[test]
     fn constructing_a_ray_through_the_center_of_the_canvas() {
-        let mut c = Camera::new(201, 101, PI / 2.0);
+        let c = Camera::new(201, 101, PI / 2.0);
         let r = c.ray_for_pixel(100, 50);
         assert_eq!(r.origin, Tuple::new_point(0.0, 0.0, 0.0));
         assert_eq!(r.direction, Tuple::new_vector(0.0, 0.0, -1.0));
     }
     #[test]
     fn constructing_a_ray_through_a_corner_of_the_canvas() {
-        let mut c = Camera::new(201, 101, PI / 2.0);
+        let c = Camera::new(201, 101, PI / 2.0);
         let r = c.ray_for_pixel(0, 0);
         assert_eq!(r.origin, Tuple::new_point(0.0, 0.0, 0.0));
         assert_eq!(r.direction, Tuple::new_vector(0.66519, 0.33259, -0.66851));
@@ -126,7 +215,7 @@ mod tests {
     #[test]
     fn constructing_a_ray_when_the_camera_is_transformed() {
         let mut c = Camera::new(201, 101, PI / 2.0);
-        c.transform = Transform::rotation_y(PI / 4.0) * Transform::translate(0.0, -2.0, 5.0);
+        c.set_transform(Transform::rotation_y(PI / 4.0) * Transform::translate(0.0, -2.0, 5.0));
         let r = c.ray_for_pixel(100, 50);
         assert_eq!(r.origin, Tuple::new_point(0.0, 2.0, -5.0));
         assert_eq!(
@@ -141,8 +230,30 @@ mod tests {
         let from = Tuple::new_point(0.0, 0.0, -5.0);
         let to = Tuple::new_point(0.0, 0.0, 0.0);
         let up = Tuple::new_vector(0.0, 1.0, 0.0);
-        c.transform = Transform::view_transform(&from, &to, &up);
+        c.set_transform(Transform::view_transform(&from, &to, &up));
         let image: Canvas = c.render(&w);
+        assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
+    }
+    #[test]
+    fn rendering_a_world_with_a_camera_with_one_thread() {
+        let w = World::new_default_world();
+        let mut c = Camera::new(11, 11, PI / 2.0);
+        let from = Tuple::new_point(0.0, 0.0, -5.0);
+        let to = Tuple::new_point(0.0, 0.0, 0.0);
+        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        c.set_transform(Transform::view_transform(&from, &to, &up));
+        let image: Canvas = c.render_multithreaded(&w, 1);
+        assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
+    }
+    #[test]
+    fn rendering_a_world_with_a_camera_with_two_threads() {
+        let w = World::new_default_world();
+        let mut c = Camera::new(11, 11, PI / 2.0);
+        let from = Tuple::new_point(0.0, 0.0, -5.0);
+        let to = Tuple::new_point(0.0, 0.0, 0.0);
+        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        c.set_transform(Transform::view_transform(&from, &to, &up));
+        let image: Canvas = c.render_multithreaded(&w, 2);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
     }
 }

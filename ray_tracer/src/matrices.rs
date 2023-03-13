@@ -7,6 +7,7 @@ pub enum MatrixError {
     AsymmetricMatrix,
     InvalidSize,
     NonInvertible,
+    NotInverted,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -99,16 +100,17 @@ impl Matrix {
         self.is_inverted
     }
 
-    pub fn get_inverted(&mut self) -> Result<Matrix, MatrixError> {
+    pub fn get_inverted(&self) -> Result<Matrix, MatrixError> {
         if self.is_inverted == false {
-            self.calculate_inverse()?;
+            Err(MatrixError::NotInverted)
+        } else {
+            Ok(Matrix {
+                matrix: self.inverse,
+                size: self.size,
+                inverse: [[0.0; 4]; 4],
+                is_inverted: false,
+            })
         }
-        Ok(Matrix {
-            matrix: self.inverse,
-            size: self.size,
-            inverse: [[0.0; 4]; 4],
-            is_inverted: false,
-        })
     }
 
     pub fn transpose(&self) -> Result<Matrix, MatrixError> {
@@ -192,26 +194,22 @@ impl Matrix {
         }
     }
 
-    pub fn calculate_inverse(&mut self) -> Result<Self, MatrixError> {
-        if self.is_inverted == true {
-            Ok(*self)
-        } else {
-            if !self.invertible() {
-                return Err(MatrixError::NonInvertible);
-            }
-
-            let mut m2 = Self::new_empty(self.size).unwrap();
-
-            for row in 0..self.size {
-                for column in 0..self.size {
-                    let c = self.cofactor(row, column);
-                    m2.matrix[column][row] = c / self.determinant();
-                }
-            }
-            self.inverse = m2.matrix;
-            self.is_inverted = true;
-            Ok(*self)
+    pub(crate) fn calculate_inverse(&mut self) -> Result<Self, MatrixError> {
+        if !self.invertible() {
+            return Err(MatrixError::NonInvertible);
         }
+
+        let mut m2 = Self::new_empty(self.size).unwrap();
+
+        for row in 0..self.size {
+            for column in 0..self.size {
+                let c = self.cofactor(row, column);
+                m2.matrix[column][row] = c / self.determinant();
+            }
+        }
+        self.inverse = m2.matrix;
+        self.is_inverted = true;
+        Ok(*self)
     }
 }
 
@@ -732,6 +730,9 @@ mod tests {
         .unwrap();
         let c = a.clone() * b.clone();
 
-        assert_eq!(c * b.get_inverted().unwrap(), a);
+        assert_eq!(
+            c * b.calculate_inverse().unwrap().get_inverted().unwrap(),
+            a
+        );
     }
 }

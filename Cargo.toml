@@ -51,5 +51,6 @@ path="src/cannon_ppm/cannon_ppm.rs"
 [workspace]
 
 [dependencies]
+clap = { version = "4.1.8", features = ["derive"] }
 image = "0.24.5"
 ray_tracer = {path = "ray_tracer"}

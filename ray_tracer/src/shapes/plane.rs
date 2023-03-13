@@ -47,7 +47,7 @@ impl Shapes for Plane {
         }
 
         let t = -local_ray.origin.y / local_ray.direction.y;
-        vec![Intersection::new(t, Object::new(Box::new(*self)))]
+        vec![Intersection::new(t, Object::new_raw(Box::new(*self)))]
     }
 }
 

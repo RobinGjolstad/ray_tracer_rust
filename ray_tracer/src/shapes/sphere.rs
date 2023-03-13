@@ -1,7 +1,6 @@
 use crate::{
     intersections::Intersection,
     materials::Material,
-    matrices::Matrix,
     rays::Ray,
     shapes::Shapes,
     tuples::{Point, Tuple, Vector},
@@ -10,14 +9,12 @@ use crate::{
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub(super) struct Sphere {
     position: Point,
-    transform: Matrix,
     material: Material,
 }
 impl Sphere {
     pub fn new() -> Self {
         Sphere {
             position: Point::new_point(0.0, 0.0, 0.0),
-            transform: Matrix::new_identity(),
             material: Material::new(),
         }
     }
@@ -51,11 +48,11 @@ impl Shapes for Sphere {
             vec![
                 Intersection::new(
                     (-b - discriminant_sqrt) / (2.0 * a),
-                    super::Object::new(Box::new(*self)),
+                    super::Object::new_raw(Box::new(*self)),
                 ),
                 Intersection::new(
                     (-b + discriminant_sqrt) / (2.0 * a),
-                    super::Object::new(Box::new(*self)),
+                    super::Object::new_raw(Box::new(*self)),
                 ),
             ]
         }
