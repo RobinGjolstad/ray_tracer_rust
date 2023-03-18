@@ -6,13 +6,13 @@ pub struct Pattern {
     pub(crate) color_b: Color,
 }
 impl Pattern {
-    pub(crate) fn stripe_default() -> Self {
+    pub fn stripe_default() -> Self {
         Pattern {
             color_a: Color::new(1.0, 1.0, 1.0),
             color_b: Color::new(0.0, 0.0, 0.0),
         }
     }
-    pub(crate) fn stripe(color_a: Color, color_b: Color) -> Self {
+    pub fn stripe(color_a: Color, color_b: Color) -> Self {
         Pattern { color_a, color_b }
     }
     pub(crate) fn stripe_at(&self, point: Point) -> Color {
