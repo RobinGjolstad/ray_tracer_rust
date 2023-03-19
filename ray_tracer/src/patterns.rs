@@ -37,7 +37,9 @@ impl Pattern {
     }
 
     pub fn set_transform(&mut self, transformation: Matrix) {
-        self.transform = transformation;
+        let mut transform = transformation;
+        transform.calculate_inverse().unwrap();
+        self.transform = transform;
     }
 
     fn get_transform(&self) -> Matrix {
