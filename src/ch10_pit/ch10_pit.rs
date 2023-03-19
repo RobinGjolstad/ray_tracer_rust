@@ -1,7 +1,7 @@
 use clap::Parser;
 use ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, materials::Material, shapes::Object,
-    transformations::Transform, tuples::Tuple, world::World,
+    camera::Camera, colors::Color, lights::Light, materials::Material, patterns::Pattern,
+    shapes::Object, transformations::Transform, tuples::Tuple, world::World,
 };
 use std::{f64::consts::PI, time::Instant};
 
@@ -33,6 +33,11 @@ fn main() {
     let mut material = Material::new();
     material.color = Color::new(1.0, 0.9, 0.9);
     material.specular = 0.0;
+    let mut pattern = Pattern::stripe(Color::new(0.75, 0.50, 0.0), Color::new(0.0, 0.0, 1.0));
+    pattern.set_transform(
+        Transform::rotation_y(f64::to_radians(33.0)) * Transform::scaling(0.5, 0.5, 0.5),
+    );
+    material.pattern = Some(pattern);
     floor.set_material(&material);
 
     let mut middle = Object::new_sphere();
@@ -41,6 +46,13 @@ fn main() {
     material.color = Color::new(0.1, 1.0, 0.5);
     material.diffuse = 0.7;
     material.specular = 0.3;
+    let mut pattern = Pattern::stripe_default();
+    pattern.set_transform(
+        Transform::rotation_z(f64::to_radians(66.0))
+            * Transform::rotation_x(f64::to_radians(20.0))
+            * Transform::scaling(0.10, 0.10, 0.10),
+    );
+    material.pattern = Some(pattern);
     middle.set_material(&material);
 
     let mut right = Object::new_sphere();
@@ -78,25 +90,13 @@ fn main() {
     let mut elapsed = start.elapsed();
     println!("Starting render: {:?}", elapsed);
 
-    /*
-    let mut img = camera.render(&world);
-
-    elapsed = start.elapsed();
-    println!("Saving render: {:?}", elapsed);
-    img.save(&String::from(format!(
-        "images/ch9_pit/ch9_pit_{}x{}.ppm",
-        img.width(),
-        img.height()
-    )));
-    */
-
     let thread_number = args.jobs;
     let mut img = camera.render_multithreaded(&world, thread_number.clone());
 
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
     img.save(&String::from(format!(
-        "images/ch9_pit/ch9_pit_{}x{}_{}-threads.ppm",
+        "images/ch10_pit/ch10_pit_{}x{}_{}-threads.ppm",
         img.width(),
         img.height(),
         thread_number
