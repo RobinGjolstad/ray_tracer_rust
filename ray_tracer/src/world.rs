@@ -47,6 +47,7 @@ impl World {
         for lights in &self.lights {
             color = color
                 + mat.lighting(
+                    &s,
                     &lights,
                     &comps.over_point,
                     &comps.eyev,

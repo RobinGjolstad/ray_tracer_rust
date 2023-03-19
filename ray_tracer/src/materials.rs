@@ -2,6 +2,7 @@ use crate::{
     colors::Color,
     lights::Light,
     patterns::Pattern,
+    shapes::Object,
     tuples::{Point, Tuple},
 };
 
@@ -26,8 +27,9 @@ impl Material {
         }
     }
 
-    pub fn lighting(
+    pub(crate) fn lighting(
         &self,
+        object: &Object,
         light: &Light,
         position: &Point,
         eyev: &Tuple,
@@ -40,7 +42,8 @@ impl Material {
         // combine the surface color with the light's color/intensity
         let mut effective_color = self.color * light.get_intensity();
         if let Some(pattern) = self.pattern {
-            effective_color = pattern.stripe_at(*position) * light.get_intensity();
+            effective_color =
+                Pattern::stripe_at_object(pattern, object, *position) * light.get_intensity();
         }
 
         // find the direction to the light source
@@ -120,7 +123,8 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
     #[test]
@@ -132,7 +136,8 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
     #[test]
@@ -144,7 +149,8 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.7364, 0.7364, 0.7364));
     }
     #[test]
@@ -156,7 +162,8 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.63639, 1.63639, 1.63639));
     }
     #[test]
@@ -168,7 +175,8 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, 10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 
@@ -182,7 +190,8 @@ mod tests {
             &Color::new(1.0, 1.0, 1.0),
         );
         let in_shadow = true;
-        let result = m.lighting(&light, &position, &eyev, &normalv, in_shadow);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, in_shadow);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 
@@ -202,7 +211,9 @@ mod tests {
             &Point::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
+        let obj = Object::new_sphere();
         let c1 = m.lighting(
+            &obj,
             &light,
             &Point::new_point(0.9, 0.0, 0.0),
             &eyev,
@@ -210,6 +221,7 @@ mod tests {
             false,
         );
         let c2 = m.lighting(
+            &obj,
             &light,
             &Point::new_point(1.1, 0.0, 0.0),
             &eyev,
