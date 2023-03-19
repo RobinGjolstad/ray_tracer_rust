@@ -1,10 +1,17 @@
 use crate::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
 
+pub mod stripes;
+mod test_pattern;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pattern {
     pub(crate) color_a: Color,
     pub(crate) color_b: Color,
     pub(crate) transform: Matrix,
+}
+pub(crate) trait Patterns {
+    fn set_transform(&mut self, transformation: Matrix);
+    fn get_transform(&self) -> Matrix;
 }
 impl Pattern {
     pub fn stripe_default() -> Self {
