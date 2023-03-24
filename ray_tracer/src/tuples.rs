@@ -17,12 +17,7 @@ impl Tuple {
     // Generic tuple things
     ////////////////////////////////////////////////////////////////////////////
     pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
-        Tuple {
-            x: x,
-            y: y,
-            z: z,
-            w: w,
-        }
+        Tuple { x, y, z, w }
     }
     pub fn new_tuple(input: (f64, f64, f64, f64)) -> Self {
         Tuple {
@@ -37,24 +32,14 @@ impl Tuple {
     // Point-land!
     ////////////////////////////////////////////////////////////////////////////
     pub fn new_point(x: f64, y: f64, z: f64) -> Self {
-        Tuple {
-            x: x,
-            y: y,
-            z: z,
-            w: 1.0,
-        }
+        Tuple { x, y, z, w: 1.0 }
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector-land!
     ////////////////////////////////////////////////////////////////////////////
     pub fn new_vector(x: f64, y: f64, z: f64) -> Self {
-        Tuple {
-            x: x,
-            y: y,
-            z: z,
-            w: 0.0,
-        }
+        Tuple { x, y, z, w: 0.0 }
     }
     pub fn magnitude(&self) -> f64 {
         assert_eq!(self.w, 0.0, "Magnitude is only valid for vectors!");
@@ -82,7 +67,7 @@ impl Tuple {
         let z = a.z * b.z;
         let w = a.w * b.w;
 
-        return x + y + z + w;
+        x + y + z + w
     }
     pub fn cross(a: &Self, b: &Self) -> Self {
         assert_eq!(a.w, 0.0, "Cross-product is only valid for vectors!");
@@ -98,19 +83,11 @@ impl Tuple {
     }
 
     pub fn is_point(&self) -> bool {
-        if is_float_equal(&self.w, 1.0) {
-            true
-        } else {
-            false
-        }
+        is_float_equal(&self.w, 1.0)
     }
 
     pub fn is_vector(&self) -> bool {
-        if is_float_equal(&self.w, 0.0) {
-            true
-        } else {
-            false
-        }
+        is_float_equal(&self.w, 0.0)
     }
 }
 
@@ -174,20 +151,13 @@ impl Div<f64> for Tuple {
 
 impl PartialEq for Tuple {
     fn eq(&self, other: &Self) -> bool {
-        if is_float_equal(&self.x, other.x)
+        is_float_equal(&self.x, other.x)
             && is_float_equal(&self.y, other.y)
             && is_float_equal(&self.z, other.z)
             && is_float_equal(&self.w, other.w)
-        {
-            true
-        } else {
-            false
-        }
-    }
-    fn ne(&self, other: &Self) -> bool {
-        !self.eq(other)
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
