@@ -128,7 +128,6 @@ impl Camera {
                 dbg!(end_pixels);
                 let tx_clone = tx.clone();
                 let handle = s.spawn(move || {
-                    //
                     for y in start_pixels..end_pixels {
                         for x in 0..self.hsize {
                             let ray = self.ray_for_pixel(x, y);
@@ -161,7 +160,7 @@ impl Camera {
         });
 
         let ret_img = image.lock().unwrap().clone();
-        ret_img.clone()
+        ret_img
     }
 }
 

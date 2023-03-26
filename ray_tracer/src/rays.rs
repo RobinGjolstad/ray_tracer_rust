@@ -14,10 +14,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: Point, direction: Vector) -> Self {
-        Ray {
-            origin: origin,
-            direction: direction,
-        }
+        Ray { origin, direction }
     }
     pub fn get_direction(&self) -> Vector {
         self.direction

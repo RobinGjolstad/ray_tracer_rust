@@ -12,10 +12,7 @@ pub struct Intersection {
 }
 impl Intersection {
     pub fn new(time: f64, object: Object) -> Self {
-        Intersection {
-            t: time,
-            object: object,
-        }
+        Intersection { t: time, object }
     }
     pub fn get_time(&self) -> f64 {
         self.t
@@ -33,7 +30,7 @@ pub struct Intersections {
     pub list: Vec<Intersection>,
 }
 impl Intersections {
-    pub fn new(intersect_list: &Vec<Intersection>) -> Self {
+    pub fn new(intersect_list: &[Intersection]) -> Self {
         let mut i = Intersections {
             list: intersect_list.to_vec(),
         };
@@ -57,14 +54,12 @@ impl Intersections {
     pub fn hit(&self) -> Option<Intersection> {
         let mut list = self.list.clone();
         list.retain(|x| x.t.is_sign_positive());
-        if let Some(int) = list.iter().min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap()) {
-            Some(int.clone())
-        } else {
-            None
-        }
+        list.iter()
+            .min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap())
+            .cloned()
     }
-    pub fn put_elements(&mut self, intersection: &Vec<Intersection>) {
-        self.list.extend(intersection.clone());
+    pub fn put_elements(&mut self, intersection: &[Intersection]) {
+        self.list.extend(intersection.to_owned());
         self.sort();
     }
 }

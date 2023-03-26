@@ -18,45 +18,30 @@ impl Color {
     }
 
     pub fn float_to_u8(color: &f64) -> u8 {
-        let col = 255 as f64 * *color;
+        let col = 255_f64 * *color;
         col.ceil() as u8
     }
 }
 
 impl PartialEq<Color> for Color {
     fn eq(&self, other: &Color) -> bool {
-        if is_float_equal(&self.red, other.red)
+        is_float_equal(&self.red, other.red)
             && is_float_equal(&self.green, other.green)
             && is_float_equal(&self.blue, other.blue)
-        {
-            true
-        } else {
-            false
-        }
     }
 }
 impl PartialEq<Color> for &Color {
     fn eq(&self, other: &Color) -> bool {
-        if is_float_equal(&self.red, other.red)
+        is_float_equal(&self.red, other.red)
             && is_float_equal(&self.green, other.green)
             && is_float_equal(&self.blue, other.blue)
-        {
-            true
-        } else {
-            false
-        }
     }
 }
 impl PartialEq<&Color> for Color {
     fn eq(&self, other: &&Color) -> bool {
-        if is_float_equal(&self.red, other.red)
+        is_float_equal(&self.red, other.red)
             && is_float_equal(&self.green, other.green)
             && is_float_equal(&self.blue, other.blue)
-        {
-            true
-        } else {
-            false
-        }
     }
 }
 impl Add<Color> for Color {

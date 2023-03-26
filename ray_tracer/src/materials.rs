@@ -25,7 +25,7 @@ impl Material {
         position: &Tuple,
         eyev: &Tuple,
         normalv: &Tuple,
-        in_shadow: bool
+        in_shadow: bool,
     ) -> Color {
         // Variables to combine and return
         let mut diffuse = Color::new(0.0, 0.0, 0.0);
@@ -43,7 +43,7 @@ impl Material {
         // light_dot_normal represents the cosine of the angle between the
         // light vector and the normal vector. A negative number means the
         // light is on the other side of the surface.
-        let light_dot_normal = Tuple::dot(&lightv, &normalv);
+        let light_dot_normal = Tuple::dot(&lightv, normalv);
         if light_dot_normal < 0.0 {
             // diffuse and specular shall be black.
             // They are already initialized to black so we do nothing
@@ -66,13 +66,19 @@ impl Material {
             }
         }
 
-        if false == in_shadow {
+        if !in_shadow {
             // add the three contributions together to get the final shading
             ambient + diffuse + specular
         } else {
             // Only ambient lighting applies if the zone is in shadow
             ambient
         }
+    }
+}
+
+impl Default for Material {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -3,9 +3,5 @@ pub const EPSILON: f64 = 0.00005;
 
 /// Compares two f64 and asserts whether they are "equal" or not.
 pub fn is_float_equal(actual: &f64, comparison: f64) -> bool {
-    if (actual - comparison).abs() < EPSILON {
-        true
-    } else {
-        false
-    }
+     (actual - comparison).abs() < EPSILON 
 }
