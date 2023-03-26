@@ -81,10 +81,10 @@ impl Material {
 
         if !in_shadow {
             // add the three contributions together to get the final shading
-            return ambient + diffuse + specular;
+            ambient + diffuse + specular
         } else {
             // Only ambient lighting applies if the zone is in shadow
-            return ambient;
+            ambient
         }
     }
 }

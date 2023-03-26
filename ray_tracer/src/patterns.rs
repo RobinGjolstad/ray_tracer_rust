@@ -3,15 +3,16 @@ use crate::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
 pub mod stripes;
 mod test_pattern;
 
+pub(crate) trait Patterns {
+    fn set_transform(&mut self, transformation: Matrix);
+    fn get_transform(&self) -> Matrix;
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pattern {
     pub(crate) color_a: Color,
     pub(crate) color_b: Color,
     pub(crate) transform: Matrix,
-}
-pub(crate) trait Patterns {
-    fn set_transform(&mut self, transformation: Matrix);
-    fn get_transform(&self) -> Matrix;
 }
 impl Pattern {
     pub fn stripe_default() -> Self {
@@ -30,9 +31,9 @@ impl Pattern {
     }
     pub(crate) fn stripe_at(&self, point: Point) -> Color {
         if point.x.floor() as isize % 2 == 0 {
-            return self.color_a;
+            self.color_a
         } else {
-            return self.color_b;
+            self.color_b
         }
     }
 
@@ -40,7 +41,7 @@ impl Pattern {
         let object_point = object.get_transform().get_inverted().unwrap() * world_point;
         let pattern_point = pattern.get_transform().get_inverted().unwrap() * object_point;
 
-        return pattern.stripe_at(pattern_point);
+        pattern.stripe_at(pattern_point)
     }
 
     pub fn set_transform(&mut self, transformation: Matrix) {
@@ -50,7 +51,7 @@ impl Pattern {
     }
 
     fn get_transform(&self) -> Matrix {
-        return self.transform;
+        self.transform
     }
 }
 
@@ -114,7 +115,7 @@ mod tests {
     }
     #[test]
     fn stripes_with_a_pattern_transformation() {
-        let mut object = Object::new_sphere();
+        let object = Object::new_sphere();
         let mut pattern = Pattern::stripe(WHITE, BLACK);
         pattern.set_transform(
             Transform::scaling(2.0, 2.0, 2.0)
