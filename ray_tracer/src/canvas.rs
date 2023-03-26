@@ -19,8 +19,8 @@ impl Canvas {
         let strlen = (width * height * 3 * 5) + 128;
         Canvas {
             pixels: vec![vec![Color::new(0.0, 0.0, 0.0); width]; height],
-            width: width,
-            height: height,
+            width,
+            height,
             ppm: String::with_capacity(strlen),
         }
     }
@@ -60,21 +60,21 @@ impl Canvas {
                 ];
 
                 // PPM lines should stop at 70 characters
-                for i in 0..3 {
-                    if num_chars + _color_str_array[i].len() >= 70 {
+                for color_pixel in &_color_str_array {
+                    if num_chars + color_pixel.len() >= 70 {
                         // Replace trailing whitespace with a newline
                         self.ppm.pop().unwrap();
-                        self.ppm.push_str("\n");
+                        self.ppm.push('\n');
                         num_chars = 0;
                     }
-                    self.ppm.push_str(_color_str_array[i].as_str());
-                    num_chars += _color_str_array[i].len();
+                    self.ppm.push_str(color_pixel.as_str());
+                    num_chars += color_pixel.len();
                 }
             }
 
             // Replace trailing whitespace with a newline
             self.ppm.pop().unwrap();
-            self.ppm.push_str("\n");
+            self.ppm.push('\n');
         }
     }
 
@@ -98,7 +98,7 @@ impl Canvas {
         // Save to a file
         self.canvas_to_ppm();
         let mut file = File::create(file).unwrap();
-        file.write(self.ppm.as_bytes()).unwrap();
+        file.write_all(self.ppm.as_bytes()).unwrap();
     }
 }
 

@@ -110,11 +110,8 @@ impl Object {
     pub fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         let detected_intersections = self.object.local_intersect(local_ray);
         let mut return_intersections: Vec<Intersection> = Vec::new();
-        for intersection in 0..detected_intersections.len() {
-            return_intersections.push(Intersection::new(
-                detected_intersections[intersection].get_time(),
-                self.clone(),
-            ));
+        for intersection in &detected_intersections {
+            return_intersections.push(Intersection::new(intersection.get_time(), self.clone()));
         }
 
         return_intersections
@@ -122,17 +119,10 @@ impl Object {
 }
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
-        if self.object.get_shape_type() != other.object.get_shape_type() {
-            return false;
-        } else if self.object.get_position() != other.object.get_position() {
-            return false;
-        } else if self.get_transform() != other.get_transform() {
-            return false;
-        } else if self.get_material() != other.get_material() {
-            return false;
-        }
-
-        true
+        !(self.object.get_shape_type() != other.object.get_shape_type()
+            || self.object.get_position() != other.object.get_position()
+            || self.get_transform() != other.get_transform()
+            || self.get_material() != other.get_material())
     }
 }
 

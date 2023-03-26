@@ -48,7 +48,7 @@ impl World {
             color = color
                 + mat.lighting(
                     &s,
-                    &lights,
+                    lights,
                     &comps.over_point,
                     &comps.eyev,
                     &comps.normalv,
@@ -59,15 +59,14 @@ impl World {
     }
 
     pub fn color_at(&self, r: &crate::rays::Ray) -> Color {
-        let int = r.intersect_world(&self);
-        let color = match int.hit() {
+        let int = r.intersect_world(self);
+        match int.hit() {
             None => Color::new(0.0, 0.0, 0.0),
             Some(int) => {
                 let comp = prepare_computations(&int, r);
                 self.shade_hit(&comp)
             }
-        };
-        color
+        }
     }
 
     pub fn is_shadowed(&self, point: &Tuple) -> bool {
@@ -85,6 +84,12 @@ impl World {
             }
         }
         false
+    }
+}
+
+impl Default for World {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

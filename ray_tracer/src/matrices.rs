@@ -41,10 +41,8 @@ impl Matrix {
         };
         let mut row_idx = 0;
         for row in input {
-            let mut col_idx = 0;
-            for column in row {
-                m.matrix[row_idx][col_idx] = column.try_into().unwrap();
-                col_idx += 1;
+            for (col_idx, column) in row.into_iter().enumerate() {
+                m.matrix[row_idx][col_idx] = column;
             }
             row_idx += 1;
         }
@@ -57,7 +55,7 @@ impl Matrix {
         if size > 1 && size < 5 {
             Ok(Matrix {
                 matrix: [[0.0; 4]; 4],
-                size: size,
+                size,
                 inverse: [[0.0; 4]; 4],
                 is_inverted: false,
             })
@@ -101,7 +99,7 @@ impl Matrix {
     }
 
     pub fn get_inverted(&self) -> Result<Matrix, MatrixError> {
-        if self.is_inverted == false {
+        if !self.is_inverted {
             Err(MatrixError::NotInverted)
         } else {
             Ok(Matrix {
@@ -138,7 +136,7 @@ impl Matrix {
             det = ad - bc;
         } else {
             for column in 0..self.size() {
-                det = det + self.matrix[0][column] * self.cofactor(0, column);
+                det += self.matrix[0][column] * self.cofactor(0, column);
             }
         }
 
@@ -187,11 +185,7 @@ impl Matrix {
     }
 
     fn invertible(&self) -> bool {
-        if is_float_equal(&self.determinant(), 0.0) {
-            false
-        } else {
-            true
-        }
+        !is_float_equal(&self.determinant(), 0.0)
     }
 
     pub(crate) fn calculate_inverse(&mut self) -> Result<Self, MatrixError> {
@@ -264,8 +258,8 @@ impl Mul<Tuple> for Matrix {
         let size = self.size();
         assert_eq!(4, size);
         let mut tup = vec![0.0; 4];
-        for row in 0..size {
-            tup[row] = self.matrix[row][0] * rhs.x
+        for (row, item) in tup.iter_mut().enumerate().take(size) {
+            *item = self.matrix[row][0] * rhs.x
                 + self.matrix[row][1] * rhs.y
                 + self.matrix[row][2] * rhs.z
                 + self.matrix[row][3] * rhs.w;
