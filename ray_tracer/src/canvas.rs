@@ -143,8 +143,8 @@ mod tests {
         c.canvas_to_ppm();
         let comp_string = "P3\n5 3\n255\n".to_string();
 
-        let mut ppm_iter = c.ppm.split("\n");
-        let mut comp_iter = comp_string.split("\n");
+        let mut ppm_iter = c.ppm.split('\n');
+        let mut comp_iter = comp_string.split('\n');
 
         // Test each line separately
         assert_eq!(ppm_iter.next().unwrap(), comp_iter.next().unwrap());
@@ -167,9 +167,9 @@ mod tests {
         let mut comp_string = "255 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n".to_string();
         comp_string.push_str("0 0 0 0 0 0 0 128 0 0 0 0 0 0 0\n");
         comp_string.push_str("0 0 0 0 0 0 0 0 0 0 0 0 0 0 255\n");
-        let mut comp_string_iter = comp_string.split("\n");
+        let mut comp_string_iter = comp_string.split('\n');
 
-        let ppm_iter = c.ppm.split("\n");
+        let ppm_iter = c.ppm.split('\n');
         let mut ppm_start_comp = ppm_iter.skip(3);
 
         for _ in 0..3 {
@@ -193,9 +193,9 @@ mod tests {
         comp_string
             .push_str("255 204 153 255 204 153 255 204 153 255 204 153 255 204 153 255 204\n");
         comp_string.push_str("153 255 204 153 255 204 153 255 204 153 255 204 153\n");
-        let mut comp_string_iter = comp_string.split("\n");
+        let mut comp_string_iter = comp_string.split('\n');
 
-        let ppm_iter = c.ppm.split("\n");
+        let ppm_iter = c.ppm.split('\n');
         let mut ppm_start_comp = ppm_iter.skip(3);
 
         for _ in 0..3 {
@@ -208,6 +208,6 @@ mod tests {
         let mut c = Canvas::new(5, 3);
         c.canvas_to_ppm();
 
-        assert!(c.ppm.as_str().ends_with("\n"));
+        assert!(c.ppm.as_str().ends_with('\n'));
     }
 }

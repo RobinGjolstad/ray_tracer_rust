@@ -15,42 +15,6 @@ debug = true
 name = "ch10_pit"
 path = "src/ch10_pit/ch10_pit.rs"
 
-[[bin]]
-name = "ch9_pit"
-path = "src/ch9_pit/ch9_pit.rs"
-
-[[bin]]
-name = "ch8_pit"
-path = "src/ch8_pit/ch8_pit.rs"
-
-[[bin]]
-name = "ch7_pit"
-path = "src/ch7_pit/ch7_pit.rs"
-
-[[bin]]
-name = "ch6_pit"
-path = "src/ch6_pit/ch6_pit.rs"
-
-[[bin]]
-name = "ch5_pit"
-path = "src/ch5_pit/ch5_pit.rs"
-
-[[bin]]
-name = "ch4_pit"
-path = "src/ch4_pit/ch4_pit.rs"
-
-[[bin]]
-name = "ch3_pit"
-path = "src/ch3_pit/ch3_pit.rs"
-
-[[bin]]
-name = "cannon"
-path = "src/cannon/cannon.rs"
-
-[[bin]]
-name = "cannon_ppm"
-path = "src/cannon_ppm/cannon_ppm.rs"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
 

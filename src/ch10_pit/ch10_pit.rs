@@ -91,16 +91,16 @@ fn main() {
     println!("Starting render: {:?}", elapsed);
 
     let thread_number = args.jobs;
-    let mut img = camera.render_multithreaded(&world, thread_number.clone());
+    let mut img = camera.render_multithreaded(&world, thread_number);
 
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
-    img.save(&String::from(format!(
+    img.save(&format!(
         "images/ch10_pit/ch10_pit_{}x{}_{}-threads.ppm",
         img.width(),
         img.height(),
         thread_number
-    )));
+    ));
 
     elapsed = start.elapsed();
     println!("Time elapsed: {:?}", elapsed);

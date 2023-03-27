@@ -171,8 +171,8 @@ mod tests {
         assert!(is_float_equal(&a.1, -4.2));
         assert!(is_float_equal(&a.2, 3.1));
         assert!(is_float_equal(&a.3, 1.0));
-        assert_eq!(tup.is_point(), true);
-        assert_ne!(tup.is_vector(), true);
+        assert!(tup.is_point());
+        assert!(!tup.is_vector());
     }
 
     #[test]
@@ -184,8 +184,8 @@ mod tests {
         assert!(is_float_equal(&a.1, -4.2));
         assert!(is_float_equal(&a.2, 3.1));
         assert!(is_float_equal(&a.3, 0.0));
-        assert_ne!(tup.is_point(), true);
-        assert_eq!(tup.is_vector(), true);
+        assert!(!tup.is_point());
+        assert!(tup.is_vector());
     }
 
     #[test]
