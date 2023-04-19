@@ -8,9 +8,10 @@ use std::io::ErrorKind;
 
 use crate::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
 
-use self::stripes::Stripes;
+use self::{checker::Checker, gradient::Gradient, rings::Ring, stripes::Stripes};
 
 pub mod checker;
+pub mod gradient;
 pub mod rings;
 pub mod stripes;
 
@@ -20,6 +21,7 @@ mod test_pattern;
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum PatternType {
     Stripes(Stripes),
+    Gradient(Gradient),
     Ring(Ring),
     Checker(Checker),
 
@@ -50,6 +52,19 @@ impl Pattern {
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    pub fn gradient(color_a: Color, color_b: Color) -> Self {
+        Pattern {
+            pattern: PatternType::Gradient(Gradient::new(color_a, color_b)),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+        }
+    }
+    pub fn gradient_default() -> Self {
+        Pattern {
+            pattern: PatternType::Gradient(Gradient::default()),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+        }
+    }
+
     pub fn ring(color_a: Color, color_b: Color) -> Self {
         Pattern {
             pattern: PatternType::Ring(Ring::new(color_a, color_b)),
@@ -79,6 +94,7 @@ impl Pattern {
     fn pattern_at(&self, point: Point) -> Color {
         match self.pattern {
             PatternType::Stripes(s) => s.color_at(point),
+            PatternType::Gradient(g) => g.color_at(point),
             PatternType::Ring(r) => r.color_at(point),
             PatternType::Checker(c) => c.color_at(point),
 
