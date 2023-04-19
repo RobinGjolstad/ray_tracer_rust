@@ -10,6 +10,7 @@ use crate::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
 
 use self::stripes::Stripes;
 
+pub mod rings;
 pub mod stripes;
 
 #[cfg(test)]
@@ -18,6 +19,7 @@ mod test_pattern;
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum PatternType {
     Stripes(Stripes),
+    Ring(Ring),
 
     #[cfg(test)]
     TestPattern(TestPattern),
@@ -46,9 +48,23 @@ impl Pattern {
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    pub fn ring(color_a: Color, color_b: Color) -> Self {
+        Pattern {
+            pattern: PatternType::Ring(Ring::new(color_a, color_b)),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+        }
+    }
+    pub fn ring_default() -> Self {
+        Pattern {
+            pattern: PatternType::Ring(Ring::default()),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+        }
+    }
+
     fn pattern_at(&self, point: Point) -> Color {
         match self.pattern {
             PatternType::Stripes(s) => s.color_at(point),
+            PatternType::Ring(r) => r.color_at(point),
 
             #[cfg(test)]
             PatternType::TestPattern(tp) => tp.color_at(point),
