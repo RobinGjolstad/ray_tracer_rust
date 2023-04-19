@@ -43,7 +43,7 @@ impl Material {
         let mut effective_color = self.color * light.get_intensity();
         if let Some(pattern) = self.pattern {
             effective_color =
-                Pattern::stripe_at_object(pattern, object, *position) * light.get_intensity();
+                Pattern::pattern_at_object(pattern, object, *position) * light.get_intensity();
         }
 
         // find the direction to the light source
