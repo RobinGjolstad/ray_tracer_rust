@@ -3,13 +3,13 @@ use crate::{colors::Color, tuples::Point};
 use super::Patterns;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct Stripes {
+pub(super) struct Stripes {
     color_a: Color,
     color_b: Color,
 }
 
 impl Stripes {
-    pub(crate) fn new(color_a: Color, color_b: Color) -> Self {
+    pub(super) fn new(color_a: Color, color_b: Color) -> Self {
         Stripes { color_a, color_b }
     }
     pub(super) fn get_colors(&self) -> (Color, Color) {
