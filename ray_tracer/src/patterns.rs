@@ -8,11 +8,12 @@ use std::io::ErrorKind;
 
 use crate::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
 
-use self::{checker::Checker, gradient::Gradient, rings::Ring, stripes::Stripes};
+use self::{checker::Checker, gradient::Gradient, rings::Ring, solid::Solid, stripes::Stripes};
 
 pub mod checker;
 pub mod gradient;
 pub mod rings;
+pub mod solid;
 pub mod stripes;
 
 #[cfg(test)]
@@ -24,6 +25,7 @@ enum PatternType {
     Gradient(Gradient),
     Ring(Ring),
     Checker(Checker),
+    Solid(Solid),
 
     #[cfg(test)]
     TestPattern(TestPattern),
@@ -91,12 +93,26 @@ impl Pattern {
         }
     }
 
+    pub fn solid(color: Color) -> Self {
+        Pattern {
+            pattern: PatternType::Solid(Solid::new(color)),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+        }
+    }
+    pub fn solid_default() -> Self {
+        Pattern {
+            pattern: PatternType::Solid(Solid::default()),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+        }
+    }
+
     fn pattern_at(&self, point: Point) -> Color {
         match self.pattern {
             PatternType::Stripes(s) => s.color_at(point),
             PatternType::Gradient(g) => g.color_at(point),
             PatternType::Ring(r) => r.color_at(point),
             PatternType::Checker(c) => c.color_at(point),
+            PatternType::Solid(s) => s.color_at(point),
 
             #[cfg(test)]
             PatternType::TestPattern(tp) => tp.color_at(point),
