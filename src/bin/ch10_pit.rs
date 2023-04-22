@@ -1,4 +1,4 @@
-use crate::ray_tracer::{
+use ray_tracer_rust::ray_tracer::{
     camera::Camera, colors::Color, lights::Light, materials::Material, patterns::Pattern,
     shapes::Object, transformations::Transform, tuples::Tuple, world::World,
 };
