@@ -70,13 +70,13 @@ impl Camera {
         Ray::new(origin, direction)
     }
 
-    pub fn render(&self, w: &World) -> Canvas {
+    pub fn render(&self, w: &World, num_reflections: usize) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
 
         for y in 0..self.vsize {
             for x in 0..self.hsize {
                 let ray = self.ray_for_pixel(x, y);
-                let color = w.color_at(&ray);
+                let color = w.color_at(&ray, num_reflections);
                 image.write_pixel(x, y, color);
             }
         }
@@ -84,7 +84,12 @@ impl Camera {
         image
     }
 
-    pub fn render_multithreaded(&self, w: &World, thread_num: usize) -> Canvas {
+    pub fn render_multithreaded(
+        &self,
+        w: &World,
+        thread_num: usize,
+        num_reflections: usize,
+    ) -> Canvas {
         let image = Arc::new(Mutex::new(Canvas::new(self.hsize, self.vsize)));
 
         let mut pixels_per_thread = self.vsize;
@@ -112,7 +117,7 @@ impl Camera {
                     for y in start_pixels..end_pixels {
                         for x in 0..self.hsize {
                             let ray = self.ray_for_pixel(x, y);
-                            let color = w.color_at(&ray);
+                            let color = w.color_at(&ray, num_reflections);
                             tx_clone.send((x, y, color)).unwrap();
                         }
                     }
@@ -131,7 +136,7 @@ impl Camera {
                     for y in start_pixels..end_pixels {
                         for x in 0..self.hsize {
                             let ray = self.ray_for_pixel(x, y);
-                            let color = w.color_at(&ray);
+                            let color = w.color_at(&ray, num_reflections);
                             tx_clone.send((x, y, color)).unwrap();
                         }
                     }
@@ -230,7 +235,7 @@ mod tests {
         let to = Tuple::new_point(0.0, 0.0, 0.0);
         let up = Tuple::new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
-        let image: Canvas = c.render(&w);
+        let image: Canvas = c.render(&w, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
     }
     #[test]
@@ -241,7 +246,7 @@ mod tests {
         let to = Tuple::new_point(0.0, 0.0, 0.0);
         let up = Tuple::new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
-        let image: Canvas = c.render_multithreaded(&w, 1);
+        let image: Canvas = c.render_multithreaded(&w, 1, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
     }
     #[test]
@@ -252,7 +257,7 @@ mod tests {
         let to = Tuple::new_point(0.0, 0.0, 0.0);
         let up = Tuple::new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
-        let image: Canvas = c.render_multithreaded(&w, 2);
+        let image: Canvas = c.render_multithreaded(&w, 2, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
     }
 }

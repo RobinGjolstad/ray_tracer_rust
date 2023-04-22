@@ -1,3 +1,4 @@
+#![allow(clippy::approx_constant)]
 use dyn_clonable::*;
 use std::fmt::Debug;
 
@@ -35,7 +36,7 @@ pub trait Shapes: Debug + Clone + Sync {
 pub struct Object {
     object: Box<dyn Shapes>,
     transform: Matrix,
-    material: Material,
+    pub(crate) material: Material,
 }
 
 impl Object {
@@ -97,6 +98,7 @@ impl Object {
         self.material
     }
     pub fn set_material(&mut self, mat: &Material) {
+        debug_assert!(mat.reflective >= 0.0 && mat.reflective <= 1.0);
         self.material = *mat;
     }
     // Used in comparisons between objects

@@ -71,6 +71,7 @@ pub struct IntersectComp {
     pub point: Point,
     pub eyev: Vector,
     pub normalv: Vector,
+    pub reflectv: Vector,
     pub inside: bool,
     pub over_point: Tuple,
 }
@@ -83,6 +84,7 @@ pub fn prepare_computations(intersection: &Intersection, ray: &Ray) -> Intersect
         normalv: intersection
             .get_object()
             .normal_at(ray.position(intersection.t)),
+        reflectv: Vector::new_vector(0.0, 0.0, 0.0),
         inside: false,
         over_point: Tuple::new(0.0, 0.0, 0.0, 0.0),
     };
@@ -93,6 +95,9 @@ pub fn prepare_computations(intersection: &Intersection, ray: &Ray) -> Intersect
         comps.inside = true;
         comps.normalv = -comps.normalv;
     }
+
+    comps.reflectv = Vector::reflect(&ray.direction, &comps.normalv);
+
     comps.over_point = comps.point + comps.normalv * utils::EPSILON;
 
     comps
@@ -214,5 +219,20 @@ mod tests {
         let comps = prepare_computations(&i, &r);
         assert!(comps.over_point.z < -utils::EPSILON / 2.0);
         assert!(comps.point.z > comps.over_point.z);
+    }
+
+    #[test]
+    fn precomputing_the_reflection_vector() {
+        let shape = Object::new_plane();
+        let r = Ray::new(
+            Point::new_point(0.0, 1.0, -1.0),
+            Vector::new_vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
+        );
+        let i = Intersection::new(f64::sqrt(2.0), shape);
+        let comps = prepare_computations(&i, &r);
+        assert_eq!(
+            comps.reflectv,
+            Vector::new_vector(0.0, f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0)
+        );
     }
 }

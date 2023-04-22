@@ -1,7 +1,7 @@
 use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, materials::Material, shapes::Object,
-    transformations::Transform, tuples::Tuple, world::World,
+    camera::Camera, colors::Color, lights::Light, materials::Material, patterns::Pattern,
+    shapes::Object, transformations::Transform, tuples::Tuple, world::World,
 };
 use std::{f64::consts::PI, time::Instant};
 
@@ -19,6 +19,10 @@ struct Args {
     /// Vertical number of pixels
     #[arg(short, long, default_value_t = 480)]
     y_axis: usize,
+
+    /// Number of times light can reflect
+    #[arg(short, long, default_value_t = 5)]
+    reflect: usize,
 }
 
 fn main() {
@@ -33,6 +37,12 @@ fn main() {
     let mut material = Material::new();
     material.color = Color::new(1.0, 0.9, 0.9);
     material.specular = 0.0;
+    material.reflective = 0.9;
+    let mut pattern = Pattern::stripe(Color::new(0.75, 0.50, 0.0), Color::new(0.0, 0.0, 1.0));
+    pattern.set_transform(
+        Transform::rotation_y(f64::to_radians(33.0)) * Transform::scaling(0.5, 0.5, 0.5),
+    );
+    material.pattern = Some(pattern);
     floor.set_material(&material);
 
     let mut middle = Object::new_sphere();
@@ -41,6 +51,13 @@ fn main() {
     material.color = Color::new(0.1, 1.0, 0.5);
     material.diffuse = 0.7;
     material.specular = 0.3;
+    let mut pattern = Pattern::stripe_default();
+    pattern.set_transform(
+        Transform::rotation_z(f64::to_radians(66.0))
+            * Transform::rotation_x(f64::to_radians(20.0))
+            * Transform::scaling(0.10, 0.10, 0.10),
+    );
+    material.pattern = Some(pattern);
     middle.set_material(&material);
 
     let mut right = Object::new_sphere();
@@ -50,6 +67,7 @@ fn main() {
     material.color = Color::new(0.5, 1.0, 0.1);
     material.diffuse = 0.7;
     material.specular = 0.3;
+    material.reflective = 0.4;
     right.set_material(&material);
 
     let mut left = Object::new_sphere();
@@ -59,6 +77,7 @@ fn main() {
     material.color = Color::new(1.0, 0.8, 0.1);
     material.diffuse = 0.7;
     material.specular = 0.3;
+    material.reflective = 1.0;
     left.set_material(&material);
 
     let mut world = World::new();
@@ -78,16 +97,18 @@ fn main() {
     let mut elapsed = start.elapsed();
     println!("Starting render: {:?}", elapsed);
 
-    let mut img = camera.render(&world, 1);
+    let thread_number = args.jobs;
+    let mut img = camera.render_multithreaded(&world, thread_number, args.reflect);
 
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
-    img.save(&String::from(format!(
-        "images/ch9_pit/ch9_pit_{}x{}_{}-threads.ppm",
+    img.save(&format!(
+        "images/ch11_pit/ch11_pit_{}x{}_{}-threads_{}-reflect.ppm",
         img.width(),
         img.height(),
-        0
-    )));
+        thread_number,
+        args.reflect
+    ));
 
     elapsed = start.elapsed();
     println!("Time elapsed: {:?}", elapsed);
