@@ -1,4 +1,4 @@
-use crate::{
+use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
     rays::Ray,
@@ -62,7 +62,6 @@ impl Shapes for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tuples::Tuple;
 
     #[test]
     fn the_normal_on_a_sphere_at_a_point_on_the_x_axis() {

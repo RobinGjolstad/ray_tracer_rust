@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use crate::{tuples::Tuple, utils::is_float_equal};
+use crate::ray_tracer::{tuples::Tuple, utils::is_float_equal};
 
 #[derive(Debug)]
 pub enum MatrixError {
@@ -271,10 +271,7 @@ impl Mul<Tuple> for Matrix {
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
-
     use super::*;
-    use crate::{tuples::Tuple, utils::is_float_equal};
 
     #[test]
     fn constructing_and_inspecting_a_4_x_4_matrix() {

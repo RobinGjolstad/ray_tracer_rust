@@ -3,7 +3,7 @@ use std::{
     thread,
 };
 
-use crate::{
+use crate::ray_tracer::{
     canvas::Canvas, colors::Color, matrices::Matrix, rays::Ray, tuples::Tuple, world::World,
 };
 
@@ -168,7 +168,7 @@ impl Camera {
 mod tests {
     use std::f64::consts::PI;
 
-    use crate::{
+    use crate::ray_tracer::{
         canvas::Canvas, colors::Color, matrices::Matrix, transformations::Transform, tuples::Tuple,
         utils::is_float_equal, world::World,
     };

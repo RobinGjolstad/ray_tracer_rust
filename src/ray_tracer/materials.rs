@@ -1,4 +1,4 @@
-use crate::{
+use crate::ray_tracer::{
     colors::Color,
     lights::Light,
     patterns::Pattern,
@@ -98,11 +98,7 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
 
-    use crate::{
-        lights::Light,
-        tuples::{Point, Tuple, Vector},
-        utils::is_float_equal,
-    };
+    use crate::ray_tracer::{utils::is_float_equal, tuples::Vector};
 
     use super::*;
 

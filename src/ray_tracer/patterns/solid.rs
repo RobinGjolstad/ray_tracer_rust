@@ -1,4 +1,4 @@
-use crate::{colors::Color, tuples};
+use crate::ray_tracer::{colors::Color, tuples};
 
 use super::Patterns;
 
@@ -29,7 +29,8 @@ impl Patterns for Solid {
 
 #[cfg(test)]
 mod tests {
-    use crate::{colors::Color, patterns::Pattern, tuples::Tuple};
+    use super::*;
+    use crate::ray_tracer::{patterns::Pattern, tuples::Tuple};
 
     const WHITE: Color = Color {
         red: 1.0,

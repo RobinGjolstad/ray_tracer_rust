@@ -1,7 +1,7 @@
 use dyn_clonable::*;
 use std::fmt::Debug;
 
-use crate::{
+use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
     matrices::Matrix,
@@ -131,7 +131,7 @@ mod tests {
 
     use std::f64::consts::PI;
 
-    use crate::{
+    use crate::ray_tracer::{
         shapes::{sphere::Sphere, test_shape::TestShape},
         transformations::Transform,
     };

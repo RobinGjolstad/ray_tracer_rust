@@ -6,7 +6,7 @@ use self::test_pattern::TestPattern;
 #[cfg(test)]
 use std::io::ErrorKind;
 
-use crate::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
+use crate::ray_tracer::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
 
 use self::{checker::Checker, gradient::Gradient, rings::Ring, solid::Solid, stripes::Stripes};
 
@@ -160,7 +160,7 @@ impl Pattern {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{colors::Color, shapes::Object, transformations::Transform, tuples::Point};
+    use crate::ray_tracer::transformations::Transform;
 
     #[test]
     fn a_pattern_with_an_object_transformation() {

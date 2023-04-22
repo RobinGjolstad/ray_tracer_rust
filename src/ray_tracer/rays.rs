@@ -1,4 +1,4 @@
-use crate::{
+use crate::ray_tracer::{
     intersections::{Intersection, Intersections},
     matrices::Matrix,
     shapes::Object,
@@ -50,7 +50,7 @@ impl Ray {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{transformations::Transform, tuples::Tuple, utils::is_float_equal};
+    use crate::ray_tracer::{transformations::Transform, tuples::Tuple, utils::is_float_equal};
 
     #[test]
     fn creating_and_querying_a_ray() {

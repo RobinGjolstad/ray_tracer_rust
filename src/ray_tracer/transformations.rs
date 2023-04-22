@@ -1,4 +1,4 @@
-use crate::{matrices::Matrix, tuples::Tuple};
+use crate::ray_tracer::{matrices::Matrix, tuples::Tuple};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Transform;
@@ -80,7 +80,6 @@ mod tests {
     use std::f64::consts::PI;
 
     use super::*;
-    use crate::tuples::Tuple;
 
     #[test]
     fn multiplying_by_a_translation_matrix() {

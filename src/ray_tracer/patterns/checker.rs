@@ -1,4 +1,4 @@
-use crate::{colors::Color, tuples};
+use crate::ray_tracer::{colors::Color, tuples};
 
 use super::Patterns;
 
@@ -35,7 +35,9 @@ impl Patterns for Checker {
 
 #[cfg(test)]
 mod tests {
-    use crate::{colors::Color, patterns::Pattern, tuples::Tuple};
+    use crate::ray_tracer::{patterns::Pattern, tuples::Tuple};
+
+    use super::*;
 
     const WHITE: Color = Color {
         red: 1.0,
