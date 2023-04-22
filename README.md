@@ -2,26 +2,28 @@
 
 This is a project based on the book `The Ray Tracer Challenge` by Jamis Buck.
 
-In this project I intend to learn Rust, which I have no real knowledge of from earlier. In addition I will also try to exclusively use Vim motions for all my editing in a hope of getting more comfortable with that as well.
+In this project I intend to learn Rust, which I have no real knowledge of from earlier. 
+In addition I will also try to exclusively use Vim motions for all my editing in a hope of getting more comfortable with that as well.
 
 ## Progress
 
-- Chapter 1 completed
-- Chapter 2 completed
-- Chapter 3 completed
-- Chapter 4 completed
-- Chapter 5 completed
-- Chapter 6 completed
-- Chapter 7 completed
-- Chapter 8 completed
-- Chapter 9 completed
-- Chapter 10 started
-
-## Todo list
-
-- Add support for a different image file format. An external crate should be used for this.
-- Add support for text-based world definitions. Will make it easier to have a single "main" with just different config files. Will also make it easier to share a world with someone else.
-- Implement multithreading. Should be done early to avoid major re-writes if things are implemented in a way which is incompatible with multithreading.
+- [x] Chapter 1
+- [x] Chapter 2
+- [x] Chapter 3
+- [x] Chapter 4
+- [x] Chapter 5
+- [x] Chapter 6
+- [x] Chapter 7
+- [x] Chapter 8
+- [x] Chapter 9
+- [x] Chapter 10
+- [ ] Chapter 11
+- [ ] Chapter 12
+- [ ] Chapter 13
+- [ ] Chapter 14
+- [ ] Chapter 15
+- [ ] Chapter 16
+- [ ] Chapter 17
 
 ## Ambitious expansions
 

@@ -1,4 +1,10 @@
-use crate::{colors::Color, lights::Light, tuples::Tuple};
+use crate::{
+    colors::Color,
+    lights::Light,
+    patterns::Pattern,
+    shapes::Object,
+    tuples::{Point, Tuple},
+};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Material {
@@ -7,6 +13,7 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
+    pub pattern: Option<Pattern>,
 }
 impl Material {
     pub fn new() -> Material {
@@ -16,13 +23,15 @@ impl Material {
             diffuse: 0.9,
             specular: 0.9,
             shininess: 200.0,
+            pattern: None,
         }
     }
 
-    pub fn lighting(
+    pub(crate) fn lighting(
         &self,
+        object: &Object,
         light: &Light,
-        position: &Tuple,
+        position: &Point,
         eyev: &Tuple,
         normalv: &Tuple,
         in_shadow: bool,
@@ -31,7 +40,11 @@ impl Material {
         let mut diffuse = Color::new(0.0, 0.0, 0.0);
         let mut specular = Color::new(0.0, 0.0, 0.0);
         // combine the surface color with the light's color/intensity
-        let effective_color = self.color * light.get_intensity();
+        let mut effective_color = self.color * light.get_intensity();
+        if let Some(pattern) = self.pattern {
+            effective_color =
+                Pattern::pattern_at_object(pattern, object, *position) * light.get_intensity();
+        }
 
         // find the direction to the light source
         let mut lightv = light.get_position() - *position;
@@ -85,7 +98,11 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
 
-    use crate::{lights::Light, tuples::Tuple, utils::is_float_equal};
+    use crate::{
+        lights::Light,
+        tuples::{Point, Tuple, Vector},
+        utils::is_float_equal,
+    };
 
     use super::*;
 
@@ -112,7 +129,8 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
     #[test]
@@ -124,7 +142,8 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
     #[test]
@@ -136,7 +155,8 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.7364, 0.7364, 0.7364));
     }
     #[test]
@@ -148,7 +168,8 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.63639, 1.63639, 1.63639));
     }
     #[test]
@@ -160,7 +181,8 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, 10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let result = m.lighting(&light, &position, &eyev, &normalv, false);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
 
@@ -174,7 +196,45 @@ mod tests {
             &Color::new(1.0, 1.0, 1.0),
         );
         let in_shadow = true;
-        let result = m.lighting(&light, &position, &eyev, &normalv, in_shadow);
+        let obj = Object::new_sphere();
+        let result = m.lighting(&obj, &light, &position, &eyev, &normalv, in_shadow);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
+    }
+
+    #[test]
+    fn lighting_with_a_pattern_applied() {
+        let m = Material {
+            ambient: 1.0,
+            diffuse: 0.0,
+            specular: 0.0,
+            shininess: 0.0,
+            color: Color::new(0.0, 0.0, 0.0),
+            pattern: Some(Pattern::stripe_default()),
+        };
+        let eyev = Vector::new_vector(0.0, 0.0, -1.0);
+        let normalv = Vector::new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(
+            &Point::new_point(0.0, 0.0, -10.0),
+            &Color::new(1.0, 1.0, 1.0),
+        );
+        let obj = Object::new_sphere();
+        let c1 = m.lighting(
+            &obj,
+            &light,
+            &Point::new_point(0.9, 0.0, 0.0),
+            &eyev,
+            &normalv,
+            false,
+        );
+        let c2 = m.lighting(
+            &obj,
+            &light,
+            &Point::new_point(1.1, 0.0, 0.0),
+            &eyev,
+            &normalv,
+            false,
+        );
+        assert_eq!(c1, Color::new(1.0, 1.0, 1.0));
+        assert_eq!(c2, Color::new(0.0, 0.0, 0.0));
     }
 }

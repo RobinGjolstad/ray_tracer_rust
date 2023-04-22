@@ -454,14 +454,14 @@ mod tests {
             vec![4.0, 8.0, 16.0, 32.0],
         ])
         .unwrap();
-        let ia = a.clone() * Matrix::new_identity();
+        let ia = a * Matrix::new_identity();
         assert_eq!(ia, a);
     }
 
     #[test]
     fn multiplying_a_tuple_by_the_identity_matrix() {
         let a = Tuple::new(1.0, 2.0, 3.0, 4.0);
-        let ia = Matrix::new_identity() * a.clone();
+        let ia = Matrix::new_identity() * a;
         assert_eq!(ia, a);
     }
 
@@ -722,7 +722,7 @@ mod tests {
             vec![6.0, -2.0, 0.0, 5.0],
         ])
         .unwrap();
-        let c = a.clone() * b.clone();
+        let c = a * b;
 
         assert_eq!(
             c * b.calculate_inverse().unwrap().get_inverted().unwrap(),

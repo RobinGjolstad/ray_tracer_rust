@@ -47,6 +47,7 @@ impl World {
         for lights in &self.lights {
             color = color
                 + mat.lighting(
+                    &s,
                     lights,
                     &comps.over_point,
                     &comps.eyev,
@@ -265,24 +266,24 @@ mod tests {
     fn there_is_no_shadow_when_nothing_is_collinear_with_point_and_light() {
         let w = World::new_default_world();
         let p = Tuple::new_point(0.0, 10.0, 0.0);
-        assert_eq!(w.is_shadowed(&p), false);
+        assert!(!w.is_shadowed(&p));
     }
     #[test]
     fn the_shadow_when_an_object_is_between_the_point_and_the_light() {
         let w = World::new_default_world();
         let p = Tuple::new_point(10.0, -10.0, 10.0);
-        assert_eq!(w.is_shadowed(&p), true);
+        assert!(w.is_shadowed(&p));
     }
     #[test]
     fn there_is_no_shadow_when_an_object_is_behind_the_light() {
         let w = World::new_default_world();
         let p = Tuple::new_point(-20.0, 20.0, -20.0);
-        assert_eq!(w.is_shadowed(&p), false);
+        assert!(!w.is_shadowed(&p));
     }
     #[test]
     fn there_is_no_shadow_when_an_object_is_behind_the_point() {
         let w = World::new_default_world();
         let p = Tuple::new_point(-2.0, 2.0, -2.0);
-        assert_eq!(w.is_shadowed(&p), false);
+        assert!(!w.is_shadowed(&p));
     }
 }

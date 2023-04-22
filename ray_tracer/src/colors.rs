@@ -4,9 +4,9 @@ use crate::utils::is_float_equal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
-    pub red: f64,
-    pub green: f64,
-    pub blue: f64,
+    pub(crate) red: f64,
+    pub(crate) green: f64,
+    pub(crate) blue: f64,
 }
 impl Color {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
