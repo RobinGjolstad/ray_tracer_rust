@@ -1,7 +1,8 @@
-use crate::{
+use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
     matrices::Matrix,
+    rays::Ray,
     tuples::{Point, Vector},
     utils::EPSILON,
 };
@@ -35,13 +36,10 @@ impl Shapes for Plane {
         super::ShapeType::Plane
     }
     #[allow(unused_variables)]
-    fn local_normal_at(&self, point: Point) -> crate::tuples::Vector {
+    fn local_normal_at(&self, point: Point) -> Vector {
         Vector::new_vector(0.0, 1.0, 0.0)
     }
-    fn local_intersect(
-        &self,
-        local_ray: crate::rays::Ray,
-    ) -> Vec<crate::intersections::Intersection> {
+    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         if f64::abs(local_ray.direction.y) < EPSILON {
             return Vec::new();
         }
@@ -53,8 +51,6 @@ impl Shapes for Plane {
 
 #[cfg(test)]
 mod tests {
-    use crate::{rays::Ray, shapes::Object, tuples::Vector};
-
     use super::*;
 
     #[test]

@@ -1,6 +1,6 @@
 use std::{fs::File, io::Write};
 
-use crate::colors::Color;
+use crate::ray_tracer::colors::Color;
 
 #[derive(Debug, Clone)]
 pub struct Canvas {

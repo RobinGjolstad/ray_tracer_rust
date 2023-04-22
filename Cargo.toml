@@ -11,14 +11,7 @@ panic = "abort"
 inherits = "release"
 debug = true
 
-[[bin]]
-name = "ch10_pit"
-path = "src/ch10_pit/ch10_pit.rs"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[workspace]
-
 [dependencies]
 clap = { version = "4.1.8", features = ["derive"] }
 image = "0.24.5"
-ray_tracer = { path = "ray_tracer" }
+dyn-clonable = "0.9.0"

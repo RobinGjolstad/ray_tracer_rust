@@ -1,4 +1,4 @@
-use crate::{
+use crate::ray_tracer::{
     rays::Ray,
     shapes::Object,
     tuples::{Point, Tuple, Vector},
@@ -100,12 +100,8 @@ pub fn prepare_computations(intersection: &Intersection, ray: &Ray) -> Intersect
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        rays::Ray,
-        transformations::Transform,
-        tuples::Tuple,
-        utils::{self, is_float_equal},
-    };
+
+    use crate::ray_tracer::{transformations::Transform, utils::is_float_equal};
 
     use super::*;
 

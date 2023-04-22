@@ -1,13 +1,13 @@
 #![allow(unused)]
-use crate::{
+use crate::ray_tracer::{
     materials::Material, matrices::Matrix, rays::Ray, shapes::test_shape::saved_ray::SAVED_RAY,
-    tuples::Tuple,
+    tuples::{Tuple, Point, Vector}, intersections::Intersection,
 };
 
 use super::Shapes;
 
 mod saved_ray {
-    use crate::rays::Ray;
+    use crate::ray_tracer::rays::Ray;
 
     pub static mut SAVED_RAY: Option<Ray> = None;
 }
@@ -31,22 +31,19 @@ impl TestShape {
 }
 
 impl Shapes for TestShape {
-    fn set_position(&mut self, pos: &crate::tuples::Point) {
+    fn set_position(&mut self, pos: &Point) {
         self.position = *pos;
     }
-    fn get_position(&self) -> crate::tuples::Point {
+    fn get_position(&self) -> Point {
         self.position
     }
-    fn local_normal_at(&self, point: crate::tuples::Point) -> crate::tuples::Vector {
+    fn local_normal_at(&self, point: Point) -> Vector {
         Tuple::new_vector(point.x, point.y, point.z)
     }
     fn get_shape_type(&self) -> super::ShapeType {
         super::ShapeType::TestShape
     }
-    fn local_intersect(
-        &self,
-        local_ray: crate::rays::Ray,
-    ) -> Vec<crate::intersections::Intersection> {
+    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         unsafe {
             SAVED_RAY = Some(local_ray);
         }

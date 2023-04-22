@@ -1,4 +1,4 @@
-use crate::utils::is_float_equal;
+use crate::ray_tracer::utils::is_float_equal;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Copy, Clone)]

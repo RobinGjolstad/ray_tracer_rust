@@ -1,4 +1,4 @@
-use crate::{
+use crate::ray_tracer::{
     colors::Color,
     intersections::{prepare_computations, IntersectComp},
     lights::Light,
@@ -58,7 +58,7 @@ impl World {
         color
     }
 
-    pub fn color_at(&self, r: &crate::rays::Ray) -> Color {
+    pub fn color_at(&self, r: &Ray) -> Color {
         let int = r.intersect_world(self);
         match int.hit() {
             None => Color::new(0.0, 0.0, 0.0),
@@ -95,16 +95,9 @@ impl Default for World {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::ray_tracer::{intersections::Intersection, utils::is_float_equal};
 
-    use crate::{
-        colors::Color,
-        intersections::{prepare_computations, Intersection},
-        rays::Ray,
-        transformations::Transform,
-        tuples::Tuple,
-        utils::is_float_equal,
-    };
+    use super::*;
 
     fn default_world() -> World {
         World::new_default_world()

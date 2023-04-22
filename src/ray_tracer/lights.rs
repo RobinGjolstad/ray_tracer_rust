@@ -1,4 +1,4 @@
-use crate::{colors::Color, tuples::Tuple};
+use crate::ray_tracer::{colors::Color, tuples::Tuple};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Light {

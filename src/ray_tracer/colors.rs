@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul, Sub};
 
-use crate::utils::is_float_equal;
+use crate::ray_tracer::utils::is_float_equal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
@@ -90,8 +90,6 @@ impl Mul<f64> for Color {
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::is_float_equal;
-
     use super::*;
 
     #[test]
