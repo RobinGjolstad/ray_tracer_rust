@@ -82,12 +82,12 @@ fn main() {
 
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
-    img.save(&String::from(format!(
+    img.save(&format!(
         "images/ch9_pit/ch9_pit_{}x{}_{}-threads.ppm",
         img.width(),
         img.height(),
         0
-    )));
+    ));
 
     elapsed = start.elapsed();
     println!("Time elapsed: {:?}", elapsed);

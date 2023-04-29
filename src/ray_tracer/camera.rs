@@ -96,7 +96,6 @@ impl Camera {
         if thread_num > 0 {
             pixels_per_thread = self.vsize / thread_num;
         }
-        dbg!(pixels_per_thread);
         let (tx, rx) = mpsc::channel();
         thread::scope(|s| {
             let mut thread_handles = Vec::new();
@@ -109,9 +108,6 @@ impl Camera {
                 let end_pixels = start_pixels + pixels_per_thread;
                 last_allocated_pixels = end_pixels;
                 pixels_not_allocated -= pixels_per_thread;
-                dbg!(thread);
-                dbg!(start_pixels);
-                dbg!(end_pixels);
                 let handle = s.spawn(move || {
                     //
                     for y in start_pixels..end_pixels {
@@ -129,8 +125,6 @@ impl Camera {
             if pixels_not_allocated > 0 {
                 let start_pixels = last_allocated_pixels;
                 let end_pixels = last_allocated_pixels + pixels_not_allocated;
-                dbg!(start_pixels);
-                dbg!(end_pixels);
                 let tx_clone = tx.clone();
                 let handle = s.spawn(move || {
                     for y in start_pixels..end_pixels {

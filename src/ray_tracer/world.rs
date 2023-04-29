@@ -97,9 +97,8 @@ impl World {
         }
 
         let reflect_ray = Ray::new(comps.over_point, comps.reflectv);
-        let color = self.color_at(&reflect_ray, remaining - 1) * comps.object.material.reflective;
 
-        color
+        self.color_at(&reflect_ray, remaining - 1) * comps.object.material.reflective
     }
 }
 
@@ -322,7 +321,7 @@ mod tests {
         w.objects.push(shape.clone());
         let r = Ray::new(
             Tuple::new_point(0.0, 0.0, -3.0),
-            Tuple::new_vector(0.0, -2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0),
+            Tuple::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
         let comps = intersections::prepare_computations(&i, &r);
@@ -338,7 +337,7 @@ mod tests {
         w.objects.push(shape.clone());
         let r = Ray::new(
             Tuple::new_point(0.0, 0.0, -3.0),
-            Tuple::new_vector(0.0, -2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0),
+            Tuple::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
         let comps = intersections::prepare_computations(&i, &r);
@@ -346,7 +345,6 @@ mod tests {
         assert_eq!(color, Color::new(0.87677, 0.92436, 0.82918));
     }
     #[test]
-    #[ignore = "Recursive reflection is not bounded yet."]
     fn color_at_with_mutually_reflective_surfaces() {
         let mut w = World::new();
         w.lights.push(Light::point_light(
@@ -364,7 +362,12 @@ mod tests {
             Tuple::new_point(0.0, 0.0, 0.0),
             Tuple::new_vector(0.0, 1.0, 0.0),
         );
-        let color = w.color_at(&r, 1);
+
+        // Simply test that the function returns when the ray is locked between two mirrors.
+        #[allow(unused_assignments)]
+        let mut color = Color::new(0.0, 0.0, 0.0);
+        color = w.color_at(&r, 1);
+        assert_ne!(color, Color::new(0.0, 0.0, 0.0));
     }
     #[test]
     fn the_reflected_color_at_the_maximum_recursive_depth() {
@@ -375,7 +378,7 @@ mod tests {
         w.objects.push(shape.clone());
         let r = Ray::new(
             Tuple::new_point(0.0, 0.0, -3.0),
-            Tuple::new_vector(0.0, -2.0_f64.sqrt() / 2.0, 2.0_f64.sqrt() / 2.0),
+            Tuple::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
         let comps = intersections::prepare_computations(&i, &r);

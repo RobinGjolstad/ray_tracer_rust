@@ -59,6 +59,15 @@ impl Object {
         sphere.transform = sphere.transform.calculate_inverse().unwrap();
         sphere
     }
+    pub fn glass_sphere() -> Object {
+        let mut object = Self::new_sphere();
+        let mut material = object.get_material();
+        material.transparency = 1.0;
+        material.refractive_index = 1.5;
+        object.set_material(&material);
+
+        object
+    }
     pub fn new_plane() -> Object {
         let mut plane = Object::new(Box::new(Plane::new()));
         plane.transform = plane.transform.calculate_inverse().unwrap();
@@ -136,6 +145,7 @@ mod tests {
     use crate::ray_tracer::{
         shapes::{sphere::Sphere, test_shape::TestShape},
         transformations::Transform,
+        utils::is_float_equal,
     };
 
     use super::*;
@@ -233,5 +243,16 @@ mod tests {
             -f64::sqrt(2.0) / 2.0,
         ));
         assert_eq!(n, Tuple::new_vector(0.0, 0.97014, -0.24254));
+    }
+
+    #[test]
+    fn a_helper_for_producing_a_sphere_with_a_glassy_material() {
+        let s = Object::glass_sphere();
+        assert_eq!(
+            s.get_transform().get_matrix(),
+            Matrix::new_identity().get_matrix()
+        );
+        assert!(is_float_equal(&s.material.transparency, 1.0));
+        assert!(is_float_equal(&s.material.refractive_index, 1.5));
     }
 }
