@@ -157,6 +157,33 @@ fn get_refractive_index_from_intersections(
     (n1, n2)
 }
 
+/// Calculate the `reflectance` of an intersection.
+/// Reflectance describes a fraction of light being reflected.
+pub(crate) fn schlick(comps: &IntersectComp) -> f64 {
+    // Find the cosine of the angle between the eye and normal vectors
+    let mut cos = Tuple::dot(&comps.eyev, &comps.normalv);
+
+    // Total internal reflection can only occur if n1 > n2
+    if comps.n1 > comps.n2 {
+        let n = comps.n1 / comps.n2;
+        let sin2_t = n.powi(2) * (1.0 - cos.powi(2));
+
+        if sin2_t > 1.0 {
+            return 1.0;
+        } else {
+            // Compute cosine of theta_t using trig identity
+            let cos_t = (1.0 - sin2_t).sqrt();
+
+            // when n1 > n2, use cos(theta_t) instead
+            cos = cos_t;
+        }
+    }
+
+    let r0 = ((comps.n1 - comps.n2) / (comps.n1 + comps.n2)).powi(2);
+
+    r0 + (1.0 - r0) * (1.0 - cos).powi(5)
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -360,5 +387,47 @@ mod tests {
         let comps = prepare_computations(&i, &r, &xs);
         assert!(comps.under_point.z > EPSILON / 2.0);
         assert!(comps.point.z < comps.under_point.z);
+    }
+    #[test]
+    fn the_schlick_approximation_under_total_internal_reflection() {
+        let shape = Object::glass_sphere();
+        let r = Ray::new(
+            Point::new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
+            Vector::new_vector(0.0, 1.0, 0.0),
+        );
+        let xs = Intersections::new(&[
+            Intersection::new(-(2.0_f64.sqrt()) / 2.0, shape.clone()),
+            Intersection::new(2.0_f64.sqrt() / 2.0, shape),
+        ]);
+        let comps = prepare_computations(&xs.list[1], &r, &xs);
+        let reflectance = schlick(&comps);
+        assert!(is_float_equal(&reflectance, 1.0));
+    }
+    #[test]
+    fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
+        let shape = Object::glass_sphere();
+        let r = Ray::new(
+            Point::new_point(0.0, 0.0, 0.0),
+            Vector::new_vector(0.0, 1.0, 0.0),
+        );
+        let xs = Intersections::new(&[
+            Intersection::new(-1.0, shape.clone()),
+            Intersection::new(2.0, shape),
+        ]);
+        let comps = prepare_computations(&xs.list[1], &r, &xs);
+        let reflectance = schlick(&comps);
+        assert!(is_float_equal(&reflectance, 0.04));
+    }
+    #[test]
+    fn the_schlick_approximation_with_small_angle_and_n2_greater_than_n1() {
+        let shape = Object::glass_sphere();
+        let r = Ray::new(
+            Point::new_point(0.0, 0.99, -2.0),
+            Vector::new_vector(0.0, 0.0, 1.0),
+        );
+        let xs = Intersections::new(&[Intersection::new(1.8589, shape)]);
+        let comps = prepare_computations(&xs.list[0], &r, &xs);
+        let reflectance = schlick(&comps);
+        assert!(is_float_equal(&reflectance, 0.48873));
     }
 }
