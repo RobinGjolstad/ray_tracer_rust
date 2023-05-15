@@ -17,7 +17,7 @@ pub mod solid;
 pub mod stripes;
 
 #[cfg(test)]
-mod test_pattern;
+pub(crate) mod test_pattern;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum PatternType {
@@ -149,7 +149,7 @@ impl Pattern {
         }
     }
 
-    fn test_pattern_default() -> Self {
+    pub(crate) fn test_pattern_default() -> Self {
         Pattern {
             pattern: PatternType::TestPattern(TestPattern::default()),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),

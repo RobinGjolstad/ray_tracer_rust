@@ -24,7 +24,7 @@ pub enum ShapeType {
 }
 
 #[clonable]
-pub trait Shapes: Debug + Clone + Sync {
+pub(crate) trait Shapes: Debug + Clone + Sync {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
     fn local_normal_at(&self, point: Point) -> Vector;
@@ -40,7 +40,7 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn new(obj: Box<dyn Shapes>) -> Object {
+    pub(crate) fn new(obj: Box<dyn Shapes>) -> Object {
         Object {
             object: obj,
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
@@ -88,7 +88,7 @@ impl Object {
 
         world_vector.normalize()
     }
-    pub fn normal_at(&self, point: Point) -> Vector {
+    pub(crate) fn normal_at(&self, point: Point) -> Vector {
         let local_point = self.world_point_to_local(&point);
         let local_normal = self.object.local_normal_at(local_point);
         self.local_vector_to_world(&local_normal)
@@ -118,7 +118,7 @@ impl Object {
     pub fn set_position(&mut self, pos: &Tuple) {
         self.object.set_position(pos);
     }
-    pub fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         let detected_intersections = self.object.local_intersect(local_ray);
         let mut return_intersections: Vec<Intersection> = Vec::new();
         for intersection in &detected_intersections {

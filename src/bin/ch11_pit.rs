@@ -38,7 +38,8 @@ fn main() {
     material.color = Color::new(1.0, 0.9, 0.9);
     material.specular = 0.0;
     material.reflective = 0.9;
-    let mut pattern = Pattern::stripe(Color::new(0.75, 0.50, 0.0), Color::new(0.0, 0.0, 1.0));
+    material.refractive_index = 1.5;
+    let mut pattern = Pattern::checker(Color::new(0.75, 0.50, 0.0), Color::new(0.0, 0.0, 1.0));
     pattern.set_transform(
         Transform::rotation_y(f64::to_radians(33.0)) * Transform::scaling(0.5, 0.5, 0.5),
     );
@@ -48,16 +49,12 @@ fn main() {
     let mut middle = Object::new_sphere();
     middle.set_transform(&Transform::translate(-0.5, 1.0, 0.5));
     material = Material::new();
-    material.color = Color::new(0.1, 1.0, 0.5);
+    material.color = Color::new(0.75, 0.75, 0.75);
     material.diffuse = 0.7;
     material.specular = 0.3;
-    let mut pattern = Pattern::stripe_default();
-    pattern.set_transform(
-        Transform::rotation_z(f64::to_radians(66.0))
-            * Transform::rotation_x(f64::to_radians(20.0))
-            * Transform::scaling(0.10, 0.10, 0.10),
-    );
-    material.pattern = Some(pattern);
+    material.transparency = 1.0;
+    material.refractive_index = 2.5;
+    material.reflective = 0.15;
     middle.set_material(&material);
 
     let mut right = Object::new_sphere();
