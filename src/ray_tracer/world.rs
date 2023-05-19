@@ -5,10 +5,9 @@ use crate::ray_tracer::{
     rays::Ray,
     shapes::Object,
     transformations::Transform,
-    tuples::Point,
+    tuples::{Point, Tuple},
+    utils::is_float_equal,
 };
-
-use super::{intersections, tuples::Tuple, utils::is_float_equal};
 
 #[derive(Debug, PartialEq)]
 pub struct World {
