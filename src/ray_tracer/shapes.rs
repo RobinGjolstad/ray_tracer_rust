@@ -1,3 +1,4 @@
+#![allow(clippy::approx_constant)]
 use dyn_clonable::*;
 use std::fmt::Debug;
 
@@ -23,7 +24,7 @@ pub enum ShapeType {
 }
 
 #[clonable]
-pub trait Shapes: Debug + Clone + Sync {
+pub(crate) trait Shapes: Debug + Clone + Sync {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
     fn local_normal_at(&self, point: Point) -> Vector;
@@ -35,11 +36,11 @@ pub trait Shapes: Debug + Clone + Sync {
 pub struct Object {
     object: Box<dyn Shapes>,
     transform: Matrix,
-    material: Material,
+    pub(crate) material: Material,
 }
 
 impl Object {
-    pub fn new(obj: Box<dyn Shapes>) -> Object {
+    pub(crate) fn new(obj: Box<dyn Shapes>) -> Object {
         Object {
             object: obj,
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
@@ -57,6 +58,15 @@ impl Object {
         let mut sphere = Object::new(Box::new(Sphere::new()));
         sphere.transform = sphere.transform.calculate_inverse().unwrap();
         sphere
+    }
+    pub fn glass_sphere() -> Object {
+        let mut object = Self::new_sphere();
+        let mut material = object.get_material();
+        material.transparency = 1.0;
+        material.refractive_index = 1.5;
+        object.set_material(&material);
+
+        object
     }
     pub fn new_plane() -> Object {
         let mut plane = Object::new(Box::new(Plane::new()));
@@ -78,7 +88,7 @@ impl Object {
 
         world_vector.normalize()
     }
-    pub fn normal_at(&self, point: Point) -> Vector {
+    pub(crate) fn normal_at(&self, point: Point) -> Vector {
         let local_point = self.world_point_to_local(&point);
         let local_normal = self.object.local_normal_at(local_point);
         self.local_vector_to_world(&local_normal)
@@ -97,6 +107,7 @@ impl Object {
         self.material
     }
     pub fn set_material(&mut self, mat: &Material) {
+        debug_assert!(mat.reflective >= 0.0 && mat.reflective <= 1.0);
         self.material = *mat;
     }
     // Used in comparisons between objects
@@ -107,7 +118,7 @@ impl Object {
     pub fn set_position(&mut self, pos: &Tuple) {
         self.object.set_position(pos);
     }
-    pub fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         let detected_intersections = self.object.local_intersect(local_ray);
         let mut return_intersections: Vec<Intersection> = Vec::new();
         for intersection in &detected_intersections {
@@ -134,6 +145,7 @@ mod tests {
     use crate::ray_tracer::{
         shapes::{sphere::Sphere, test_shape::TestShape},
         transformations::Transform,
+        utils::is_float_equal,
     };
 
     use super::*;
@@ -231,5 +243,16 @@ mod tests {
             -f64::sqrt(2.0) / 2.0,
         ));
         assert_eq!(n, Tuple::new_vector(0.0, 0.97014, -0.24254));
+    }
+
+    #[test]
+    fn a_helper_for_producing_a_sphere_with_a_glassy_material() {
+        let s = Object::glass_sphere();
+        assert_eq!(
+            s.get_transform().get_matrix(),
+            Matrix::new_identity().get_matrix()
+        );
+        assert!(is_float_equal(&s.material.transparency, 1.0));
+        assert!(is_float_equal(&s.material.refractive_index, 1.5));
     }
 }

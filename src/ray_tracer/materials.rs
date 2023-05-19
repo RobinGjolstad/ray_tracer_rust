@@ -14,6 +14,9 @@ pub struct Material {
     pub specular: f64,
     pub shininess: f64,
     pub pattern: Option<Pattern>,
+    pub reflective: f64,
+    pub transparency: f64,
+    pub refractive_index: f64,
 }
 impl Material {
     pub fn new() -> Material {
@@ -24,6 +27,9 @@ impl Material {
             specular: 0.9,
             shininess: 200.0,
             pattern: None,
+            reflective: 0.0,
+            transparency: 0.0,
+            refractive_index: 1.0,
         }
     }
 
@@ -98,7 +104,7 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
 
-    use crate::ray_tracer::{utils::is_float_equal, tuples::Vector};
+    use crate::ray_tracer::{tuples::Vector, utils::is_float_equal};
 
     use super::*;
 
@@ -206,6 +212,9 @@ mod tests {
             shininess: 0.0,
             color: Color::new(0.0, 0.0, 0.0),
             pattern: Some(Pattern::stripe_default()),
+            reflective: 0.0,
+            transparency: 0.0,
+            refractive_index: 1.0,
         };
         let eyev = Vector::new_vector(0.0, 0.0, -1.0);
         let normalv = Vector::new_vector(0.0, 0.0, -1.0);
@@ -232,5 +241,17 @@ mod tests {
         );
         assert_eq!(c1, Color::new(1.0, 1.0, 1.0));
         assert_eq!(c2, Color::new(0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn reflectivity_for_the_default_material() {
+        let m = Material::default();
+        assert!(is_float_equal(&m.reflective, 0.0));
+    }
+    #[test]
+    fn transparency_and_refractive_index_for_the_default_material() {
+        let m = Material::default();
+        assert!(is_float_equal(&m.transparency, 0.0));
+        assert!(is_float_equal(&m.refractive_index, 1.0));
     }
 }

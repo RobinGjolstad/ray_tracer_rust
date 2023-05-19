@@ -1,3 +1,6 @@
+// Allow using `.get(0)` on vectors to make the matrix calculations more obvious
+#![allow(clippy::get_first)]
+
 use std::ops::Mul;
 
 use crate::ray_tracer::{tuples::Tuple, utils::is_float_equal};

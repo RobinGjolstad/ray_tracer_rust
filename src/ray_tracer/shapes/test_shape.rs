@@ -1,7 +1,11 @@
 #![allow(unused)]
 use crate::ray_tracer::{
-    materials::Material, matrices::Matrix, rays::Ray, shapes::test_shape::saved_ray::SAVED_RAY,
-    tuples::{Tuple, Point, Vector}, intersections::Intersection,
+    intersections::Intersection,
+    materials::Material,
+    matrices::Matrix,
+    rays::Ray,
+    shapes::test_shape::saved_ray::SAVED_RAY,
+    tuples::{Point, Tuple, Vector},
 };
 
 use super::Shapes;
@@ -9,10 +13,10 @@ use super::Shapes;
 mod saved_ray {
     use crate::ray_tracer::rays::Ray;
 
-    pub static mut SAVED_RAY: Option<Ray> = None;
+    pub(super) static mut SAVED_RAY: Option<Ray> = None;
 }
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct TestShape {
+pub(super) struct TestShape {
     position: Tuple,
     transform: Matrix,
     material: Material,

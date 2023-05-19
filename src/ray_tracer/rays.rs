@@ -7,31 +7,31 @@ use crate::ray_tracer::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Ray {
+pub(crate) struct Ray {
     pub origin: Point,
     pub direction: Vector,
 }
 
 impl Ray {
-    pub fn new(origin: Point, direction: Vector) -> Self {
+    pub(crate) fn new(origin: Point, direction: Vector) -> Self {
         Ray { origin, direction }
     }
-    pub fn get_direction(&self) -> Vector {
+    pub(crate) fn get_direction(&self) -> Vector {
         self.direction
     }
-    pub fn position(&self, time: f64) -> Point {
+    pub(crate) fn position(&self, time: f64) -> Point {
         self.origin + self.direction * time
     }
     fn global_to_local(&self, object: &Object) -> Ray {
         self.transform(object.get_transform().get_inverted().unwrap())
     }
 
-    pub fn intersect(&self, object: &Object) -> Vec<Intersection> {
+    pub(crate) fn intersect(&self, object: &Object) -> Vec<Intersection> {
         let local_ray = self.global_to_local(object);
         object.local_intersect(local_ray)
     }
 
-    pub fn intersect_world(&self, world: &World) -> Intersections {
+    pub(crate) fn intersect_world(&self, world: &World) -> Intersections {
         let mut intersections = Intersections { list: Vec::new() };
         for object in &world.objects {
             intersections.put_elements(&self.intersect(object));
@@ -39,7 +39,7 @@ impl Ray {
         intersections
     }
 
-    pub fn transform(&self, transformation: Matrix) -> Self {
+    pub(crate) fn transform(&self, transformation: Matrix) -> Self {
         Ray {
             origin: transformation * self.origin,
             direction: transformation * self.direction,

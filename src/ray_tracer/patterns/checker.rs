@@ -25,7 +25,7 @@ impl Default for Checker {
 
 impl Patterns for Checker {
     fn color_at(&self, point: tuples::Point) -> Color {
-        if (point.x.floor() + point.y.floor() + point.z.floor()) as usize % 2 == 0 {
+        if (point.x.floor() + point.y.floor() + point.z.floor()) as isize % 2 == 0 {
             self.color_a
         } else {
             self.color_b

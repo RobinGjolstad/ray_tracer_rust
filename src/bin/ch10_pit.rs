@@ -1,8 +1,8 @@
+use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
     camera::Camera, colors::Color, lights::Light, materials::Material, patterns::Pattern,
     shapes::Object, transformations::Transform, tuples::Tuple, world::World,
 };
-use clap::Parser;
 use std::{f64::consts::PI, time::Instant};
 
 #[derive(Debug, Clone, Copy, clap::Parser)]
@@ -19,6 +19,10 @@ struct Args {
     /// Vertical number of pixels
     #[arg(short, long, default_value_t = 480)]
     y_axis: usize,
+
+    /// Number of times light can reflect
+    #[arg(short, long, default_value_t = 5)]
+    reflect: usize,
 }
 
 fn main() {
@@ -91,7 +95,7 @@ fn main() {
     println!("Starting render: {:?}", elapsed);
 
     let thread_number = args.jobs;
-    let mut img = camera.render_multithreaded(&world, thread_number);
+    let mut img = camera.render_multithreaded(&world, thread_number, args.reflect);
 
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
