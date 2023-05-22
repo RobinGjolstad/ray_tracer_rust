@@ -42,7 +42,6 @@ impl World {
         }
     }
     pub(crate) fn shade_hit(&self, comps: &IntersectComp, remaining: usize) -> Color {
-        let mut return_color = Color::new(0.0, 0.0, 0.0);
         let shadowed = self.is_shadowed(&comps.over_point);
 
         let surface = comps.object.material.lighting(
@@ -60,12 +59,11 @@ impl World {
         let material = comps.object.material;
         if material.reflective > 0.0 && material.transparency > 0.0 {
             let reflectance = schlick(comps);
-            return_color = surface + reflected * reflectance + refracted * (1.0 - reflectance);
-        } else {
-            return_color = surface + reflected + refracted;
-        }
 
-        return_color
+            surface + reflected * reflectance + refracted * (1.0 - reflectance)
+        } else {
+            surface + reflected + refracted
+        }
     }
 
     pub(crate) fn color_at(&self, r: &Ray, remaining: usize) -> Color {

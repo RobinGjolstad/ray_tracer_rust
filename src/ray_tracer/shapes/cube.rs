@@ -10,33 +10,26 @@ use crate::ray_tracer::{
 pub struct Cube {
     position: Point,
 }
+
 impl Cube {
     pub fn new() -> Self {
         Self {
             position: Point::new_point(0.0, 0.0, 0.0),
         }
     }
+}
 
-    fn check_axis(&self, origin: f64, direction: f64) -> (f64, f64) {
-        let tmin_numerator = -1.0 - origin;
-        let tmax_numerator = 1.0 - origin;
-
-        let mut tmin = tmin_numerator / direction;
-        let mut tmax = tmax_numerator / direction;
-
-        if tmin > tmax {
-            (tmin, tmax) = (tmax, tmin);
-        }
-
-        (tmin, tmax)
+impl Default for Cube {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
 impl Shapes for Cube {
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
-        let (xtmin, xtmax): (f64, f64) = self.check_axis(local_ray.origin.x, local_ray.direction.x);
-        let (ytmin, ytmax): (f64, f64) = self.check_axis(local_ray.origin.y, local_ray.direction.y);
-        let (ztmin, ztmax): (f64, f64) = self.check_axis(local_ray.origin.z, local_ray.direction.z);
+        let (xtmin, xtmax): (f64, f64) = check_axis(local_ray.origin.x, local_ray.direction.x);
+        let (ytmin, ytmax): (f64, f64) = check_axis(local_ray.origin.y, local_ray.direction.y);
+        let (ztmin, ztmax): (f64, f64) = check_axis(local_ray.origin.z, local_ray.direction.z);
 
         let tmin = [xtmin, ytmin, ztmin]
             .iter()
@@ -88,6 +81,22 @@ impl Shapes for Cube {
     fn get_shape_type(&self) -> ShapeType {
         super::ShapeType::Cube
     }
+}
+
+/// Check which plane of a given axis is hit first and returns the time difference between the
+/// intersections.
+fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
+    let tmin_numerator = -1.0 - origin;
+    let tmax_numerator = 1.0 - origin;
+
+    let mut tmin = tmin_numerator / direction;
+    let mut tmax = tmax_numerator / direction;
+
+    if tmin > tmax {
+        (tmin, tmax) = (tmax, tmin);
+    }
+
+    (tmin, tmax)
 }
 
 #[cfg(test)]
