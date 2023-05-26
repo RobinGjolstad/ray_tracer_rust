@@ -12,6 +12,10 @@ impl Stripes {
     pub(super) fn new(color_a: Color, color_b: Color) -> Self {
         Stripes { color_a, color_b }
     }
+}
+
+#[cfg(test)]
+impl Stripes {
     pub(super) fn get_colors(&self) -> (Color, Color) {
         (self.color_a, self.color_b)
     }

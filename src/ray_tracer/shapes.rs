@@ -10,8 +10,9 @@ use crate::ray_tracer::{
     tuples::{Point, Tuple, Vector},
 };
 
-use self::{plane::Plane, sphere::Sphere};
+use self::{cube::Cube, plane::Plane, sphere::Sphere};
 
+pub mod cube;
 pub mod plane;
 pub mod sphere;
 mod test_shape;
@@ -21,6 +22,7 @@ pub enum ShapeType {
     Sphere,
     TestShape,
     Plane,
+    Cube,
 }
 
 #[clonable]
@@ -72,6 +74,11 @@ impl Object {
         let mut plane = Object::new(Box::new(Plane::new()));
         plane.transform = plane.transform.calculate_inverse().unwrap();
         plane
+    }
+    pub fn new_cube() -> Object {
+        let mut cube = Object::new(Box::new(Cube::new()));
+        cube.transform = cube.transform.calculate_inverse().unwrap();
+        cube
     }
     fn world_point_to_local(&self, point: &Point) -> Point {
         self.get_transform().get_inverted().unwrap() * *point
