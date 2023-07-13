@@ -37,31 +37,21 @@ fn main() {
     let mut floor = Object::new_plane();
     floor.set_transform(&Transform::scaling(1.0, 1.0, 1.0));
     let mut material = Material::new();
-    material.color = Color::new(1.0, 0.9, 0.9);
+    material.color = Color::new(1.0, 0.75, 0.75);
     material.specular = 0.0;
     material.reflective = 0.25;
-    let mut pattern = Pattern::checker(Color::new(0.75, 0.50, 0.0), Color::new(0.0, 0.0, 1.0));
-    pattern.set_transform(
-        Transform::rotation_y(f64::to_radians(33.0)) * Transform::scaling(0.5, 0.5, 0.5),
-    );
-    material.pattern = Some(pattern);
     floor.set_material(&material);
     world.objects.push(floor);
 
-    let mut middle = Object::new_cube();
-    let trans = Transform::translate(-0.5, 1.0, 0.5) * Transform::rotation_y(33_f64.to_radians());
-    middle.set_transform(&trans);
+    let mut cylinder = Object::new_cylinder();
+    let trans =
+        Transform::rotation_y(90.0_f64.to_radians()) * Transform::rotation_x(25.0_f64.to_radians());
+    cylinder.set_transform(&trans);
     material = Material::new();
-    material.color = Color::new(0.05, 0.05, 0.05);
-    material.diffuse = 0.05;
-    material.ambient = 0.05;
-    material.specular = 1.0;
-    material.shininess = 300.0;
-    material.transparency = 1.0;
-    material.refractive_index = 2.5;
-    material.reflective = 1.0;
-    middle.set_material(&material);
-    world.objects.push(middle);
+    material.color = Color::new(0.20, 0.30, 0.90);
+    material.reflective = 0.10;
+    cylinder.set_material(&material);
+    world.objects.push(cylinder);
 
     world.lights.push(Light::point_light(
         &Tuple::new_point(-10.0, 10.0, -10.0),
@@ -84,7 +74,7 @@ fn main() {
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
     img.save(&format!(
-        "images/ch12_pit/ch12_pit_{}x{}_{}-threads_{}-reflect.ppm",
+        "images/ch13_pit/ch13_pit_{}x{}_{}-threads_{}-reflect.ppm",
         img.width(),
         img.height(),
         thread_number,
