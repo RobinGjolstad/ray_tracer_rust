@@ -1,7 +1,7 @@
 use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, materials::Material, patterns::Pattern,
-    shapes::Object, transformations::Transform, tuples::Tuple, world::World,
+    camera::Camera, colors::Color, lights::Light, materials::Material, shapes::Object,
+    transformations::Transform, tuples::Tuple, world::World,
 };
 use std::{f64::consts::PI, time::Instant};
 

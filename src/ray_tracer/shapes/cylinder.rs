@@ -3,7 +3,7 @@ use crate::ray_tracer::{
     materials::Material,
     rays::Ray,
     tuples::{Point, Vector},
-    utils::is_float_equal,
+    utils::{is_float_equal, EPSILON},
 };
 
 use super::{ShapeType, Shapes};
@@ -12,6 +12,9 @@ use super::{ShapeType, Shapes};
 pub(crate) struct Cylinder {
     position: Point,
     material: Material,
+    minimum: f64,
+    maximum: f64,
+    closed: bool,
 }
 
 impl Cylinder {
@@ -19,6 +22,32 @@ impl Cylinder {
         Self {
             position: Point::new_point(0.0, 0.0, 0.0),
             material: Material::new(),
+            minimum: f64::NEG_INFINITY,
+            maximum: f64::INFINITY,
+            closed: false,
+        }
+    }
+
+    fn check_cap(ray: &Ray, t: &f64) -> bool {
+        let x = ray.origin.x + t * ray.direction.x;
+        let z = ray.origin.z + t * ray.direction.z;
+
+        (x.powi(2) + z.powi(2)) <= 1.0
+    }
+
+    fn intersect_caps(&self, ray: &Ray, xs: &mut Vec<Intersection>) {
+        if !self.closed || is_float_equal(&ray.direction.y, 0.0) {
+            return;
+        }
+
+        let t = (self.minimum - ray.origin.y) / ray.direction.y;
+        if Cylinder::check_cap(ray, &t) {
+            xs.push(Intersection::new(t, super::Object::new(Box::new(*self))));
+        }
+
+        let t = (self.maximum - ray.origin.y) / ray.direction.y;
+        if Cylinder::check_cap(ray, &t) {
+            xs.push(Intersection::new(t, super::Object::new(Box::new(*self))));
         }
     }
 }
@@ -40,13 +69,23 @@ impl Shapes for Cylinder {
         ShapeType::Cylinder
     }
     fn local_normal_at(&self, point: Point) -> Vector {
-        Vector::new_vector(point.x, 0.0, point.z)
+        // Compute the square of the distance from the y-axis
+        let dist = point.x.powi(2) + point.z.powi(2);
+
+        if dist < 1.0 && point.y >= (self.maximum - EPSILON) {
+            Vector::new_vector(0.0, 1.0, 0.0)
+        } else if dist < 1.0 && point.y <= (self.minimum + EPSILON) {
+            Vector::new_vector(0.0, -1.0, 0.0)
+        } else {
+            Vector::new_vector(point.x, 0.0, point.z)
+        }
     }
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         let a = local_ray.direction.x.powi(2) + local_ray.direction.z.powi(2);
         if is_float_equal(&a, 0.0) {
-            // ray is parallell to the y axis
-            return vec![];
+            let mut xs = vec![];
+            self.intersect_caps(&local_ray, &mut xs);
+            return xs;
         }
 
         let b = 2.0 * local_ray.origin.x * local_ray.direction.x
@@ -60,10 +99,22 @@ impl Shapes for Cylinder {
 
         let t0 = (-b - disc.sqrt()) / (2.0 * a);
         let t1 = (-b + disc.sqrt()) / (2.0 * a);
-        vec![
-            Intersection::new(t0, super::Object::new_raw(Box::new(*self))),
-            Intersection::new(t1, super::Object::new_raw(Box::new(*self))),
-        ]
+
+        let mut xs = vec![];
+
+        let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
+        if self.minimum < y0 && y0 < self.maximum {
+            xs.push(Intersection::new(t0, super::Object::new(Box::new(*self))));
+        }
+
+        let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
+        if self.minimum < y1 && y1 < self.maximum {
+            xs.push(Intersection::new(t1, super::Object::new(Box::new(*self))));
+        }
+
+        self.intersect_caps(&local_ray, &mut xs);
+
+        xs
     }
 }
 
@@ -152,6 +203,151 @@ mod tests {
             ),
         ];
         let cyl = Cylinder::new();
+
+        for example in examples {
+            let n = cyl.local_normal_at(example.0);
+            assert_eq!(example.1, n);
+        }
+    }
+
+    #[test]
+    fn the_default_minimum_and_maximum_for_a_cylinder() {
+        let cyl = Cylinder::new();
+
+        assert!(cyl.minimum.is_infinite());
+        assert!(cyl.maximum.is_infinite());
+    }
+
+    #[test]
+    fn intersecting_a_connstrained_cylinder() {
+        let examples = [
+            (
+                Point::new_point(0.0, 1.5, 0.0),
+                Vector::new_vector(0.1, 1.0, 0.0),
+                0,
+            ),
+            (
+                Point::new_point(0.0, 3.0, -5.0),
+                Vector::new_vector(0.0, 0.0, 1.0),
+                0,
+            ),
+            (
+                Point::new_point(0.0, 0.0, -5.0),
+                Vector::new_vector(0.0, 0.0, 1.0),
+                0,
+            ),
+            (
+                Point::new_point(0.0, 2.0, -5.0),
+                Vector::new_vector(0.0, 0.0, 1.0),
+                0,
+            ),
+            (
+                Point::new_point(0.0, 1.0, -5.0),
+                Vector::new_vector(0.0, 0.0, 1.0),
+                0,
+            ),
+            (
+                Point::new_point(0.0, 1.5, -2.0),
+                Vector::new_vector(0.0, 0.0, 1.0),
+                2,
+            ),
+        ];
+
+        let mut cyl = Cylinder::new();
+        cyl.minimum = 1.0;
+        cyl.maximum = 2.0;
+
+        for example in examples {
+            let direction = example.1.normalize();
+            let r = Ray::new(example.0, direction);
+            let xs = cyl.local_intersect(r);
+            assert_eq!(example.2, xs.len());
+        }
+    }
+
+    #[test]
+    fn the_default_closed_value_for_a_cylinder() {
+        let cyl = Cylinder::new();
+
+        assert!(!cyl.closed);
+    }
+
+    #[test]
+    fn intersecting_the_caps_of_a_closed_cylinder() {
+        let examples = [
+            (
+                Point::new_point(0.0, 3.0, 0.0),
+                Vector::new_vector(0.0, -1.0, 0.0),
+                2,
+            ),
+            (
+                Point::new_point(0.0, 3.0, -2.0),
+                Vector::new_vector(0.0, -1.0, 2.0),
+                2,
+            ),
+            (
+                Point::new_point(0.0, 4.0, -2.0),
+                Vector::new_vector(0.0, -1.0, 1.0),
+                2,
+            ),
+            (
+                Point::new_point(0.0, 0.0, -2.0),
+                Vector::new_vector(0.0, 1.0, 2.0),
+                2,
+            ),
+            (
+                Point::new_point(0.0, -1.0, -2.0),
+                Vector::new_vector(0.0, 1.0, 1.0),
+                2,
+            ),
+        ];
+
+        let mut cyl = Cylinder::new();
+        cyl.minimum = 1.0;
+        cyl.maximum = 2.0;
+        cyl.closed = true;
+
+        for example in examples {
+            let direction = example.1.normalize();
+            let r = Ray::new(example.0, direction);
+            let xs = cyl.local_intersect(r);
+            assert_eq!(example.2, xs.len());
+        }
+    }
+
+    #[test]
+    fn the_normal_vector_on_a_cylinders_end_caps() {
+        let examples = [
+            (
+                Point::new_point(0.0, 1.0, 0.0),
+                Vector::new_vector(0.0, -1.0, 0.0),
+            ),
+            (
+                Point::new_point(0.5, 1.0, 0.0),
+                Vector::new_vector(0.0, -1.0, 0.0),
+            ),
+            (
+                Point::new_point(0.0, 1.0, 0.5),
+                Vector::new_vector(0.0, -1.0, 0.0),
+            ),
+            (
+                Point::new_point(0.0, 2.0, 0.0),
+                Vector::new_vector(0.0, 1.0, 0.0),
+            ),
+            (
+                Point::new_point(0.5, 2.0, 0.0),
+                Vector::new_vector(0.0, 1.0, 0.0),
+            ),
+            (
+                Point::new_point(0.0, 2.0, 0.5),
+                Vector::new_vector(0.0, 1.0, 0.0),
+            ),
+        ];
+
+        let mut cyl = Cylinder::new();
+        cyl.minimum = 1.0;
+        cyl.maximum = 2.0;
+        cyl.closed = true;
 
         for example in examples {
             let n = cyl.local_normal_at(example.0);
