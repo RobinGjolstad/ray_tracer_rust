@@ -10,9 +10,11 @@ use crate::ray_tracer::{
     tuples::{Point, Tuple, Vector},
 };
 
-use self::{cube::Cube, plane::Plane, sphere::Sphere};
+use self::{cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere};
 
+pub mod cone;
 pub mod cube;
+pub mod cylinder;
 pub mod plane;
 pub mod sphere;
 mod test_shape;
@@ -23,6 +25,8 @@ pub enum ShapeType {
     TestShape,
     Plane,
     Cube,
+    Cylinder,
+    Cone,
 }
 
 #[clonable]
@@ -75,10 +79,32 @@ impl Object {
         plane.transform = plane.transform.calculate_inverse().unwrap();
         plane
     }
+    pub fn new_cone(max_min: Option<(f64, f64)>) -> Object {
+        let mut cone = Cone::new();
+        if let Some((max, min)) = max_min {
+            cone.maximum = max;
+            cone.minimum = min;
+            cone.closed = true;
+        }
+        let mut cone = Object::new(Box::new(cone));
+        cone.transform = cone.transform.calculate_inverse().unwrap();
+        cone
+    }
     pub fn new_cube() -> Object {
         let mut cube = Object::new(Box::new(Cube::new()));
         cube.transform = cube.transform.calculate_inverse().unwrap();
         cube
+    }
+    pub fn new_cylinder(max_min: Option<(f64, f64)>) -> Object {
+        let mut cylinder = Cylinder::new();
+        if let Some((max, min)) = max_min {
+            cylinder.maximum = max;
+            cylinder.minimum = min;
+            cylinder.closed = true;
+        }
+        let mut cylinder = Object::new(Box::new(cylinder));
+        cylinder.transform = cylinder.transform.calculate_inverse().unwrap();
+        cylinder
     }
     fn world_point_to_local(&self, point: &Point) -> Point {
         self.get_transform().get_inverted().unwrap() * *point

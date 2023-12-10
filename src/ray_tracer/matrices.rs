@@ -260,7 +260,7 @@ impl Mul<Tuple> for Matrix {
     fn mul(self, rhs: Tuple) -> Self::Output {
         let size = self.size();
         assert_eq!(4, size);
-        let mut tup = vec![0.0; 4];
+        let mut tup = [0.0; 4];
         for (row, item) in tup.iter_mut().enumerate().take(size) {
             *item = self.matrix[row][0] * rhs.x
                 + self.matrix[row][1] * rhs.y

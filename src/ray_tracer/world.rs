@@ -335,7 +335,7 @@ mod tests {
             Point::new_point(0.0, 0.0, 0.0),
             Vector::new_vector(0.0, 0.0, 1.0),
         );
-        let mut shape = w.objects.get_mut(1).unwrap();
+        let shape = w.objects.get_mut(1).unwrap();
         shape.material.ambient = 1.0;
         let i = Intersection::new(1.0, shape.clone());
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
