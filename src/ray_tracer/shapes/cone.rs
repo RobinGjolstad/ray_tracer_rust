@@ -12,9 +12,9 @@ use super::{ShapeType, Shapes};
 pub(crate) struct Cone {
     position: Point,
     material: Material,
-    minimum: f64,
-    maximum: f64,
-    closed: bool,
+    pub(super) minimum: f64,
+    pub(super) maximum: f64,
+    pub(super) closed: bool,
 }
 
 impl Cone {
@@ -100,8 +100,11 @@ impl Shapes for Cone {
 
         if is_float_equal(&a, 0.0) {
             if is_float_equal(&b, 0.0) {
+                // No intersections.
                 return vec![];
             } else {
+                // Parallel to one of the halves.
+                // One intersection.
                 let t = -c / (2.0 * b);
                 xs.push(Intersection::new(t, super::Object::new(Box::new(*self))));
             }
@@ -358,6 +361,31 @@ mod tests {
         for example in examples {
             let n = cone.local_normal_at(example.0);
             assert_eq!(example.1, n);
+        }
+    }
+
+    #[test]
+    fn a_ray_misses_a_restricted_cone() {
+        let mut cone = Cone::new();
+        cone.minimum = -1.0;
+        cone.maximum = 0.0;
+        cone.closed = true;
+        let examples = [
+            (
+                Point::new_point(0.0, 0.0, -5.0),
+                Vector::new_vector(0.0, 0.0, 1.0),
+            ),
+            (
+                Point::new_point(-2.0, 1.0, 0.0),
+                Vector::new_vector(1.0, 0.0, 0.0),
+            ),
+        ];
+
+        for example in examples {
+            let direction = example.1.normalize();
+            let r = Ray::new(example.0, direction);
+            let xs = cone.local_intersect(r);
+            assert_eq!(xs.len(), 0);
         }
     }
 }

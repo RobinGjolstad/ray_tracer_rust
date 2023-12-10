@@ -79,8 +79,14 @@ impl Object {
         plane.transform = plane.transform.calculate_inverse().unwrap();
         plane
     }
-    pub fn new_cone() -> Object {
-        let mut cone = Object::new(Box::new(Cone::new()));
+    pub fn new_cone(max_min: Option<(f64, f64)>) -> Object {
+        let mut cone = Cone::new();
+        if let Some((max, min)) = max_min {
+            cone.maximum = max;
+            cone.minimum = min;
+            cone.closed = true;
+        }
+        let mut cone = Object::new(Box::new(cone));
         cone.transform = cone.transform.calculate_inverse().unwrap();
         cone
     }
@@ -89,8 +95,14 @@ impl Object {
         cube.transform = cube.transform.calculate_inverse().unwrap();
         cube
     }
-    pub fn new_cylinder() -> Object {
-        let mut cylinder = Object::new(Box::new(Cylinder::new()));
+    pub fn new_cylinder(max_min: Option<(f64, f64)>) -> Object {
+        let mut cylinder = Cylinder::new();
+        if let Some((max, min)) = max_min {
+            cylinder.maximum = max;
+            cylinder.minimum = min;
+            cylinder.closed = true;
+        }
+        let mut cylinder = Object::new(Box::new(cylinder));
         cylinder.transform = cylinder.transform.calculate_inverse().unwrap();
         cylinder
     }

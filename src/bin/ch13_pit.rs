@@ -43,15 +43,22 @@ fn main() {
     floor.set_material(&material);
     world.objects.push(floor);
 
-    let mut cylinder = Object::new_cylinder();
-    let trans =
-        Transform::rotation_y(90.0_f64.to_radians()) * Transform::rotation_x(25.0_f64.to_radians());
+    let mut cylinder = Object::new_cylinder(Some((1.0, 0.0)));
+    let mut trans = Transform::scaling(0.25, 1.0, 0.25);
     cylinder.set_transform(&trans);
     material = Material::new();
-    material.color = Color::new(0.20, 0.30, 0.90);
-    material.reflective = 0.10;
+    material.color = Color::new(0.545098, 0.270588, 0.07451);
+    material.reflective = 0.0;
     cylinder.set_material(&material);
     world.objects.push(cylinder);
+
+    let mut cone = Object::new_cone(Some((0.0, -1.0)));
+    trans = Transform::translate(0.0, 3.0, 0.0) * Transform::scaling(0.75, 2.0, 0.75);
+    cone.set_transform(&trans);
+    material = Material::new();
+    material.color = Color::new(0.133333, 0.545098, 0.133333);
+    cone.set_material(&material);
+    world.objects.push(cone);
 
     world.lights.push(Light::point_light(
         &Tuple::new_point(-10.0, 10.0, -10.0),

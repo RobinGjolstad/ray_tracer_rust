@@ -12,9 +12,9 @@ use super::{ShapeType, Shapes};
 pub(crate) struct Cylinder {
     position: Point,
     material: Material,
-    minimum: f64,
-    maximum: f64,
-    closed: bool,
+    pub(super) minimum: f64,
+    pub(super) maximum: f64,
+    pub(super) closed: bool,
 }
 
 impl Cylinder {

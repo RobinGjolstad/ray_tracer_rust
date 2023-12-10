@@ -19,7 +19,7 @@ In addition I will also try to exclusively use Vim motions for all my editing in
 - [x] Chapter 10
 - [x] Chapter 11
 - [x] Chapter 12
-- [ ] Chapter 13
+- [x] Chapter 13
 - [ ] Chapter 14
 - [ ] Chapter 15
 - [ ] Chapter 16
