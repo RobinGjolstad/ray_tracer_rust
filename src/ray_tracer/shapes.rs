@@ -10,8 +10,9 @@ use crate::ray_tracer::{
     tuples::{Point, Tuple, Vector},
 };
 
-use self::{cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere};
+use self::{cone::Cone, cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere};
 
+pub mod cone;
 pub mod cube;
 pub mod cylinder;
 pub mod plane;
@@ -25,6 +26,7 @@ pub enum ShapeType {
     Plane,
     Cube,
     Cylinder,
+    Cone,
 }
 
 #[clonable]
@@ -76,6 +78,11 @@ impl Object {
         let mut plane = Object::new(Box::new(Plane::new()));
         plane.transform = plane.transform.calculate_inverse().unwrap();
         plane
+    }
+    pub fn new_cone() -> Object {
+        let mut cone = Object::new(Box::new(Cone::new()));
+        cone.transform = cone.transform.calculate_inverse().unwrap();
+        cone
     }
     pub fn new_cube() -> Object {
         let mut cube = Object::new(Box::new(Cube::new()));
