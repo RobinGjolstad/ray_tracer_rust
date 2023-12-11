@@ -1,45 +1,53 @@
-#![allow(unused)]
-use super::*;
+use super::{BaseShape, Object, Shapes};
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    shapes_test::BaseShape,
     tuples::{Point, Vector},
 };
 
-/// Ugly hack for testing purposes
-mod saved_ray {
-    use crate::ray_tracer::rays::Ray;
-
-    pub(super) static mut SAVED_RAY: Option<Ray> = None;
-}
-use saved_ray::SAVED_RAY;
-
-#[cfg(test)]
-#[derive(Debug, Clone, Copy)]
-pub struct TestShape {
-    base: BaseShape,
+#[derive(Debug, Clone)]
+pub struct GroupBuilder {
+    pub base: BaseShape,
+    children: Vec<Object>,
     parent: Option<BaseShape>,
 }
-impl TestShape {
-    pub(super) fn new() -> TestShape {
-        TestShape {
+impl GroupBuilder {
+    pub fn new() -> GroupBuilder {
+        GroupBuilder {
             base: BaseShape {
-                position: Some(Point::new_point(0.0, 0.0, 0.0)),
-                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
-                material: Some(Material::new()),
+                position: None,
+                transform: None,
+                material: None,
             },
+            children: Vec::new(),
             parent: None,
         }
     }
-    pub(super) fn get_saved_ray() -> Option<Ray> {
-        unsafe { SAVED_RAY }
+    pub fn add_child(&mut self, child: Object) {
+        self.children.push(child);
+    }
+    pub fn build(mut self) -> Group {
+        self.children.iter_mut().for_each(|child| {
+            child.set_parent(&self.base);
+        });
+        Group {
+            base: self.base.clone(),
+            children: self.children.clone(),
+            parent: self.parent.clone(),
+        }
     }
 }
 
-impl Shapes for TestShape {
+#[derive(Debug, Clone)]
+pub struct Group {
+    base: BaseShape,
+    children: Vec<Object>,
+    parent: Option<BaseShape>,
+}
+impl Group {}
+impl Shapes for Group {
     fn set_position(&mut self, pos: &Point) {
         self.base.position = Some(*pos);
     }
@@ -47,8 +55,7 @@ impl Shapes for TestShape {
         self.base.position.unwrap()
     }
     fn set_transform(&mut self, transform: &Matrix) {
-        let transform = transform.clone().calculate_inverse().unwrap();
-        self.base.transform = Some(transform);
+        self.base.transform = Some(*transform);
     }
     fn get_transform(&self) -> Matrix {
         self.base.transform.unwrap()
@@ -68,10 +75,7 @@ impl Shapes for TestShape {
     fn local_normal_at(&self, point: Point) -> Vector {
         Vector::new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
-        unsafe {
-            SAVED_RAY = Some(local_ray);
-        }
+    fn local_intersect(&self, _local_ray: Ray) -> Vec<Intersection> {
         Vec::new()
     }
 }
