@@ -8,6 +8,7 @@ pub mod matrices;
 pub mod patterns;
 pub mod rays;
 pub mod shapes;
+pub mod shapes_test;
 pub mod transformations;
 pub mod tuples;
 pub mod utils;
