@@ -43,6 +43,7 @@ fn main() {
     let mut material = sphere.get_material();
     material.reflective = 0.9;
 
+    println!("Adding spheres");
     for x in 0..args.num {
         for y in 0..args.num {
             for z in 0..args.num {
@@ -59,7 +60,6 @@ fn main() {
                     -(args.num as f64) / 2.0 + z as f64,
                 ) * Transform::scaling(0.33, 0.33, 0.33);
                 s.set_transform(&trans);
-                println!("Adding sphere [{}, {}, {}]", x, y, z);
                 world.objects.push(s);
             }
         }
@@ -76,8 +76,8 @@ fn main() {
 
     let mut camera = Camera::new(args.x_axis, args.y_axis, 60_f64.to_radians());
     camera.set_transform(Transform::view_transform(
-        &Tuple::new_point(58.0, 48.0, -58.0),
-        &Tuple::new_point(0.0, -8.0, 0.0),
+        &Tuple::new_point(40.0, 30.0, -40.0),
+        &Tuple::new_point(0.0, -3.0, 0.0),
         &Tuple::new_vector(0.0, 1.0, 0.0),
     ));
 
@@ -95,7 +95,7 @@ fn main() {
         img.height(),
         thread_number,
         args.reflect,
-        args.num.pow(3)
+        args.num
     ));
 
     elapsed = start.elapsed();
