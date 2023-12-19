@@ -161,6 +161,69 @@ impl Camera {
         let ret_img = image.lock().unwrap().clone();
         ret_img
     }
+
+    pub fn render_multithreaded_improved(
+        &self,
+        w: &World,
+        thread_num: usize,
+        num_reflections: usize,
+    ) -> Canvas {
+        let image = Arc::new(Mutex::new(Canvas::new(self.hsize, self.vsize)));
+
+        let (tx, rx) = mpsc::channel();
+        thread::scope(|s| {
+            // List of pixel rows that need to be rendered.
+            // Each thread will take a row from this list and render it.
+            // When a thread has taken the row, it should be removed from the list.
+            let pixel_rows_to_render: Vec<usize> = (0..self.vsize).collect();
+            let pixel_rows_to_render = Arc::new(Mutex::new(pixel_rows_to_render));
+
+            let mut thread_handles = Vec::new();
+            for _thread in 0..thread_num {
+                let tx_clone = tx.clone();
+                let pixel_rows = Arc::clone(&pixel_rows_to_render);
+                let handle = s.spawn(move || loop {
+                    // While there are still pixel rows to render, render them.
+                    // Otherwise, break out of the loop.
+                    let mut pixel_rows_to_render = pixel_rows.lock().unwrap();
+                    if pixel_rows_to_render.len() > 0 {
+                        let row = pixel_rows_to_render.pop().unwrap();
+                        drop(pixel_rows_to_render);
+                        for x in 0..self.hsize {
+                            let ray = self.ray_for_pixel(x, row);
+                            let color = w.color_at(&ray, num_reflections);
+                            tx_clone.send((x, row, color)).unwrap();
+                        }
+                    } else {
+                        break;
+                    }
+                });
+                thread_handles.push(handle);
+            }
+
+            let thread_image = Arc::clone(&image);
+            s.spawn(move || loop {
+                if thread_handles.len() > thread_handles.iter().filter(|x| x.is_finished()).count()
+                {
+                    let values: Result<(usize, usize, Color), mpsc::TryRecvError> = rx.try_recv();
+                    match values {
+                        Ok((x, y, color)) => {
+                            let mut internal_image = thread_image.lock().unwrap();
+                            internal_image.write_pixel(x, y, color);
+                        }
+                        _ => {
+                            continue;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            });
+        });
+
+        let ret_img = image.lock().unwrap().clone();
+        ret_img
+    }
 }
 
 #[cfg(test)]
@@ -252,6 +315,17 @@ mod tests {
         let up = Tuple::new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
         let image: Canvas = c.render_multithreaded(&w, 2, 1);
+        assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
+    }
+    #[test]
+    fn rendering_a_world_with_a_camera_with_two_threads_improved() {
+        let w = World::new_default_world();
+        let mut c = Camera::new(11, 11, PI / 2.0);
+        let from = Tuple::new_point(0.0, 0.0, -5.0);
+        let to = Tuple::new_point(0.0, 0.0, 0.0);
+        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        c.set_transform(Transform::view_transform(&from, &to, &up));
+        let image: Canvas = c.render_multithreaded_improved(&w, 2, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
     }
 }
