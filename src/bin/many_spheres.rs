@@ -1,9 +1,9 @@
 use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, materials::Material, shapes::Object,
-    transformations::Transform, tuples::Tuple, world::World,
+    camera::Camera, colors::Color, lights::Light, shapes::Object, transformations::Transform,
+    tuples::Tuple, world::World,
 };
-use std::{f64::consts::PI, time::Instant};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Copy, clap::Parser)]
 #[command(author, version, about, long_about = None)]
@@ -23,10 +23,6 @@ struct Args {
     /// Number of times light can reflect
     #[arg(short, long, default_value_t = 5)]
     reflect: usize,
-
-    /// Number of spheres, cubed, to render
-    #[arg(short, long, default_value_t = 3)]
-    num: usize,
 }
 
 fn main() {
@@ -38,26 +34,27 @@ fn main() {
 
     let mut world = World::new();
 
+    let num_spheres = 25;
     let mut sphere = Object::glass_sphere();
 
     let mut material = sphere.get_material();
     material.reflective = 0.9;
 
     println!("Adding spheres");
-    for x in 0..args.num {
-        for y in 0..args.num {
-            for z in 0..args.num {
+    for x in 0..num_spheres {
+        for y in 0..num_spheres {
+            for z in 0..num_spheres {
                 material.color = Color::new(
-                    x as f64 / args.num as f64,
-                    y as f64 / args.num as f64,
-                    z as f64 / args.num as f64,
+                    x as f64 / num_spheres as f64,
+                    y as f64 / num_spheres as f64,
+                    z as f64 / num_spheres as f64,
                 );
                 sphere.set_material(&material);
                 let mut s = sphere.clone();
                 let trans = Transform::translate(
-                    -(args.num as f64) / 2.0 + x as f64,
-                    -(args.num as f64) / 2.0 + y as f64,
-                    -(args.num as f64) / 2.0 + z as f64,
+                    -(num_spheres as f64) / 2.0 + x as f64,
+                    -(num_spheres as f64) / 2.0 + y as f64,
+                    -(num_spheres as f64) / 2.0 + z as f64,
                 ) * Transform::scaling(0.33, 0.33, 0.33);
                 s.set_transform(&trans);
                 world.objects.push(s);
@@ -67,9 +64,9 @@ fn main() {
 
     world.lights.push(Light::point_light(
         &Tuple::new_point(
-            args.num as f64 * 2.0,
-            args.num as f64 * 2.0,
-            -(args.num as f64),
+            num_spheres as f64 * 2.0,
+            num_spheres as f64 * 2.0,
+            -(num_spheres as f64),
         ),
         &Color::new(1.0, 1.0, 1.0),
     ));
@@ -95,7 +92,7 @@ fn main() {
         img.height(),
         thread_number,
         args.reflect,
-        args.num
+        num_spheres
     ));
 
     elapsed = start.elapsed();
