@@ -3,10 +3,14 @@ use ray_tracer_rust::ray_tracer::{
     camera::Camera, colors::Color, lights::Light, shapes::Object, transformations::Transform,
     tuples::Tuple, world::World,
 };
-use std::time::Instant;
+use std::{fs, path::Path, time::Instant};
 
-#[derive(Debug, Clone, Copy, clap::Parser)]
-#[command(author, version, about, long_about = None)]
+#[derive(Debug, Clone, clap::Parser)]
+#[command(name="Marble Madness 25", 
+          author="Robin Gjølstad", 
+          version="1.0.0", 
+          about="Render an image with a cube of spheres, 25 at each side.", 
+          long_about = None)]
 struct Args {
     /// Number of parallell jobs
     #[arg(short, long, default_value_t = 1)]
@@ -23,6 +27,10 @@ struct Args {
     /// Number of times light can reflect
     #[arg(short, long, default_value_t = 5)]
     reflect: usize,
+
+    /// Output directory for images
+    #[arg(short, long, default_value_t = String::from("images/marble_madness_25"))]
+    path: String,
 }
 
 fn main() {
@@ -30,7 +38,20 @@ fn main() {
     let start = Instant::now();
 
     let args = Args::parse();
-    dbg!(args);
+    dbg!(&args);
+
+    let mut create_dir = false;
+    if let Ok(status) = Path::new(&args.path).try_exists() {
+        if !status {
+            create_dir = true;
+        }
+    } else {
+        create_dir = true;
+    }
+
+    if create_dir {
+        fs::create_dir_all(&args.path).expect("Failed creating output directory.");
+    }
 
     let mut world = World::new();
 
@@ -40,7 +61,7 @@ fn main() {
     let mut material = sphere.get_material();
     material.reflective = 0.9;
 
-    println!("Adding spheres");
+    println!("Creating objects.");
     for x in 0..num_spheres {
         for y in 0..num_spheres {
             for z in 0..num_spheres {
@@ -87,12 +108,12 @@ fn main() {
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
     img.save(&format!(
-        "images/many_spheres/many_spheres_{}x{}_{}-threads_{}-reflect_{}-spheres.ppm",
+        "{}/marble_madness_25_{}x{}_{}-threads_{}-reflect.ppm",
+        args.path,
         img.width(),
         img.height(),
         thread_number,
         args.reflect,
-        num_spheres
     ));
 
     elapsed = start.elapsed();
