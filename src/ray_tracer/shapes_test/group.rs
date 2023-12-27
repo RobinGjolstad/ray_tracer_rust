@@ -7,7 +7,7 @@ use crate::ray_tracer::{
     tuples::{Point, Vector},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GroupBuilder {
     pub base: BaseShape,
     children: Vec<Object>,
@@ -40,13 +40,25 @@ impl GroupBuilder {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Group {
     base: BaseShape,
     children: Vec<Object>,
     parent: Option<BaseShape>,
 }
-impl Group {}
+
+impl Group {
+    pub fn new() -> Self {
+        todo!()
+    }
+}
+
+impl Default for Group {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Shapes for Group {
     fn set_position(&mut self, pos: &Point) {
         self.base.position = Some(*pos);

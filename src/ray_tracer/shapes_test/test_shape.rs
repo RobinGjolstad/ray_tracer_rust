@@ -18,7 +18,7 @@ mod saved_ray {
 use saved_ray::SAVED_RAY;
 
 #[cfg(test)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TestShape {
     base: BaseShape,
     parent: Option<BaseShape>,
@@ -36,6 +36,12 @@ impl TestShape {
     }
     pub(super) fn get_saved_ray() -> Option<Ray> {
         unsafe { SAVED_RAY }
+    }
+}
+
+impl Default for TestShape {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

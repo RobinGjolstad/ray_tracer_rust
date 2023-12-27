@@ -6,8 +6,18 @@ use crate::ray_tracer::{
 };
 use std::fmt::Debug;
 
+mod cylinder;
+pub use cylinder::Cylinder;
+mod cone;
+pub use cone::Cone;
 mod group;
 use group::Group;
+mod sphere;
+pub use sphere::Sphere;
+mod cube;
+pub use cube::Cube;
+mod plane;
+pub use plane::Plane;
 
 #[cfg(test)]
 mod test_shape;
@@ -16,7 +26,7 @@ use test_shape::TestShape;
 
 use super::{intersections::Intersection, rays::Ray};
 
-pub(super) trait Shapes: Debug + Sync {
+pub(super) trait Shapes: Debug + Default + Sync {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
     fn set_transform(&mut self, transform: &Matrix);
@@ -29,16 +39,30 @@ pub(super) trait Shapes: Debug + Sync {
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BaseShape {
     position: Option<Point>,
     transform: Option<Matrix>,
     material: Option<Material>,
 }
+impl BaseShape {
+    pub fn new() -> Self {
+        Self {
+            position: None,
+            transform: None,
+            material: None,
+        }
+    }
+}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     Group(Group),
+    Sphere(Sphere),
+    Plane(Plane),
+    Cube(Cube),
+    Cylinder(Cylinder),
+    Cone(Cone),
 
     #[cfg(test)]
     TestShape(TestShape),
@@ -47,6 +71,11 @@ impl Object {
     fn world_point_to_local(&self, point: &Point) -> Point {
         let inverted = match self {
             Object::Group(g) => g.get_transform().get_inverted().unwrap(),
+            Object::Sphere(s) => s.get_transform().get_inverted().unwrap(),
+            Object::Plane(p) => p.get_transform().get_inverted().unwrap(),
+            Object::Cube(c) => c.get_transform().get_inverted().unwrap(),
+            Object::Cylinder(c) => c.get_transform().get_inverted().unwrap(),
+            Object::Cone(c) => c.get_transform().get_inverted().unwrap(),
 
             #[cfg(test)]
             Object::TestShape(s) => s.get_transform().get_inverted().unwrap(),
@@ -54,10 +83,15 @@ impl Object {
 
         inverted * *point
     }
-    fn normal_at(&self, world_point: Point) -> Vector {
+    pub(crate) fn normal_at(&self, world_point: Point) -> Vector {
         let local_point = self.world_point_to_local(&world_point);
         let local_normal = match self {
             Object::Group(g) => g.local_normal_at(local_point),
+            Object::Sphere(s) => s.local_normal_at(local_point),
+            Object::Plane(p) => p.local_normal_at(local_point),
+            Object::Cube(c) => c.local_normal_at(local_point),
+            Object::Cylinder(c) => c.local_normal_at(local_point),
+            Object::Cone(c) => c.local_normal_at(local_point),
 
             #[cfg(test)]
             Object::TestShape(s) => s.local_normal_at(local_point),
@@ -68,6 +102,11 @@ impl Object {
     fn local_vector_to_world(&self, local_vector: &Vector) -> Vector {
         let inverted = match self {
             Object::Group(g) => g.get_transform().get_inverted().unwrap(),
+            Object::Sphere(s) => s.get_transform().get_inverted().unwrap(),
+            Object::Plane(p) => p.get_transform().get_inverted().unwrap(),
+            Object::Cube(c) => c.get_transform().get_inverted().unwrap(),
+            Object::Cylinder(c) => c.get_transform().get_inverted().unwrap(),
+            Object::Cone(c) => c.get_transform().get_inverted().unwrap(),
 
             #[cfg(test)]
             Object::TestShape(s) => s.get_transform().get_inverted().unwrap(),
@@ -81,6 +120,11 @@ impl Object {
     pub fn set_transform(&mut self, transform: &Matrix) {
         match self {
             Object::Group(g) => g.set_transform(transform),
+            Object::Sphere(s) => s.set_transform(transform),
+            Object::Plane(p) => p.set_transform(transform),
+            Object::Cube(c) => c.set_transform(transform),
+            Object::Cylinder(c) => c.set_transform(transform),
+            Object::Cone(c) => c.set_transform(transform),
 
             #[cfg(test)]
             Object::TestShape(s) => s.set_transform(transform),
@@ -89,6 +133,11 @@ impl Object {
     pub fn get_transform(&self) -> Matrix {
         match self {
             Object::Group(g) => g.get_transform(),
+            Object::Sphere(s) => s.get_transform(),
+            Object::Plane(p) => p.get_transform(),
+            Object::Cube(c) => c.get_transform(),
+            Object::Cylinder(c) => c.get_transform(),
+            Object::Cone(c) => c.get_transform(),
 
             #[cfg(test)]
             Object::TestShape(s) => s.get_transform(),
@@ -97,6 +146,11 @@ impl Object {
     pub fn set_material(&mut self, material: &Material) {
         match self {
             Object::Group(g) => g.set_material(material),
+            Object::Sphere(s) => s.set_material(material),
+            Object::Plane(p) => p.set_material(material),
+            Object::Cube(c) => c.set_material(material),
+            Object::Cylinder(c) => c.set_material(material),
+            Object::Cone(c) => c.set_material(material),
 
             #[cfg(test)]
             Object::TestShape(s) => s.set_material(material),
@@ -105,6 +159,11 @@ impl Object {
     pub fn get_material(&self) -> Material {
         match self {
             Object::Group(g) => g.get_material(),
+            Object::Sphere(s) => s.get_material(),
+            Object::Plane(p) => p.get_material(),
+            Object::Cube(c) => c.get_material(),
+            Object::Cylinder(c) => c.get_material(),
+            Object::Cone(c) => c.get_material(),
 
             #[cfg(test)]
             Object::TestShape(s) => s.get_material(),
@@ -113,19 +172,76 @@ impl Object {
     fn set_parent(&mut self, parent: &BaseShape) {
         match self {
             Object::Group(g) => g.set_parent(parent),
+            Object::Sphere(s) => s.set_parent(parent),
+            Object::Plane(p) => p.set_parent(parent),
+            Object::Cube(c) => c.set_parent(parent),
+            Object::Cylinder(c) => c.set_parent(parent),
+            Object::Cone(c) => c.set_parent(parent),
 
             #[cfg(test)]
             Object::TestShape(s) => s.set_parent(parent),
         }
     }
+    pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+        match self {
+            Object::Group(g) => g.local_intersect(local_ray),
+            Object::Sphere(s) => s.local_intersect(local_ray),
+            Object::Plane(p) => p.local_intersect(local_ray),
+            Object::Cube(c) => c.local_intersect(local_ray),
+            Object::Cylinder(c) => c.local_intersect(local_ray),
+            Object::Cone(c) => c.local_intersect(local_ray),
+
+            #[cfg(test)]
+            Object::TestShape(s) => s.local_intersect(local_ray),
+        }
+    }
 }
 
+pub fn new_sphere() -> Object {
+    Object::Sphere(Sphere::default())
+}
+pub fn glass_sphere() -> Object {
+    let mut s = Sphere::default();
+    let mut material = s.get_material();
+    material.transparency = 1.0;
+    material.refractive_index = 1.5;
+    s.set_material(&material);
+
+    Object::Sphere(s)
+}
+pub fn new_plane() -> Object {
+    Object::Plane(Plane::default())
+}
+pub fn new_cube() -> Object {
+    Object::Cube(Cube::default())
+}
+pub fn new_cylinder(max_min: Option<(f64, f64)>) -> Object {
+    let mut cyl = Cylinder::default();
+    if let Some(max_min) = max_min {
+        cyl.maximum = max_min.0;
+        cyl.minimum = max_min.1;
+        cyl.closed = true;
+    }
+
+    Object::Cylinder(cyl)
+}
+pub fn new_cone(max_min: Option<(f64, f64)>) -> Object {
+    let mut cone = Cone::default();
+    if let Some(max_min) = max_min {
+        cone.maximum = max_min.0;
+        cone.minimum = max_min.1;
+        cone.closed = true;
+    }
+
+    Object::Cone(cone)
+}
 pub fn new_group(group: Group) -> Object {
     Object::Group(group)
 }
+
 #[cfg(test)]
 fn new_test_shape() -> Object {
-    Object::TestShape(TestShape::new())
+    Object::TestShape(TestShape::default())
 }
 
 #[cfg(test)]

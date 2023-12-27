@@ -1,6 +1,6 @@
 use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, materials::Material, shapes::Object,
+    camera::Camera, colors::Color, lights::Light, materials::Material, shapes_test::*,
     transformations::Transform, tuples::Tuple, world::World,
 };
 use std::{f64::consts::PI, time::Instant};
@@ -34,7 +34,7 @@ fn main() {
 
     let mut world = World::new();
 
-    let mut floor = Object::new_plane();
+    let mut floor = new_plane();
     floor.set_transform(&Transform::scaling(1.0, 1.0, 1.0));
     let mut material = Material::new();
     material.color = Color::new(1.0, 0.75, 0.75);
@@ -43,7 +43,7 @@ fn main() {
     floor.set_material(&material);
     world.objects.push(floor);
 
-    let mut cylinder = Object::new_cylinder(Some((1.0, 0.0)));
+    let mut cylinder = new_cylinder(Some((1.0, 0.0)));
     let mut trans = Transform::scaling(0.25, 1.0, 0.25);
     cylinder.set_transform(&trans);
     material = Material::new();
@@ -52,7 +52,7 @@ fn main() {
     cylinder.set_material(&material);
     world.objects.push(cylinder);
 
-    let mut cone = Object::new_cone(Some((0.0, -1.0)));
+    let mut cone = new_cone(Some((0.0, -1.0)));
     trans = Transform::translate(0.0, 3.0, 0.0) * Transform::scaling(0.75, 2.0, 0.75);
     cone.set_transform(&trans);
     material = Material::new();

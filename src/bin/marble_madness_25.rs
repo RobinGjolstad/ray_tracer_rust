@@ -1,6 +1,6 @@
 use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, shapes::Object, transformations::Transform,
+    camera::Camera, colors::Color, lights::Light, shapes_test::*, transformations::Transform,
     tuples::Tuple, world::World,
 };
 use std::{fs, path::Path, time::Instant};
@@ -56,7 +56,7 @@ fn main() {
     let mut world = World::new();
 
     let num_spheres = 25;
-    let mut sphere = Object::glass_sphere();
+    let mut sphere = glass_sphere();
 
     let mut material = sphere.get_material();
     material.reflective = 0.9;

@@ -1,6 +1,6 @@
 use crate::ray_tracer::{
     rays::Ray,
-    shapes::Object,
+    shapes_test::Object,
     tuples::{Point, Tuple, Vector},
     utils,
 };
@@ -136,7 +136,7 @@ fn get_refractive_index_from_intersections(
 
     for i in &intersection_collection.list {
         if i == intersected_object && !containers.is_empty() {
-            n1 = containers.last().unwrap().material.refractive_index;
+            n1 = containers.last().unwrap().get_material().refractive_index;
         }
 
         if containers.contains(&i.object) {
@@ -147,7 +147,7 @@ fn get_refractive_index_from_intersections(
 
         if i == intersected_object {
             if !containers.is_empty() {
-                n2 = containers.last().unwrap().material.refractive_index;
+                n2 = containers.last().unwrap().get_material().refractive_index;
             }
 
             break;
@@ -188,6 +188,7 @@ pub(crate) fn schlick(comps: &IntersectComp) -> f64 {
 mod tests {
 
     use crate::ray_tracer::{
+        shapes_test::*,
         transformations::Transform,
         utils::{is_float_equal, EPSILON},
     };
@@ -196,7 +197,7 @@ mod tests {
 
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
-        let s = Object::new_sphere();
+        let s = new_sphere();
         let i = Intersection::new(3.5, s.clone());
 
         assert!(is_float_equal(&i.t, 3.5));
@@ -204,7 +205,7 @@ mod tests {
     }
     #[test]
     fn aggregating_intersections() {
-        let s = Object::new_sphere();
+        let s = new_sphere();
         let i1 = Intersection::new(1.0, s.clone());
         let i2 = Intersection::new(2.0, s);
         let xs = Intersections::new(&vec![i1, i2]);
@@ -214,7 +215,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
-        let s = Object::new_sphere();
+        let s = new_sphere();
         let i1 = Intersection::new(1.0, s.clone());
         let i2 = Intersection::new(2.0, s);
         let xs = Intersections::new(&vec![i2, i1.clone()]);
@@ -223,7 +224,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
-        let s = Object::new_sphere();
+        let s = new_sphere();
         let i1 = Intersection::new(-1.0, s.clone());
         let i2 = Intersection::new(1.0, s);
         let xs = Intersections::new(&vec![i1, i2.clone()]);
@@ -232,7 +233,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
-        let s = Object::new_sphere();
+        let s = new_sphere();
         let i1 = Intersection::new(-2.0, s.clone());
         let i2 = Intersection::new(-1.0, s);
         let xs = Intersections::new(&vec![i2, i1]);
@@ -241,7 +242,7 @@ mod tests {
     }
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let s = Object::new_sphere();
+        let s = new_sphere();
         let i1 = Intersection::new(5.0, s.clone());
         let i2 = Intersection::new(7.0, s.clone());
         let i3 = Intersection::new(-3.0, s.clone());
@@ -256,7 +257,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let shape = Object::new_sphere();
+        let shape = new_sphere();
         let i = Intersection::new(4.0, shape);
         let comps = prepare_computations(
             &i,
@@ -277,7 +278,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let shape = Object::new_sphere();
+        let shape = new_sphere();
         let i = Intersection::new(4.0, shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
         assert!(!comps.inside);
@@ -288,7 +289,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, 0.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let shape = Object::new_sphere();
+        let shape = new_sphere();
         let i = Intersection::new(1.0, shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
         assert_eq!(comps.point, Tuple::new_point(0.0, 0.0, 1.0));
@@ -303,7 +304,7 @@ mod tests {
             Tuple::new_point(0.0, 0.0, -5.0),
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
-        let mut shape = Object::new_sphere();
+        let mut shape = new_sphere();
         shape.set_transform(&Transform::translate(0.0, 0.0, 1.0));
         let i = Intersection::new(5.0, shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
@@ -313,7 +314,7 @@ mod tests {
 
     #[test]
     fn precomputing_the_reflection_vector() {
-        let shape = Object::new_plane();
+        let shape = new_plane();
         let r = Ray::new(
             Point::new_point(0.0, 1.0, -1.0),
             Vector::new_vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
@@ -329,19 +330,19 @@ mod tests {
     #[test]
     fn finding_n1_and_n2_at_various_intersections() {
         #[allow(non_snake_case)]
-        let mut A = Object::glass_sphere();
+        let mut A = glass_sphere();
         A.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
-        A.material.refractive_index = 1.5;
+        A.get_material().refractive_index = 1.5;
 
         #[allow(non_snake_case)]
-        let mut B = Object::glass_sphere();
+        let mut B = glass_sphere();
         B.set_transform(&Transform::translate(0.0, 0.0, -0.25));
-        B.material.refractive_index = 2.0;
+        B.get_material().refractive_index = 2.0;
 
         #[allow(non_snake_case)]
-        let mut C = Object::glass_sphere();
+        let mut C = glass_sphere();
         C.set_transform(&Transform::translate(0.0, 0.0, 0.25));
-        C.material.refractive_index = 2.5;
+        C.get_material().refractive_index = 2.5;
 
         let r = Ray::new(
             Point::new_point(0.0, 0.0, -4.0),
@@ -380,7 +381,7 @@ mod tests {
             Point::new_point(0.0, 0.0, -5.0),
             Vector::new_vector(0.0, 0.0, 1.0),
         );
-        let mut shape = Object::glass_sphere();
+        let mut shape = glass_sphere();
         shape.set_transform(&Transform::translate(0.0, 0.0, 1.0));
         let i = Intersection::new(5.0, shape);
         let xs = Intersections::new(&[i.clone()]);
@@ -390,7 +391,7 @@ mod tests {
     }
     #[test]
     fn the_schlick_approximation_under_total_internal_reflection() {
-        let shape = Object::glass_sphere();
+        let shape = glass_sphere();
         let r = Ray::new(
             Point::new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
             Vector::new_vector(0.0, 1.0, 0.0),
@@ -405,7 +406,7 @@ mod tests {
     }
     #[test]
     fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
-        let shape = Object::glass_sphere();
+        let shape = glass_sphere();
         let r = Ray::new(
             Point::new_point(0.0, 0.0, 0.0),
             Vector::new_vector(0.0, 1.0, 0.0),
@@ -420,7 +421,7 @@ mod tests {
     }
     #[test]
     fn the_schlick_approximation_with_small_angle_and_n2_greater_than_n1() {
-        let shape = Object::glass_sphere();
+        let shape = glass_sphere();
         let r = Ray::new(
             Point::new_point(0.0, 0.99, -2.0),
             Vector::new_vector(0.0, 0.0, 1.0),

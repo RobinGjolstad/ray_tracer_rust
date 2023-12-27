@@ -2,7 +2,7 @@ use crate::ray_tracer::{
     colors::Color,
     lights::Light,
     patterns::Pattern,
-    shapes::Object,
+    shapes_test::*,
     tuples::{Point, Tuple},
 };
 
@@ -131,7 +131,7 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let obj = Object::new_sphere();
+        let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
@@ -144,7 +144,7 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let obj = Object::new_sphere();
+        let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
@@ -157,7 +157,7 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let obj = Object::new_sphere();
+        let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.7364, 0.7364, 0.7364));
     }
@@ -170,7 +170,7 @@ mod tests {
             &Tuple::new_point(0.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let obj = Object::new_sphere();
+        let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.63639, 1.63639, 1.63639));
     }
@@ -183,7 +183,7 @@ mod tests {
             &Tuple::new_point(0.0, 0.0, 10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let obj = Object::new_sphere();
+        let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
@@ -198,7 +198,7 @@ mod tests {
             &Color::new(1.0, 1.0, 1.0),
         );
         let in_shadow = true;
-        let obj = Object::new_sphere();
+        let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, in_shadow);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
@@ -222,7 +222,7 @@ mod tests {
             &Point::new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let obj = Object::new_sphere();
+        let obj = new_sphere();
         let c1 = m.lighting(
             &obj,
             &light,
