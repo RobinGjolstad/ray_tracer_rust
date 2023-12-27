@@ -435,7 +435,7 @@ mod tests {
     #[test]
     fn the_refracted_color_at_the_maximum_recursive_depth() {
         let w = World::new_default_world();
-        let mut shape = w.objects[0].clone();
+        let shape = w.objects[0].clone();
         shape.get_material().transparency = 1.0;
         shape.get_material().refractive_index = 1.5;
         let r = Ray::new(
@@ -453,7 +453,7 @@ mod tests {
     #[test]
     fn the_refracted_color_under_total_internal_reflection() {
         let w = World::new_default_world();
-        let mut shape = w.objects[0].clone();
+        let shape = w.objects[0].clone();
         shape.get_material().transparency = 1.0;
         shape.get_material().refractive_index = 1.5;
         let r = Ray::new(
@@ -471,7 +471,7 @@ mod tests {
     #[test]
     #[allow(non_snake_case)]
     fn the_refracted_color_with_a_refracted_ray() {
-        let mut w = default_world();
+        let w = default_world();
         w.objects[0].get_material().ambient = 1.0;
         w.objects[0].get_material().pattern = Some(Pattern::test_pattern_default());
         let A = w.objects[0].clone();

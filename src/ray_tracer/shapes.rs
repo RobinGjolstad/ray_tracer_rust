@@ -54,6 +54,11 @@ impl BaseShape {
         }
     }
 }
+impl Default for BaseShape {
+    fn default() -> Self {
+        BaseShape::new()
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
