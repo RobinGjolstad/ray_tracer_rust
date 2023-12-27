@@ -1,27 +1,32 @@
+#![allow(unused)]
+use super::*;
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
+    matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Vector},
+    tuples::{Point, Tuple, Vector},
     utils::{is_float_equal, EPSILON},
 };
 
-use super::{ShapeType, Shapes};
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct Cylinder {
-    position: Point,
-    material: Material,
+#[derive(Debug, Clone, PartialEq)]
+pub struct Cylinder {
+    base: BaseShape,
+    parent: Option<BaseShape>,
     pub(super) minimum: f64,
     pub(super) maximum: f64,
     pub(super) closed: bool,
 }
 
 impl Cylinder {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
-            position: Point::new_point(0.0, 0.0, 0.0),
-            material: Material::new(),
+            base: BaseShape {
+                position: Some(Point::new_point(0.0, 0.0, 0.0)),
+                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
+                material: Some(Material::new()),
+            },
+            parent: None,
             minimum: f64::NEG_INFINITY,
             maximum: f64::INFINITY,
             closed: false,
@@ -42,12 +47,12 @@ impl Cylinder {
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, &t) {
-            xs.push(Intersection::new(t, super::Object::new(Box::new(*self))));
+            xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, &t) {
-            xs.push(Intersection::new(t, super::Object::new(Box::new(*self))));
+            xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
         }
     }
 }
@@ -60,13 +65,30 @@ impl Default for Cylinder {
 
 impl Shapes for Cylinder {
     fn set_position(&mut self, pos: &Point) {
-        self.position = *pos;
+        self.base.position = Some(*pos);
     }
     fn get_position(&self) -> Point {
-        self.position
+        self.base.position.unwrap()
     }
-    fn get_shape_type(&self) -> ShapeType {
-        ShapeType::Cylinder
+    fn set_transform(&mut self, transform: &Matrix) {
+        let mut trans = *transform;
+        trans.calculate_inverse().unwrap();
+        self.base.transform = Some(trans);
+    }
+    fn get_transform(&self) -> Matrix {
+        self.base.transform.unwrap()
+    }
+    fn set_material(&mut self, material: &Material) {
+        self.base.material = Some(*material);
+    }
+    fn get_material(&self) -> Material {
+        self.base.material.unwrap()
+    }
+    fn set_parent(&mut self, parent: &BaseShape) {
+        self.parent = Some(*parent);
+    }
+    fn get_parent(&self) -> BaseShape {
+        self.parent.unwrap()
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         // Compute the square of the distance from the y-axis
@@ -104,12 +126,12 @@ impl Shapes for Cylinder {
 
         let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
         if self.minimum < y0 && y0 < self.maximum {
-            xs.push(Intersection::new(t0, super::Object::new(Box::new(*self))));
+            xs.push(Intersection::new(t0, Object::Cylinder(self.clone())));
         }
 
         let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
         if self.minimum < y1 && y1 < self.maximum {
-            xs.push(Intersection::new(t1, super::Object::new(Box::new(*self))));
+            xs.push(Intersection::new(t1, Object::Cylinder(self.clone())));
         }
 
         self.intersect_caps(&local_ray, &mut xs);

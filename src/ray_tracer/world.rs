@@ -3,7 +3,7 @@ use crate::ray_tracer::{
     intersections::{prepare_computations, schlick, IntersectComp},
     lights::Light,
     rays::Ray,
-    shapes::Object,
+    shapes::*,
     transformations::Transform,
     tuples::{Point, Tuple},
     utils::is_float_equal,
@@ -23,14 +23,14 @@ impl World {
         }
     }
     pub fn new_default_world() -> World {
-        let mut s1 = Object::new_sphere();
+        let mut s1 = new_sphere();
         let mut s1_mat = s1.get_material();
         s1_mat.color = Color::new(0.8, 1.0, 0.6);
         s1_mat.diffuse = 0.7;
         s1_mat.specular = 0.2;
         s1.set_material(&s1_mat);
 
-        let mut s2 = Object::new_sphere();
+        let mut s2 = new_sphere();
         s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
 
         World {
@@ -44,7 +44,7 @@ impl World {
     pub(crate) fn shade_hit(&self, comps: &IntersectComp, remaining: usize) -> Color {
         let shadowed = self.is_shadowed(&comps.over_point);
 
-        let surface = comps.object.material.lighting(
+        let surface = comps.object.get_material().lighting(
             &comps.object.clone(),
             &self.lights[0],
             &comps.over_point,
@@ -56,7 +56,7 @@ impl World {
         let reflected = self.reflected_color(comps, remaining);
         let refracted = self.refracted_color(comps, remaining);
 
-        let material = comps.object.material;
+        let material = comps.object.get_material();
         if material.reflective > 0.0 && material.transparency > 0.0 {
             let reflectance = schlick(comps);
 
@@ -95,13 +95,13 @@ impl World {
     }
 
     pub(crate) fn reflected_color(&self, comps: &IntersectComp, remaining: usize) -> Color {
-        if is_float_equal(&comps.object.material.reflective, 0.0) || remaining < 1 {
+        if is_float_equal(&comps.object.get_material().reflective, 0.0) || remaining < 1 {
             return Color::new(0.0, 0.0, 0.0);
         }
 
         let reflect_ray = Ray::new(comps.over_point, comps.reflectv);
 
-        self.color_at(&reflect_ray, remaining - 1) * comps.object.material.reflective
+        self.color_at(&reflect_ray, remaining - 1) * comps.object.get_material().reflective
     }
 
     fn refracted_color(&self, comps: &IntersectComp, remaining: usize) -> Color {
@@ -109,7 +109,7 @@ impl World {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        if is_float_equal(&comps.object.material.transparency, 0.0) {
+        if is_float_equal(&comps.object.get_material().transparency, 0.0) {
             return Color::new(0.0, 0.0, 0.0);
         }
 
@@ -126,7 +126,7 @@ impl World {
         let direction = comps.normalv * (n_ratio * cos_i - cos_t) - comps.eyev * n_ratio;
         let refract_ray = Ray::new(comps.under_point, direction);
 
-        self.color_at(&refract_ray, remaining - 1) * comps.object.material.transparency
+        self.color_at(&refract_ray, remaining - 1) * comps.object.get_material().transparency
     }
 }
 
@@ -164,14 +164,14 @@ mod tests {
             &Point::new_point(-10.0, 10.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         );
-        let mut s1 = Object::new_sphere();
+        let mut s1 = new_sphere();
         let mut s1_mat = s1.get_material();
         s1_mat.color = Color::new(0.8, 1.0, 0.6);
         s1_mat.diffuse = 0.7;
         s1_mat.specular = 0.2;
         s1.set_material(&s1_mat);
 
-        let mut s2 = Object::new_sphere();
+        let mut s2 = new_sphere();
         s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
 
         let w = default_world();
@@ -235,10 +235,10 @@ mod tests {
             &Color::new(1.0, 1.0, 1.0),
         )];
 
-        let s1 = Object::new_sphere();
+        let s1 = new_sphere();
         w.objects.push(s1);
 
-        let mut s2 = Object::new_sphere();
+        let mut s2 = new_sphere();
         s2.set_transform(&Transform::translate(0.0, 0.0, 10.0));
         w.objects.push(s2.clone());
 
@@ -285,7 +285,7 @@ mod tests {
 
         // Grabs the inner sphere
         let mut inner = objects.next().unwrap().clone();
-        let mut _inner_sphere = Object::new_sphere();
+        let mut _inner_sphere = new_sphere();
         let mut mat = inner.get_material();
         mat.ambient = 1.0;
         inner.set_material(&mat);
@@ -336,7 +336,7 @@ mod tests {
             Vector::new_vector(0.0, 0.0, 1.0),
         );
         let shape = w.objects.get_mut(1).unwrap();
-        shape.material.ambient = 1.0;
+        shape.get_material().ambient = 1.0;
         let i = Intersection::new(1.0, shape.clone());
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
         let color = w.reflected_color(&comps, 1);
@@ -345,8 +345,8 @@ mod tests {
     #[test]
     fn the_reflected_color_for_a_reflective_material() {
         let mut w = World::new_default_world();
-        let mut shape = Object::new_plane();
-        shape.material.reflective = 0.5;
+        let mut shape = new_plane();
+        shape.get_material().reflective = 0.5;
         shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
         w.objects.push(shape.clone());
         let r = Ray::new(
@@ -361,8 +361,8 @@ mod tests {
     #[test]
     fn shade_hit_with_a_reflective_material() {
         let mut w = World::new_default_world();
-        let mut shape = Object::new_plane();
-        shape.material.reflective = 0.5;
+        let mut shape = new_plane();
+        shape.get_material().reflective = 0.5;
         shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
         w.objects.push(shape.clone());
         let r = Ray::new(
@@ -381,8 +381,8 @@ mod tests {
             &Point::new_point(0.0, 0.0, 0.0),
             &Color::new(1.0, 1.0, 1.0),
         ));
-        let mut lower = Object::new_plane();
-        lower.material.reflective = 1.0;
+        let mut lower = new_plane();
+        lower.get_material().reflective = 1.0;
         lower.set_transform(&Transform::translate(0.0, -1.0, 0.0));
         let mut upper = lower.clone();
         upper.set_transform(&Transform::translate(0.0, 1.0, 0.0));
@@ -402,8 +402,8 @@ mod tests {
     #[test]
     fn the_reflected_color_at_the_maximum_recursive_depth() {
         let mut w = World::new_default_world();
-        let mut shape = Object::new_plane();
-        shape.material.reflective = 0.5;
+        let mut shape = new_plane();
+        shape.get_material().reflective = 0.5;
         shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
         w.objects.push(shape.clone());
         let r = Ray::new(
@@ -435,9 +435,9 @@ mod tests {
     #[test]
     fn the_refracted_color_at_the_maximum_recursive_depth() {
         let w = World::new_default_world();
-        let mut shape = w.objects[0].clone();
-        shape.material.transparency = 1.0;
-        shape.material.refractive_index = 1.5;
+        let shape = w.objects[0].clone();
+        shape.get_material().transparency = 1.0;
+        shape.get_material().refractive_index = 1.5;
         let r = Ray::new(
             Point::new_point(0.0, 0.0, -5.0),
             Vector::new_vector(0.0, 0.0, 1.0),
@@ -453,9 +453,9 @@ mod tests {
     #[test]
     fn the_refracted_color_under_total_internal_reflection() {
         let w = World::new_default_world();
-        let mut shape = w.objects[0].clone();
-        shape.material.transparency = 1.0;
-        shape.material.refractive_index = 1.5;
+        let shape = w.objects[0].clone();
+        shape.get_material().transparency = 1.0;
+        shape.get_material().refractive_index = 1.5;
         let r = Ray::new(
             Point::new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
             Vector::new_vector(0.0, 1.0, 0.0),
@@ -471,13 +471,13 @@ mod tests {
     #[test]
     #[allow(non_snake_case)]
     fn the_refracted_color_with_a_refracted_ray() {
-        let mut w = default_world();
-        w.objects[0].material.ambient = 1.0;
-        w.objects[0].material.pattern = Some(Pattern::test_pattern_default());
+        let w = default_world();
+        w.objects[0].get_material().ambient = 1.0;
+        w.objects[0].get_material().pattern = Some(Pattern::test_pattern_default());
         let A = w.objects[0].clone();
 
-        w.objects[1].material.transparency = 1.0;
-        w.objects[1].material.refractive_index = 1.5;
+        w.objects[1].get_material().transparency = 1.0;
+        w.objects[1].get_material().refractive_index = 1.5;
         let B = w.objects[1].clone();
 
         let r = Ray::new(
@@ -498,16 +498,16 @@ mod tests {
     fn shade_hit_with_a_transparent_material() {
         let mut w = default_world();
 
-        let mut floor = Object::new_plane();
+        let mut floor = new_plane();
         floor.set_transform(&Transform::translate(0.0, -1.0, 0.0));
-        floor.material.transparency = 0.5;
-        floor.material.refractive_index = 1.5;
+        floor.get_material().transparency = 0.5;
+        floor.get_material().refractive_index = 1.5;
         w.objects.push(floor.clone());
 
-        let mut ball = Object::new_sphere();
+        let mut ball = new_sphere();
         ball.set_transform(&Transform::translate(0.0, -3.5, -0.5));
-        ball.material.color = Color::new(1.0, 0.0, 0.0);
-        ball.material.ambient = 0.5;
+        ball.get_material().color = Color::new(1.0, 0.0, 0.0);
+        ball.get_material().ambient = 0.5;
         w.objects.push(ball.clone());
 
         let r = Ray::new(
@@ -523,17 +523,17 @@ mod tests {
     fn shade_hit_with_a_reflective_transparent_material() {
         let mut w = default_world();
 
-        let mut floor = Object::new_plane();
+        let mut floor = new_plane();
         floor.set_transform(&Transform::translate(0.0, -1.0, 0.0));
-        floor.material.reflective = 0.5;
-        floor.material.transparency = 0.5;
-        floor.material.refractive_index = 1.5;
+        floor.get_material().reflective = 0.5;
+        floor.get_material().transparency = 0.5;
+        floor.get_material().refractive_index = 1.5;
         w.objects.push(floor.clone());
 
-        let mut ball = Object::new_sphere();
+        let mut ball = new_sphere();
         ball.set_transform(&Transform::translate(0.0, -3.5, -0.5));
-        ball.material.color = Color::new(1.0, 0.0, 0.0);
-        ball.material.ambient = 0.5;
+        ball.get_material().color = Color::new(1.0, 0.0, 0.0);
+        ball.get_material().ambient = 0.5;
         w.objects.push(ball.clone());
 
         let r = Ray::new(

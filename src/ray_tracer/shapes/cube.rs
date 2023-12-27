@@ -1,20 +1,29 @@
+#![allow(unused)]
+use super::*;
 use crate::ray_tracer::{
     intersections::Intersection,
+    materials::Material,
+    matrices::Matrix,
     rays::Ray,
-    shapes::{Object, ShapeType, Shapes},
-    tuples::{Point, Vector},
+    tuples::{Point, Tuple, Vector},
     utils::is_float_equal,
 };
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Cube {
-    position: Point,
+    base: BaseShape,
+    parent: Option<BaseShape>,
 }
 
 impl Cube {
     pub fn new() -> Self {
         Self {
-            position: Point::new_point(0.0, 0.0, 0.0),
+            base: BaseShape {
+                position: Some(Point::new_point(0.0, 0.0, 0.0)),
+                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
+                material: Some(Material::new()),
+            },
+            parent: None,
         }
     }
 }
@@ -26,6 +35,49 @@ impl Default for Cube {
 }
 
 impl Shapes for Cube {
+    fn set_position(&mut self, pos: &Point) {
+        self.base.position = Some(*pos);
+    }
+    fn get_position(&self) -> Point {
+        self.base.position.unwrap()
+    }
+    fn set_transform(&mut self, transform: &Matrix) {
+        let mut trans = *transform;
+        trans.calculate_inverse().unwrap();
+        self.base.transform = Some(trans);
+    }
+    fn get_transform(&self) -> Matrix {
+        self.base.transform.unwrap()
+    }
+    fn set_material(&mut self, material: &Material) {
+        self.base.material = Some(*material);
+    }
+    fn get_material(&self) -> Material {
+        self.base.material.unwrap()
+    }
+    fn set_parent(&mut self, parent: &BaseShape) {
+        self.parent = Some(*parent);
+    }
+    fn get_parent(&self) -> BaseShape {
+        self.parent.unwrap()
+    }
+    fn local_normal_at(&self, point: Point) -> Vector {
+        let maxc = [point.x.abs(), point.y.abs(), point.z.abs()]
+            .iter()
+            .max_by(|a, b| a.total_cmp(b))
+            .unwrap()
+            .to_owned();
+
+        if is_float_equal(&maxc, point.x.abs()) {
+            Vector::new_vector(point.x, 0.0, 0.0)
+        } else if is_float_equal(&maxc, point.y.abs()) {
+            Vector::new_vector(0.0, point.y, 0.0)
+        } else if is_float_equal(&maxc, point.z.abs()) {
+            Vector::new_vector(0.0, 0.0, point.z)
+        } else {
+            panic!("Intersection did not match any axis")
+        }
+    }
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         let (xtmin, xtmax): (f64, f64) = check_axis(local_ray.origin.x, local_ray.direction.x);
         let (ytmin, ytmax): (f64, f64) = check_axis(local_ray.origin.y, local_ray.direction.y);
@@ -46,40 +98,10 @@ impl Shapes for Cube {
             Vec::new()
         } else {
             vec![
-                Intersection::new(tmin, Object::new_raw(Box::new(*self))),
-                Intersection::new(tmax, Object::new_raw(Box::new(*self))),
+                Intersection::new(tmin, Object::Cube(self.clone())),
+                Intersection::new(tmax, Object::Cube(self.clone())),
             ]
         }
-    }
-
-    fn set_position(&mut self, pos: &Point) {
-        self.position = *pos;
-    }
-
-    fn get_position(&self) -> Point {
-        self.position
-    }
-
-    fn local_normal_at(&self, point: Point) -> Vector {
-        let maxc = [point.x.abs(), point.y.abs(), point.z.abs()]
-            .iter()
-            .max_by(|a, b| a.total_cmp(b))
-            .unwrap()
-            .to_owned();
-
-        if is_float_equal(&maxc, point.x.abs()) {
-            Vector::new_vector(point.x, 0.0, 0.0)
-        } else if is_float_equal(&maxc, point.y.abs()) {
-            Vector::new_vector(0.0, point.y, 0.0)
-        } else if is_float_equal(&maxc, point.z.abs()) {
-            Vector::new_vector(0.0, 0.0, point.z)
-        } else {
-            panic!("Intersection did not match any axis")
-        }
-    }
-
-    fn get_shape_type(&self) -> ShapeType {
-        super::ShapeType::Cube
     }
 }
 

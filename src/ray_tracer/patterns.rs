@@ -6,7 +6,7 @@ use self::test_pattern::TestPattern;
 #[cfg(test)]
 use std::io::ErrorKind;
 
-use crate::ray_tracer::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
+use crate::ray_tracer::{colors::Color, matrices::Matrix, shapes::*, tuples::Point};
 
 use self::{checker::Checker, gradient::Gradient, rings::Ring, solid::Solid, stripes::Stripes};
 
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn a_pattern_with_an_object_transformation() {
-        let mut object = Object::new_sphere();
+        let mut object = new_sphere();
         object.set_transform(
             &Transform::scaling(2.0, 2.0, 2.0)
                 .calculate_inverse()
@@ -176,7 +176,7 @@ mod tests {
     }
     #[test]
     fn a_pattern_with_a_pattern_transformation() {
-        let object = Object::new_sphere();
+        let object = new_sphere();
         let mut pattern = Pattern::test_pattern_default();
         pattern.set_transform(
             Transform::scaling(2.0, 2.0, 2.0)
@@ -188,7 +188,7 @@ mod tests {
     }
     #[test]
     fn a_pattern_with_both_and_object_and_a_pattern_transformation() {
-        let mut object = Object::new_sphere();
+        let mut object = new_sphere();
         object.set_transform(
             &Transform::scaling(2.0, 2.0, 2.0)
                 .calculate_inverse()
