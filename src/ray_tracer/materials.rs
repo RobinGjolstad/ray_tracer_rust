@@ -2,7 +2,7 @@ use crate::ray_tracer::{
     colors::Color,
     lights::Light,
     patterns::Pattern,
-    shapes_test::*,
+    shapes::*,
     tuples::{Point, Tuple},
 };
 

@@ -1,6 +1,6 @@
 use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, shapes_test::*, transformations::Transform,
+    camera::Camera, colors::Color, lights::Light, shapes::*, transformations::Transform,
     tuples::Tuple, world::World,
 };
 use std::{fs, path::Path, time::Instant};

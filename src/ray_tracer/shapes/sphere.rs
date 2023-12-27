@@ -1,37 +1,67 @@
+#![allow(unused)]
+use super::*;
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
+    matrices::Matrix,
     rays::Ray,
-    shapes::Shapes,
     tuples::{Point, Tuple, Vector},
 };
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub(super) struct Sphere {
-    position: Point,
-    material: Material,
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sphere {
+    base: BaseShape,
+    parent: Option<BaseShape>,
 }
+
 impl Sphere {
     pub fn new() -> Self {
-        Sphere {
-            position: Point::new_point(0.0, 0.0, 0.0),
-            material: Material::new(),
+        Self {
+            base: BaseShape {
+                position: Some(Point::new_point(0.0, 0.0, 0.0)),
+                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
+                material: Some(Material::new()),
+            },
+            parent: None,
         }
+    }
+}
+
+impl Default for Sphere {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
 impl Shapes for Sphere {
     fn set_position(&mut self, pos: &Point) {
-        self.position = *pos;
+        self.base.position = Some(*pos);
     }
     fn get_position(&self) -> Point {
-        self.position
+        self.base.position.unwrap()
+    }
+    fn set_transform(&mut self, transform: &Matrix) {
+        let mut trans = *transform;
+        trans.calculate_inverse().unwrap();
+        self.base.transform = Some(trans);
+    }
+    fn get_transform(&self) -> Matrix {
+        self.base.transform.unwrap()
+    }
+    fn set_material(&mut self, material: &Material) {
+        self.base.material = Some(*material);
+    }
+    fn get_material(&self) -> Material {
+        self.base.material.unwrap()
+    }
+    fn set_parent(&mut self, parent: &BaseShape) {
+        self.parent = Some(*parent);
+    }
+    fn get_parent(&self) -> BaseShape {
+        self.parent.unwrap()
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         point - Point::new_point(0.0, 0.0, 0.0)
-    }
-    fn get_shape_type(&self) -> super::ShapeType {
-        super::ShapeType::Sphere
     }
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         let sphere_to_ray = local_ray.origin - self.get_position();
@@ -48,11 +78,11 @@ impl Shapes for Sphere {
             vec![
                 Intersection::new(
                     (-b - discriminant_sqrt) / (2.0 * a),
-                    super::Object::new_raw(Box::new(*self)),
+                    Object::Sphere(self.clone())
                 ),
                 Intersection::new(
                     (-b + discriminant_sqrt) / (2.0 * a),
-                    super::Object::new_raw(Box::new(*self)),
+                    Object::Sphere(self.clone())
                 ),
             ]
         }

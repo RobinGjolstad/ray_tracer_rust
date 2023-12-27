@@ -1,7 +1,7 @@
 use crate::ray_tracer::{
     intersections::{Intersection, Intersections},
     matrices::Matrix,
-    shapes_test::*,
+    shapes::*,
     tuples::{Point, Vector},
     world::World,
 };

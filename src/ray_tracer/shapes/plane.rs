@@ -1,39 +1,65 @@
+#![allow(unused)]
+use super::*;
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Vector},
+    tuples::{Point, Tuple, Vector},
     utils::EPSILON,
 };
 
-use super::{Object, Shapes};
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub(super) struct Plane {
-    position: Point,
-    transform: Matrix,
-    material: Material,
+#[derive(Debug, Clone, PartialEq)]
+pub struct Plane {
+    base: BaseShape,
+    parent: Option<BaseShape>,
 }
+
 impl Plane {
-    pub(super) fn new() -> Plane {
-        Plane {
-            position: Point::new_point(0.0, 0.0, 0.0),
-            transform: Matrix::new_identity(),
-            material: Material::new(),
+    pub fn new() -> Self {
+        Self {
+            base: BaseShape {
+                position: Some(Point::new_point(0.0, 0.0, 0.0)),
+                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
+                material: Some(Material::new()),
+            },
+            parent: None,
         }
+    }
+}
+
+impl Default for Plane {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
 impl Shapes for Plane {
     fn set_position(&mut self, pos: &Point) {
-        self.position = *pos;
+        self.base.position = Some(*pos);
     }
     fn get_position(&self) -> Point {
-        self.position
+        self.base.position.unwrap()
     }
-    fn get_shape_type(&self) -> super::ShapeType {
-        super::ShapeType::Plane
+    fn set_transform(&mut self, transform: &Matrix) {
+        let mut trans = *transform;
+        trans.calculate_inverse().unwrap();
+        self.base.transform = Some(trans);
+    }
+    fn get_transform(&self) -> Matrix {
+        self.base.transform.unwrap()
+    }
+    fn set_material(&mut self, material: &Material) {
+        self.base.material = Some(*material);
+    }
+    fn get_material(&self) -> Material {
+        self.base.material.unwrap()
+    }
+    fn set_parent(&mut self, parent: &BaseShape) {
+        self.parent = Some(*parent);
+    }
+    fn get_parent(&self) -> BaseShape {
+        self.parent.unwrap()
     }
     #[allow(unused_variables)]
     fn local_normal_at(&self, point: Point) -> Vector {
@@ -45,7 +71,7 @@ impl Shapes for Plane {
         }
 
         let t = -local_ray.origin.y / local_ray.direction.y;
-        vec![Intersection::new(t, Object::new_raw(Box::new(*self)))]
+        vec![Intersection::new(t, Object::Plane(self.clone()))]
     }
 }
 
@@ -87,7 +113,7 @@ mod tests {
     #[test]
     fn a_ray_intersecting_a_plane_from_above() {
         let p = Plane::new();
-        let p_o = Object::new(Box::new(p));
+        let p_o = Object::Plane(p.clone());
         let r = Ray::new(
             Point::new_point(0.0, 1.0, 0.0),
             Vector::new_vector(0.0, -1.0, 0.0),
@@ -101,7 +127,7 @@ mod tests {
     #[test]
     fn a_ray_intersecting_a_plane_from_below() {
         let p = Plane::new();
-        let p_o = Object::new(Box::new(p));
+        let p_o = Object::Plane(p.clone());
         let r = Ray::new(
             Point::new_point(0.0, -1.0, 0.0),
             Vector::new_vector(0.0, 1.0, 0.0),

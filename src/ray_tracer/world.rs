@@ -3,7 +3,7 @@ use crate::ray_tracer::{
     intersections::{prepare_computations, schlick, IntersectComp},
     lights::Light,
     rays::Ray,
-    shapes_test::*,
+    shapes::*,
     transformations::Transform,
     tuples::{Point, Tuple},
     utils::is_float_equal,

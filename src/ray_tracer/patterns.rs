@@ -6,7 +6,7 @@ use self::test_pattern::TestPattern;
 #[cfg(test)]
 use std::io::ErrorKind;
 
-use crate::ray_tracer::{colors::Color, matrices::Matrix, shapes_test::*, tuples::Point};
+use crate::ray_tracer::{colors::Color, matrices::Matrix, shapes::*, tuples::Point};
 
 use self::{checker::Checker, gradient::Gradient, rings::Ring, solid::Solid, stripes::Stripes};
 

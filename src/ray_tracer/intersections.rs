@@ -1,6 +1,6 @@
 use crate::ray_tracer::{
     rays::Ray,
-    shapes_test::Object,
+    shapes::Object,
     tuples::{Point, Tuple, Vector},
     utils,
 };
@@ -188,7 +188,7 @@ pub(crate) fn schlick(comps: &IntersectComp) -> f64 {
 mod tests {
 
     use crate::ray_tracer::{
-        shapes_test::*,
+        shapes::*,
         transformations::Transform,
         utils::{is_float_equal, EPSILON},
     };
