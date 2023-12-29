@@ -346,7 +346,9 @@ mod tests {
     fn the_reflected_color_for_a_reflective_material() {
         let mut w = World::new_default_world();
         let mut shape = new_plane();
-        shape.get_material().reflective = 0.5;
+        let mut mat = shape.get_material();
+        mat.reflective = 0.5;
+        shape.set_material(&mat);
         shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
         w.objects.push(shape.clone());
         let r = Ray::new(
@@ -362,7 +364,9 @@ mod tests {
     fn shade_hit_with_a_reflective_material() {
         let mut w = World::new_default_world();
         let mut shape = new_plane();
-        shape.get_material().reflective = 0.5;
+        let mut mat = shape.get_material();
+        mat.reflective = 0.5;
+        shape.set_material(&mat);
         shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
         w.objects.push(shape.clone());
         let r = Ray::new(
@@ -471,13 +475,17 @@ mod tests {
     #[test]
     #[allow(non_snake_case)]
     fn the_refracted_color_with_a_refracted_ray() {
-        let w = default_world();
-        w.objects[0].get_material().ambient = 1.0;
-        w.objects[0].get_material().pattern = Some(Pattern::test_pattern_default());
+        let mut w = default_world();
+        let mut mat = w.objects[0].get_material();
+        mat.ambient = 1.0;
+        mat.pattern = Some(Pattern::test_pattern_default());
+        w.objects[0].set_material(&mat);
         let A = w.objects[0].clone();
 
-        w.objects[1].get_material().transparency = 1.0;
-        w.objects[1].get_material().refractive_index = 1.5;
+        mat = w.objects[1].get_material();
+        mat.transparency = 1.0;
+        mat.refractive_index = 1.5;
+        w.objects[1].set_material(&mat);
         let B = w.objects[1].clone();
 
         let r = Ray::new(
@@ -500,14 +508,18 @@ mod tests {
 
         let mut floor = new_plane();
         floor.set_transform(&Transform::translate(0.0, -1.0, 0.0));
-        floor.get_material().transparency = 0.5;
-        floor.get_material().refractive_index = 1.5;
+        let mut mat = floor.get_material();
+        mat.transparency = 0.5;
+        mat.refractive_index = 1.5;
+        floor.set_material(&mat);
         w.objects.push(floor.clone());
 
         let mut ball = new_sphere();
         ball.set_transform(&Transform::translate(0.0, -3.5, -0.5));
-        ball.get_material().color = Color::new(1.0, 0.0, 0.0);
-        ball.get_material().ambient = 0.5;
+        let mut mat = ball.get_material();
+        mat.color = Color::new(1.0, 0.0, 0.0);
+        mat.ambient = 0.5;
+        ball.set_material(&mat);
         w.objects.push(ball.clone());
 
         let r = Ray::new(
@@ -525,15 +537,19 @@ mod tests {
 
         let mut floor = new_plane();
         floor.set_transform(&Transform::translate(0.0, -1.0, 0.0));
-        floor.get_material().reflective = 0.5;
-        floor.get_material().transparency = 0.5;
-        floor.get_material().refractive_index = 1.5;
+        let mut mat = floor.get_material();
+        mat.reflective = 0.5;
+        mat.transparency = 0.5;
+        mat.refractive_index = 1.5;
+        floor.set_material(&mat);
         w.objects.push(floor.clone());
 
         let mut ball = new_sphere();
         ball.set_transform(&Transform::translate(0.0, -3.5, -0.5));
-        ball.get_material().color = Color::new(1.0, 0.0, 0.0);
-        ball.get_material().ambient = 0.5;
+        mat = ball.get_material();
+        mat.color = Color::new(1.0, 0.0, 0.0);
+        mat.ambient = 0.5;
+        ball.set_material(&mat);
         w.objects.push(ball.clone());
 
         let r = Ray::new(

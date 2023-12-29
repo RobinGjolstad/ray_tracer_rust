@@ -332,17 +332,23 @@ mod tests {
         #[allow(non_snake_case)]
         let mut A = glass_sphere();
         A.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
-        A.get_material().refractive_index = 1.5;
+        let mut mat = A.get_material();
+        mat.refractive_index = 1.5;
+        A.set_material(&mat);
 
         #[allow(non_snake_case)]
         let mut B = glass_sphere();
         B.set_transform(&Transform::translate(0.0, 0.0, -0.25));
-        B.get_material().refractive_index = 2.0;
+        mat = B.get_material();
+        mat.refractive_index = 2.0;
+        B.set_material(&mat);
 
         #[allow(non_snake_case)]
         let mut C = glass_sphere();
         C.set_transform(&Transform::translate(0.0, 0.0, 0.25));
-        C.get_material().refractive_index = 2.5;
+        mat = C.get_material();
+        mat.refractive_index = 2.5;
+        C.set_material(&mat);
 
         let r = Ray::new(
             Point::new_point(0.0, 0.0, -4.0),

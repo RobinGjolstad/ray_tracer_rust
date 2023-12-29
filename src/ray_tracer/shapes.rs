@@ -254,7 +254,7 @@ mod tests {
     use std::f64::consts::PI;
 
     use super::*;
-    use crate::ray_tracer::{transformations::Transform, tuples::Tuple};
+    use crate::ray_tracer::{transformations::Transform, tuples::Tuple, utils::is_float_equal};
 
     #[test]
     fn the_default_transformation() {
@@ -283,11 +283,29 @@ mod tests {
     }
     #[test]
     fn intersecting_a_scaled_shape_with_a_ray() {
-        todo!("Convert Ray to accept new objects")
+        let r = Ray::new(
+            Tuple::new_point(0.0, 0.0, -5.0),
+            Tuple::new_vector(0.0, 0.0, 1.0),
+        );
+        let mut s = new_test_shape();
+        s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
+        let _xs = r.intersect(&s);
+        let saved_ray = TestShape::get_saved_ray().unwrap();
+        assert_eq!(saved_ray.origin, Tuple::new_point(0.0, 0.0, -2.5));
+        assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 0.5));
     }
     #[test]
     fn intersecting_a_translated_shape_with_a_ray() {
-        todo!("Convert Ray to accept new objects")
+        let r = Ray::new(
+            Tuple::new_point(0.0, 0.0, -5.0),
+            Tuple::new_vector(0.0, 0.0, 1.0),
+        );
+        let mut s = new_test_shape();
+        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        let _xs = r.intersect(&s);
+        let saved_ray = TestShape::get_saved_ray().unwrap();
+        assert_eq!(saved_ray.origin, Tuple::new_point(-5.0, 0.0, -5.0));
+        assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 1.0));
     }
     #[test]
     fn computing_the_normal_on_a_translated_shape() {
@@ -310,6 +328,12 @@ mod tests {
     }
     #[test]
     fn a_helper_for_producing_a_sphere_with_a_glassy_material() {
-        todo!("Implement spheres")
+        let s = glass_sphere();
+        assert_eq!(
+            s.get_transform().get_matrix(),
+            Matrix::new_identity().get_matrix()
+        );
+        assert!(is_float_equal(&s.get_material().transparency, 1.0));
+        assert!(is_float_equal(&s.get_material().refractive_index, 1.5));
     }
 }
