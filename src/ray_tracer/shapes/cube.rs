@@ -18,11 +18,7 @@ pub struct Cube {
 impl Cube {
     pub fn new() -> Self {
         Self {
-            base: BaseShape {
-                position: Some(Point::new_point(0.0, 0.0, 0.0)),
-                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
-                material: Some(Material::new()),
-            },
+            base: BaseShape::default(),
             parent: None,
         }
     }
@@ -36,30 +32,30 @@ impl Default for Cube {
 
 impl Shapes for Cube {
     fn set_position(&mut self, pos: &Point) {
-        self.base.position = Some(*pos);
+        self.base.position = *pos;
     }
     fn get_position(&self) -> Point {
-        self.base.position.unwrap()
+        self.base.position
     }
     fn set_transform(&mut self, transform: &Matrix) {
         let mut trans = *transform;
         trans.calculate_inverse().unwrap();
-        self.base.transform = Some(trans);
+        self.base.transform = trans;
     }
     fn get_transform(&self) -> Matrix {
-        self.base.transform.unwrap()
+        self.base.transform
     }
     fn set_material(&mut self, material: &Material) {
-        self.base.material = Some(*material);
+        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
-        self.base.material.unwrap()
+        self.base.material
     }
     fn set_parent(&mut self, parent: &BaseShape) {
         self.parent = Some(*parent);
     }
-    fn get_parent(&self) -> BaseShape {
-        self.parent.unwrap()
+    fn get_parent(&self) -> Option<BaseShape> {
+        self.parent
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         let maxc = [point.x.abs(), point.y.abs(), point.z.abs()]

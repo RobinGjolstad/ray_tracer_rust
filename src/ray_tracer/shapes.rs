@@ -1,10 +1,13 @@
-#![allow(clippy::approx_constant)]
+#![allow(unused, clippy::approx_constant)]
 use crate::ray_tracer::{
     materials::Material,
     matrices::Matrix,
     tuples::{Point, Vector},
 };
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    sync::{Arc, Weak},
+};
 
 mod cylinder;
 pub use cylinder::Cylinder;
@@ -33,24 +36,26 @@ pub(super) trait Shapes: Debug + Default + Sync {
     fn get_transform(&self) -> Matrix;
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
-    fn set_parent(&mut self, parent: &BaseShape);
-    fn get_parent(&self) -> BaseShape;
+    fn set_parent(&mut self, parent: &Arc<Group>);
+    fn get_parent(&self) -> Option<Arc<Group>>;
     fn local_normal_at(&self, point: Point) -> Vector;
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BaseShape {
-    position: Option<Point>,
-    transform: Option<Matrix>,
-    material: Option<Material>,
+    position: Point,
+    transform: Matrix,
+    material: Material,
+    parent: Option<Arc<Group>>,
 }
 impl BaseShape {
     pub fn new() -> Self {
         Self {
-            position: None,
-            transform: None,
-            material: None,
+            position: Point::new_point(0.0, 0.0, 0.0),
+            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+            material: Material::new(),
+            parent: None,
         }
     }
 }
@@ -187,6 +192,19 @@ impl Object {
             Object::TestShape(s) => s.set_parent(parent),
         }
     }
+    fn get_parent(&self) -> Option<BaseShape> {
+        match self {
+            Object::Group(g) => g.get_parent(),
+            Object::Sphere(s) => s.get_parent(),
+            Object::Plane(p) => p.get_parent(),
+            Object::Cube(c) => c.get_parent(),
+            Object::Cylinder(c) => c.get_parent(),
+            Object::Cone(c) => c.get_parent(),
+
+            #[cfg(test)]
+            Object::TestShape(s) => s.get_parent(),
+        }
+    }
     pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         match self {
             Object::Group(g) => g.local_intersect(local_ray),
@@ -240,7 +258,8 @@ pub fn new_cone(max_min: Option<(f64, f64)>) -> Object {
 
     Object::Cone(cone)
 }
-pub fn new_group(group: Group) -> Object {
+pub fn new_group() -> Object {
+    let group = Group::default();
     Object::Group(group)
 }
 
@@ -335,5 +354,10 @@ mod tests {
         );
         assert!(is_float_equal(&s.get_material().transparency, 1.0));
         assert!(is_float_equal(&s.get_material().refractive_index, 1.5));
+    }
+    #[test]
+    fn a_shape_has_a_parent_attribute() {
+        let s = new_test_shape();
+        assert!(s.get_parent().is_none());
     }
 }

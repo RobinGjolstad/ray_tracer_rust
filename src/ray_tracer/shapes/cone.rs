@@ -12,7 +12,6 @@ use crate::ray_tracer::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cone {
     base: BaseShape,
-    parent: Option<BaseShape>,
     pub(super) minimum: f64,
     pub(super) maximum: f64,
     pub(super) closed: bool,
@@ -21,12 +20,7 @@ pub struct Cone {
 impl Cone {
     pub fn new() -> Self {
         Self {
-            base: BaseShape {
-                position: Some(Point::new_point(0.0, 0.0, 0.0)),
-                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
-                material: Some(Material::new()),
-            },
-            parent: None,
+            base: BaseShape::default(),
             minimum: f64::NEG_INFINITY,
             maximum: f64::INFINITY,
             closed: false,
@@ -65,30 +59,30 @@ impl Default for Cone {
 
 impl Shapes for Cone {
     fn set_position(&mut self, pos: &Point) {
-        self.base.position = Some(*pos);
+        self.base.position = *pos;
     }
     fn get_position(&self) -> Point {
-        self.base.position.unwrap()
+        self.base.position
     }
     fn set_transform(&mut self, transform: &Matrix) {
         let mut trans = *transform;
         trans.calculate_inverse().unwrap();
-        self.base.transform = Some(trans);
+        self.base.transform = trans;
     }
     fn get_transform(&self) -> Matrix {
-        self.base.transform.unwrap()
+        self.base.transform
     }
     fn set_material(&mut self, material: &Material) {
-        self.base.material = Some(*material);
+        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
-        self.base.material.unwrap()
+        self.base.material
     }
-    fn set_parent(&mut self, parent: &BaseShape) {
-        self.parent = Some(*parent);
+    fn set_parent(&mut self, parent: &Arc<Group>) {
+        self.base.parent = Some(*parent);
     }
-    fn get_parent(&self) -> BaseShape {
-        self.parent.unwrap()
+    fn get_parent(&self) -> Option<Arc<Group>> {
+        self.base.parent
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         // Compute the square of the distance from the y-axis

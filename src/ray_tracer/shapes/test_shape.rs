@@ -17,7 +17,7 @@ mod saved_ray {
 use saved_ray::SAVED_RAY;
 
 #[cfg(test)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TestShape {
     base: BaseShape,
     parent: Option<BaseShape>,
@@ -25,11 +25,7 @@ pub struct TestShape {
 impl TestShape {
     pub(super) fn new() -> TestShape {
         TestShape {
-            base: BaseShape {
-                position: Some(Point::new_point(0.0, 0.0, 0.0)),
-                transform: Some(Matrix::new_identity().calculate_inverse().unwrap()),
-                material: Some(Material::new()),
-            },
+            base: BaseShape::default(),
             parent: None,
         }
     }
@@ -46,29 +42,29 @@ impl Default for TestShape {
 
 impl Shapes for TestShape {
     fn set_position(&mut self, pos: &Point) {
-        self.base.position = Some(*pos);
+        self.base.position = *pos;
     }
     fn get_position(&self) -> Point {
-        self.base.position.unwrap()
+        self.base.position
     }
     fn set_transform(&mut self, transform: &Matrix) {
         let transform = transform.clone().calculate_inverse().unwrap();
-        self.base.transform = Some(transform);
+        self.base.transform = transform;
     }
     fn get_transform(&self) -> Matrix {
-        self.base.transform.unwrap()
+        self.base.transform
     }
     fn set_material(&mut self, material: &Material) {
-        self.base.material = Some(*material);
+        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
-        self.base.material.unwrap()
+        self.base.material
     }
     fn set_parent(&mut self, parent: &BaseShape) {
         self.parent = Some(*parent);
     }
-    fn get_parent(&self) -> BaseShape {
-        self.parent.unwrap()
+    fn get_parent(&self) -> Option<BaseShape> {
+        self.parent
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         Vector::new_vector(point.x, point.y, point.z)

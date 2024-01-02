@@ -109,7 +109,6 @@ impl Camera {
                 last_allocated_pixels = end_pixels;
                 pixels_not_allocated -= pixels_per_thread;
                 let handle = s.spawn(move || {
-                    //
                     for y in start_pixels..end_pixels {
                         for x in 0..self.hsize {
                             let ray = self.ray_for_pixel(x, y);
@@ -148,7 +147,10 @@ impl Camera {
                             let mut internal_image = thread_image.lock().unwrap();
                             internal_image.write_pixel(x, y, color);
                         }
-                        _ => {
+                        Err(mpsc::TryRecvError::Disconnected) => {
+                            break;
+                        }
+                        Err(mpsc::TryRecvError::Empty) => {
                             continue;
                         }
                     }
@@ -211,7 +213,10 @@ impl Camera {
                             let mut internal_image = thread_image.lock().unwrap();
                             internal_image.write_pixel(x, y, color);
                         }
-                        _ => {
+                        Err(mpsc::TryRecvError::Disconnected) => {
+                            break;
+                        }
+                        Err(mpsc::TryRecvError::Empty) => {
                             continue;
                         }
                     }

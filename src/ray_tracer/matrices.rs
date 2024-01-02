@@ -1,7 +1,10 @@
 // Allow using `.get(0)` on vectors to make the matrix calculations more obvious
 #![allow(clippy::get_first)]
 
-use std::ops::Mul;
+use std::{
+    fmt::{Display, Formatter},
+    ops::Mul,
+};
 
 use crate::ray_tracer::{tuples::Tuple, utils::is_float_equal};
 
@@ -269,6 +272,24 @@ impl Mul<Tuple> for Matrix {
         }
 
         Tuple::new(tup[0], tup[1], tup[2], tup[3])
+    }
+}
+
+impl Display for Matrix {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut output = String::new();
+        for row in 0..self.size {
+            output.push_str("[");
+            for column in 0..self.size {
+                output.push_str(&self.matrix[row][column].to_string());
+                if column < self.size - 1 {
+                    output.push_str(", ");
+                }
+            }
+            output.push_str("]\n");
+        }
+
+        write!(f, "{}", output)
     }
 }
 
