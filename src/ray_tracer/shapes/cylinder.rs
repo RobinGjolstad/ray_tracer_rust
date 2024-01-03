@@ -80,12 +80,6 @@ impl Shapes for Cylinder {
     fn get_material(&self) -> Material {
         self.base.material
     }
-    fn set_parent(&mut self, parent: &BaseShape) {
-        self.parent = Some(*parent);
-    }
-    fn get_parent(&self) -> Option<BaseShape> {
-        self.parent
-    }
     fn local_normal_at(&self, point: Point) -> Vector {
         // Compute the square of the distance from the y-axis
         let dist = point.x.powi(2) + point.z.powi(2);

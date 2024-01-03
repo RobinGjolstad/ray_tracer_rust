@@ -51,12 +51,6 @@ impl Shapes for Plane {
     fn get_material(&self) -> Material {
         self.base.material
     }
-    fn set_parent(&mut self, parent: &BaseShape) {
-        self.parent = Some(*parent);
-    }
-    fn get_parent(&self) -> Option<BaseShape> {
-        self.parent
-    }
     #[allow(unused_variables)]
     fn local_normal_at(&self, point: Point) -> Vector {
         Vector::new_vector(0.0, 1.0, 0.0)

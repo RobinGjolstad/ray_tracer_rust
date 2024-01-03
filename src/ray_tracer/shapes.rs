@@ -1,7 +1,15 @@
+//! # Shapes
+//!
+//! ## Groups and trees
+//!
+//! The tree structure used for grouping is inspired by the crate::utils::tree module.
+
 #![allow(unused, clippy::approx_constant)]
 use crate::ray_tracer::{
+    intersections::Intersection,
     materials::Material,
     matrices::Matrix,
+    rays::Ray,
     tuples::{Point, Vector},
 };
 use std::{
@@ -27,8 +35,6 @@ mod test_shape;
 #[cfg(test)]
 use test_shape::TestShape;
 
-use super::{intersections::Intersection, rays::Ray};
-
 pub(super) trait Shapes: Debug + Default + Sync {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
@@ -36,8 +42,6 @@ pub(super) trait Shapes: Debug + Default + Sync {
     fn get_transform(&self) -> Matrix;
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
-    fn set_parent(&mut self, parent: &Arc<Group>);
-    fn get_parent(&self) -> Option<Arc<Group>>;
     fn local_normal_at(&self, point: Point) -> Vector;
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
 }
@@ -177,32 +181,6 @@ impl Object {
 
             #[cfg(test)]
             Object::TestShape(s) => s.get_material(),
-        }
-    }
-    fn set_parent(&mut self, parent: &BaseShape) {
-        match self {
-            Object::Group(g) => g.set_parent(parent),
-            Object::Sphere(s) => s.set_parent(parent),
-            Object::Plane(p) => p.set_parent(parent),
-            Object::Cube(c) => c.set_parent(parent),
-            Object::Cylinder(c) => c.set_parent(parent),
-            Object::Cone(c) => c.set_parent(parent),
-
-            #[cfg(test)]
-            Object::TestShape(s) => s.set_parent(parent),
-        }
-    }
-    fn get_parent(&self) -> Option<BaseShape> {
-        match self {
-            Object::Group(g) => g.get_parent(),
-            Object::Sphere(s) => s.get_parent(),
-            Object::Plane(p) => p.get_parent(),
-            Object::Cube(c) => c.get_parent(),
-            Object::Cylinder(c) => c.get_parent(),
-            Object::Cone(c) => c.get_parent(),
-
-            #[cfg(test)]
-            Object::TestShape(s) => s.get_parent(),
         }
     }
     pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
@@ -358,6 +336,7 @@ mod tests {
     #[test]
     fn a_shape_has_a_parent_attribute() {
         let s = new_test_shape();
-        assert!(s.get_parent().is_none());
+        todo!("Fix grouping and parents");
+        //assert!(s.get_parent().is_none());
     }
 }

@@ -50,12 +50,6 @@ impl Shapes for Sphere {
     fn get_material(&self) -> Material {
         self.base.material
     }
-    fn set_parent(&mut self, parent: &BaseShape) {
-        self.parent = Some(*parent);
-    }
-    fn get_parent(&self) -> Option<BaseShape> {
-        self.parent
-    }
     fn local_normal_at(&self, point: Point) -> Vector {
         point - Point::new_point(0.0, 0.0, 0.0)
     }

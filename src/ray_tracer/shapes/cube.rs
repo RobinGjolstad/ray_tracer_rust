@@ -51,12 +51,6 @@ impl Shapes for Cube {
     fn get_material(&self) -> Material {
         self.base.material
     }
-    fn set_parent(&mut self, parent: &BaseShape) {
-        self.parent = Some(*parent);
-    }
-    fn get_parent(&self) -> Option<BaseShape> {
-        self.parent
-    }
     fn local_normal_at(&self, point: Point) -> Vector {
         let maxc = [point.x.abs(), point.y.abs(), point.z.abs()]
             .iter()

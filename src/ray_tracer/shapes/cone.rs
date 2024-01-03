@@ -78,12 +78,6 @@ impl Shapes for Cone {
     fn get_material(&self) -> Material {
         self.base.material
     }
-    fn set_parent(&mut self, parent: &Arc<Group>) {
-        self.base.parent = Some(*parent);
-    }
-    fn get_parent(&self) -> Option<Arc<Group>> {
-        self.base.parent
-    }
     fn local_normal_at(&self, point: Point) -> Vector {
         // Compute the square of the distance from the y-axis
         let dist = point.x.powi(2) + point.z.powi(2);

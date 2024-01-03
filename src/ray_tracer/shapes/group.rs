@@ -25,14 +25,10 @@ impl Group {
         }
     }
     fn add_child(&mut self, child: Object) {
-        let mut internal_child = child;
-        internal_child.set_parent(&self.base);
-        self.children.push(internal_child);
+        todo!()
     }
     fn update_children(&mut self) {
-        self.children.iter_mut().for_each(|child| {
-            child.set_parent(&self.base);
-        })
+        todo!()
     }
 }
 
@@ -60,12 +56,6 @@ impl Shapes for Group {
     }
     fn get_material(&self) -> Material {
         self.base.material
-    }
-    fn set_parent(&mut self, parent: &BaseShape) {
-        self.parent = Some(*parent);
-    }
-    fn get_parent(&self) -> Option<BaseShape> {
-        self.parent
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         Vector::new_vector(point.x, point.y, point.z)
@@ -104,13 +94,14 @@ mod tests {
 
         // Test-hack to get around the fact that `s` doesn't get its parent set.
         // Only the child cloned into the group gets its parent set.
-        s.set_parent(&g.base);
+        //s.set_parent(&g.base);
+        todo!("Fix grouping and parents");
 
         dbg!(&g);
-        assert!(!g.children.is_empty());
-        assert!(g.children.contains(&s));
-        assert!(s.get_parent().is_some());
-        assert_eq!(s.get_parent().unwrap(), g.base);
+        //assert!(!g.children.is_empty());
+        //assert!(g.children.contains(&s));
+        //assert!(s.get_parent().is_some());
+        //assert_eq!(s.get_parent().unwrap(), g.base);
     }
     #[test]
     fn intersecting_a_ray_with_an_empty_group() {
@@ -141,9 +132,10 @@ mod tests {
 
         // Test-hack to get around the fact that `s` doesn't get its parent set.
         // Only the child cloned into the group gets its parent set.
-        s1.set_parent(&g.base);
-        s2.set_parent(&g.base);
-        s3.set_parent(&g.base);
+        //s1.set_parent(&g.base);
+        //s2.set_parent(&g.base);
+        //s3.set_parent(&g.base);
+        todo!("Fix grouping and parents");
 
         let r = Ray::new(
             Point::new_point(0.0, 0.0, -5.0),
