@@ -247,8 +247,8 @@ fn new_test_shape() -> Object {
 
 // Shapes tree structure START
 
-type ObjectDataRef = Arc<Mutex<ObjectData>>;
-type WeakObjectDataRef = Weak<Mutex<ObjectData>>;
+type ObjectDataRef = Arc<RwLock<ObjectData>>;
+type WeakObjectDataRef = Weak<RwLock<ObjectData>>;
 /// Parent relationship is one of non-ownership.
 type Parent = RwLock<WeakObjectDataRef>; // not `RwLock<ObjectDataRef>` which would cause memory leak.
 /// Children relationship is one of ownership.
@@ -345,47 +345,47 @@ impl Object {
             children: RwLock::new(Vec::new()),
         };
         //let arc_ref = Arc::new(RwLock::new(new_node));
-        let arc_ref = Arc::new(Mutex::new(new_node));
+        let arc_ref = Arc::new(RwLock::new(new_node));
         //let arc_ref = Arc::new(new_node);
         Object { arc_ref }
     }
 
     pub fn world_point_to_local(&self, world_point: &Point) -> Point {
         self.arc_ref
-            .lock()
+            .read()
             .unwrap()
             .world_point_to_local(world_point)
     }
 
     pub fn normal_at(&self, world_point: &Point) -> Vector {
-        self.arc_ref.lock().unwrap().normal_at(world_point)
+        self.arc_ref.read().unwrap().normal_at(world_point)
     }
 
     pub fn local_vector_to_world(&self, local_vector: &Vector) -> Vector {
         self.arc_ref
-            .lock()
+            .read()
             .unwrap()
             .local_vector_to_world(local_vector)
     }
 
     pub fn set_transform(&mut self, transform: &Matrix) {
-        self.arc_ref.lock().unwrap().set_transform(transform);
+        self.arc_ref.write().unwrap().set_transform(transform);
     }
 
     pub fn get_transform(&self) -> Matrix {
-        self.arc_ref.lock().unwrap().get_transform()
+        self.arc_ref.read().unwrap().get_transform()
     }
 
     pub fn set_material(&mut self, material: &Material) {
-        self.arc_ref.lock().unwrap().set_material(material);
+        self.arc_ref.write().unwrap().set_material(material);
     }
 
     pub fn get_material(&self) -> Material {
-        self.arc_ref.lock().unwrap().get_material()
+        self.arc_ref.read().unwrap().get_material()
     }
 
     pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
-        self.arc_ref.lock().unwrap().local_intersect(local_ray)
+        self.arc_ref.read().unwrap().local_intersect(local_ray)
     }
 
     pub(crate) fn get_copy_of_internal_arc(&self) -> ObjectDataRef {
@@ -397,7 +397,7 @@ impl Object {
     ///
     /// NOTE: This method is only available for `Group` objects.
     pub fn create_and_add_child(&self, value: ObjectEnum) -> ObjectDataRef {
-        if let ObjectEnum::Group(_) = self.arc_ref.lock().unwrap().value {
+        if let ObjectEnum::Group(_) = self.arc_ref.read().unwrap().value {
             let new_child = Object::new(value);
             self.add_child_and_update_its_parent(&new_child);
             new_child.get_copy_of_internal_arc()
@@ -410,19 +410,19 @@ impl Object {
     ///
     /// NOTE: This method is only available for `Group` objects.
     pub fn add_child_and_update_its_parent(&self, child: &Object) {
-        if let ObjectEnum::Group(_) = self.arc_ref.lock().unwrap().value {
+        if let ObjectEnum::Group(_) = self.arc_ref.read().unwrap().value {
         } else {
             panic!("This method is only available for `Group` objects.");
         }
 
         {
-            let mut own_ref = self.arc_ref.lock().unwrap();
+            let mut own_ref = self.arc_ref.write().unwrap();
             let mut my_children = own_ref.children.write().unwrap();
             my_children.push(child.get_copy_of_internal_arc());
         } // `my_children` guard dropped.
 
         {
-            let mut child_ref = child.arc_ref.lock().unwrap();
+            let mut child_ref = child.arc_ref.write().unwrap();
             let mut childs_parent = child_ref.parent.write().unwrap();
             *childs_parent = Arc::downgrade(&self.get_copy_of_internal_arc());
         } // `my_parent` guard dropped.
@@ -433,7 +433,7 @@ impl Object {
     }
 
     pub(crate) fn get_parent(&self) -> Option<ObjectDataRef> {
-        let own_ref = self.arc_ref.lock().unwrap();
+        let own_ref = self.arc_ref.read().unwrap();
         let my_parent = own_ref.parent.read().unwrap();
         my_parent.upgrade()
     }
@@ -445,8 +445,8 @@ impl Default for Object {
 }
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
-        let own_ref = self.arc_ref.lock().unwrap();
-        let other_ref = other.arc_ref.lock().unwrap();
+        let own_ref = self.arc_ref.read().unwrap();
+        let other_ref = other.arc_ref.read().unwrap();
 
         let same_value = own_ref.value == other_ref.value;
 
@@ -455,7 +455,7 @@ impl PartialEq for Object {
         let mut same_parent = false;
         if own_parent.is_some() && other_parent.is_some() {
             same_parent =
-                *own_parent.unwrap().lock().unwrap() == *other_parent.unwrap().lock().unwrap();
+                *own_parent.unwrap().read().unwrap() == *other_parent.unwrap().read().unwrap();
         }
 
         let own_children = own_ref.children.read().unwrap();
@@ -464,7 +464,7 @@ impl PartialEq for Object {
         if own_children.len() == other_children.len() {
             same_children = true;
             for i in 0..own_children.len() {
-                if *own_children[i].lock().unwrap() != *other_children[i].lock().unwrap() {
+                if *own_children[i].read().unwrap() != *other_children[i].read().unwrap() {
                     same_children = false;
                     break;
                 }
