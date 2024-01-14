@@ -61,7 +61,7 @@ impl Shapes for Plane {
         }
 
         let t = -local_ray.origin.y / local_ray.direction.y;
-        vec![Intersection::new(t, Object::Plane(self.clone()))]
+        vec![Intersection::new(t, Object::new(ObjectEnum::Plane(self.clone())))]
     }
 }
 
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn a_ray_intersecting_a_plane_from_above() {
         let p = Plane::new();
-        let p_o = Object::Plane(p.clone());
+        let p_o = Object::new(ObjectEnum::Plane(p.clone()));
         let r = Ray::new(
             Point::new_point(0.0, 1.0, 0.0),
             Vector::new_vector(0.0, -1.0, 0.0),
@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn a_ray_intersecting_a_plane_from_below() {
         let p = Plane::new();
-        let p_o = Object::Plane(p.clone());
+        let p_o = Object::new(ObjectEnum::Plane(p.clone()));
         let r = Ray::new(
             Point::new_point(0.0, -1.0, 0.0),
             Vector::new_vector(0.0, 1.0, 0.0),

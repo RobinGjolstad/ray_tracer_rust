@@ -41,12 +41,18 @@ impl Cone {
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Cone::check_cap(self.minimum, ray, &t) {
-            xs.push(Intersection::new(t, Object::Cone(self.clone())));
+            xs.push(Intersection::new(
+                t,
+                Object::new(ObjectEnum::Cone(self.clone())),
+            ));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Cone::check_cap(self.maximum, ray, &t) {
-            xs.push(Intersection::new(t, Object::Cone(self.clone())));
+            xs.push(Intersection::new(
+                t,
+                Object::new(ObjectEnum::Cone(self.clone())),
+            ));
         }
     }
 }
@@ -117,7 +123,10 @@ impl Shapes for Cone {
                 // Parallel to one of the halves.
                 // One intersection.
                 let t = -c / (2.0 * b);
-                xs.push(Intersection::new(t, Object::Cone(self.clone())));
+                xs.push(Intersection::new(
+                    t,
+                    Object::new(ObjectEnum::Cone(self.clone())),
+                ));
             }
         } else {
             let disc = b.powi(2) - 4.0 * a * c;
@@ -131,12 +140,18 @@ impl Shapes for Cone {
 
             let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
             if self.minimum < y0 && y0 < self.maximum {
-                xs.push(Intersection::new(t0, Object::Cone(self.clone())));
+                xs.push(Intersection::new(
+                    t0,
+                    Object::new(ObjectEnum::Cone(self.clone())),
+                ));
             }
 
             let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
             if self.minimum < y1 && y1 < self.maximum {
-                xs.push(Intersection::new(t1, Object::Cone(self.clone())));
+                xs.push(Intersection::new(
+                    t1,
+                    Object::new(ObjectEnum::Cone(self.clone())),
+                ));
             }
         }
 

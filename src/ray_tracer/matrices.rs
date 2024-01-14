@@ -279,7 +279,7 @@ impl Display for Matrix {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut output = String::new();
         for row in 0..self.size {
-            output.push_str("[");
+            output.push('[');
             for column in 0..self.size {
                 output.push_str(&self.matrix[row][column].to_string());
                 if column < self.size - 1 {

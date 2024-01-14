@@ -88,8 +88,8 @@ impl Shapes for Cube {
             Vec::new()
         } else {
             vec![
-                Intersection::new(tmin, Object::Cube(self.clone())),
-                Intersection::new(tmax, Object::Cube(self.clone())),
+                Intersection::new(tmin, Object::new(ObjectEnum::Cube(self.clone()))),
+                Intersection::new(tmax, Object::new(ObjectEnum::Cube(self.clone()))),
             ]
         }
     }

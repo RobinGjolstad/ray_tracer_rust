@@ -68,11 +68,11 @@ impl Shapes for Sphere {
             vec![
                 Intersection::new(
                     (-b - discriminant_sqrt) / (2.0 * a),
-                    Object::Sphere(self.clone()),
+                    Object::new(ObjectEnum::Sphere(self.clone())),
                 ),
                 Intersection::new(
                     (-b + discriminant_sqrt) / (2.0 * a),
-                    Object::Sphere(self.clone()),
+                    Object::new(ObjectEnum::Sphere(self.clone())),
                 ),
             ]
         }
