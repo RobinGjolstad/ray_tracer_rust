@@ -23,10 +23,12 @@ impl Ray {
         self.origin + self.direction * time
     }
     fn global_to_local(&self, object: &Object) -> Ray {
+    //fn global_to_local(&self, object: &ObjectEnum) -> Ray {
         self.transform(object.get_transform().get_inverted().unwrap())
     }
 
     pub(crate) fn intersect(&self, object: &Object) -> Vec<Intersection> {
+    //pub(crate) fn intersect(&self, object: &ObjectEnum) -> Vec<Intersection> {
         let local_ray = self.global_to_local(object);
         object.local_intersect(local_ray)
     }

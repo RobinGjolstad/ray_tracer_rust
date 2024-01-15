@@ -198,9 +198,12 @@ impl ObjectEnum {
 }
 
 pub fn new_sphere() -> Object {
+    //pub fn new_sphere() -> ObjectEnum {
     Object::new(ObjectEnum::Sphere(Sphere::default()))
+    //ObjectEnum::Sphere(Sphere::default())
 }
 pub fn glass_sphere() -> Object {
+    //pub fn glass_sphere() -> ObjectEnum {
     let mut s = Sphere::default();
     let mut material = s.get_material();
     material.transparency = 1.0;
@@ -208,9 +211,12 @@ pub fn glass_sphere() -> Object {
     s.set_material(&material);
 
     Object::new(ObjectEnum::Sphere(s))
+    //ObjectEnum::Sphere(s)
 }
 pub fn new_plane() -> Object {
+    //pub fn new_plane() -> ObjectEnum {
     Object::new(ObjectEnum::Plane(Plane::default()))
+    //ObjectEnum::Plane(Plane::default())
 }
 pub fn new_cube() -> Object {
     Object::new(ObjectEnum::Cube(Cube::default()))
@@ -333,17 +339,13 @@ impl Default for ObjectData {
 
 // ====== Object ======
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Object {
     arc_ref: ObjectDataRef,
 }
 impl Object {
     pub fn new(value: ObjectEnum) -> Object {
-        let new_node = ObjectData {
-            value,
-            parent: RwLock::new(Weak::new()),
-            children: RwLock::new(Vec::new()),
-        };
+        let new_node = ObjectData::new(value);
         //let arc_ref = Arc::new(RwLock::new(new_node));
         let arc_ref = Arc::new(RwLock::new(new_node));
         //let arc_ref = Arc::new(new_node);
@@ -441,6 +443,21 @@ impl Object {
 impl Default for Object {
     fn default() -> Self {
         Object::new(ObjectEnum::Group(Group::default()))
+    }
+}
+impl Clone for Object {
+    fn clone(&self) -> Self {
+        let tmp_obj_data = self.arc_ref.read().unwrap();
+        let tmp_objdata_value = tmp_obj_data.value.clone();
+        let tmp_objdata_parent = tmp_obj_data.parent.read().unwrap().clone();
+        let tmp_objdata_children = tmp_obj_data.children.read().unwrap().clone();
+        Object {
+            arc_ref: Arc::new(RwLock::new(ObjectData {
+                value: tmp_objdata_value,
+                parent: tmp_objdata_parent.into(),
+                children: tmp_objdata_children.into(),
+            })),
+        }
     }
 }
 impl PartialEq for Object {

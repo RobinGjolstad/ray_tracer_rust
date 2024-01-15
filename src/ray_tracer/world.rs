@@ -12,6 +12,7 @@ use crate::ray_tracer::{
 #[derive(Debug, PartialEq)]
 pub struct World {
     pub objects: Vec<Object>,
+    //pub objects: Vec<ObjectEnum>,
     pub lights: Vec<Light>,
 }
 

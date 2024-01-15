@@ -14,6 +14,7 @@ pub struct Group {
     base: BaseShape,
     parent: Option<BaseShape>,
     children: Vec<Object>,
+    //children: Vec<ObjectEnum>,
 }
 
 impl Group {
