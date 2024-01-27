@@ -36,6 +36,8 @@ mod test_shape;
 #[cfg(test)]
 use test_shape::TestShape;
 
+use self::group::group_local_intersect;
+
 pub(super) trait Shapes: Debug + Default + Sync {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
@@ -184,7 +186,7 @@ impl ObjectEnum {
     }
     pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         match self {
-            ObjectEnum::Group(g) => g.local_intersect(local_ray),
+            ObjectEnum::Group(g) => panic!("`local_intersect` called directly on group!"),
             ObjectEnum::Sphere(s) => s.local_intersect(local_ray),
             ObjectEnum::Plane(p) => p.local_intersect(local_ray),
             ObjectEnum::Cube(c) => c.local_intersect(local_ray),
@@ -309,6 +311,10 @@ impl ObjectData {
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
         self.value.local_intersect(local_ray)
     }
+
+    fn get_children(&self) -> &Children {
+        &self.children
+    }
 }
 impl Deref for ObjectData {
     type Target = ObjectEnum;
@@ -387,10 +393,14 @@ impl Object {
     }
 
     pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
-        self.arc_ref.read().unwrap().local_intersect(local_ray)
+        if let ObjectEnum::Group(_) = self.arc_ref.read().unwrap().value {
+            group_local_intersect(self, local_ray)
+        } else {
+            self.arc_ref.read().unwrap().local_intersect(local_ray)
+        }
     }
 
-    pub(crate) fn get_copy_of_internal_arc(&self) -> ObjectDataRef {
+    pub(crate) fn get_ref(&self) -> ObjectDataRef {
         self.arc_ref.clone()
     }
 
@@ -401,8 +411,8 @@ impl Object {
     pub fn create_and_add_child(&self, value: ObjectEnum) -> ObjectDataRef {
         if let ObjectEnum::Group(_) = self.arc_ref.read().unwrap().value {
             let new_child = Object::new(value);
-            self.add_child_and_update_its_parent(&new_child);
-            new_child.get_copy_of_internal_arc()
+            self.add_child(&new_child);
+            new_child.get_ref()
         } else {
             panic!("This method is only available for `Group` objects.");
         }
@@ -411,7 +421,7 @@ impl Object {
     /// Add an existing child to the children list.
     ///
     /// NOTE: This method is only available for `Group` objects.
-    pub fn add_child_and_update_its_parent(&self, child: &Object) {
+    pub fn add_child(&self, child: &Object) {
         if let ObjectEnum::Group(_) = self.arc_ref.read().unwrap().value {
         } else {
             panic!("This method is only available for `Group` objects.");
@@ -420,13 +430,13 @@ impl Object {
         {
             let mut own_ref = self.arc_ref.write().unwrap();
             let mut my_children = own_ref.children.write().unwrap();
-            my_children.push(child.get_copy_of_internal_arc());
+            my_children.push(child.get_ref());
         } // `my_children` guard dropped.
 
         {
             let mut child_ref = child.arc_ref.write().unwrap();
             let mut childs_parent = child_ref.parent.write().unwrap();
-            *childs_parent = Arc::downgrade(&self.get_copy_of_internal_arc());
+            *childs_parent = Arc::downgrade(&self.get_ref());
         } // `my_parent` guard dropped.
     }
 
@@ -438,6 +448,20 @@ impl Object {
         let own_ref = self.arc_ref.read().unwrap();
         let my_parent = own_ref.parent.read().unwrap();
         my_parent.upgrade()
+    }
+
+    pub fn has_children(&self) -> bool {
+        self.get_children().is_some()
+    }
+
+    pub(crate) fn get_children(&self) -> Option<Vec<Child>> {
+        let own_ref = self.arc_ref.read().unwrap();
+        let child_ref = own_ref.children.read().unwrap().clone();
+        if !child_ref.is_empty() {
+            Some(child_ref.clone())
+        } else {
+            None
+        }
     }
 }
 impl Default for Object {
@@ -470,7 +494,9 @@ impl PartialEq for Object {
         let own_parent = own_ref.parent.read().unwrap().upgrade();
         let other_parent = other_ref.parent.read().unwrap().upgrade();
         let mut same_parent = false;
-        if own_parent.is_some() && other_parent.is_some() {
+        if own_parent.is_none() && other_parent.is_none() {
+            same_parent = true;
+        } else if own_parent.is_some() && other_parent.is_some() {
             same_parent =
                 *own_parent.unwrap().read().unwrap() == *other_parent.unwrap().read().unwrap();
         }
@@ -584,7 +610,6 @@ mod tests {
     #[test]
     fn a_shape_has_a_parent_attribute() {
         let s = new_test_shape();
-        todo!("Fix grouping and parents");
-        //assert!(s.get_parent().is_none());
+        assert!(s.get_parent().is_none());
     }
 }

@@ -146,6 +146,8 @@ mod tests {
         let s = new_sphere();
         let xs = Intersections::new(&r.intersect(&s));
         assert_eq!(xs.count(), 2);
+        dbg!(&s);
+        dbg!(&xs);
         assert_eq!(*xs.get_element(0).unwrap().get_object_raw(), s);
         assert_eq!(*xs.get_element(1).unwrap().get_object_raw(), s);
     }

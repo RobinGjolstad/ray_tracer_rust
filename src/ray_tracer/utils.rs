@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 /// A fixed value used for comparing f64
 pub const EPSILON: f64 = 0.00005;
 
@@ -15,12 +17,12 @@ pub fn is_float_equal(actual: &f64, comparison: f64) -> bool {
 /// struggling on with making my own tree, I'll steal and modify this one.
 ///
 /// Usage of this tree module requires any used type to implement the Display trait.
-pub(crate) mod tree {
+pub mod tree {
 
     use core::fmt::Debug;
     use std::{
         fmt::{self, Display},
-        ops::Deref,
+        ops::{Deref, DerefMut},
         sync::{Arc, RwLock, Weak},
     };
 
@@ -36,23 +38,42 @@ pub(crate) mod tree {
     /// [`Node`](struct@Node).
     pub struct NodeData<T>
     where
-        T: Display,
+        T: Display + PartialEq,
     {
-        value: T,
+        pub(crate) value: T,
         parent: Parent<T>,
-        children: Children<T>,
+        pub(crate) children: Children<T>,
+    }
+    impl<T> NodeData<T>
+    where
+        T: Display + Clone + PartialEq,
+    {
+        pub(crate) fn get_value(&self) -> T {
+            self.value.clone()
+        }
+        pub(crate) fn set_value(&mut self, new_value: T) {
+            self.value = new_value;
+        }
+    }
+    impl<T> PartialEq for NodeData<T>
+    where
+        T: Display + PartialEq,
+    {
+        fn eq(&self, other: &Self) -> bool {
+            self.value == other.value
+        }
     }
 
     /// This struct is used to own a [`NodeData`] inside an [`Arc`], which can be shared, so that it can
     /// have multiple owners. It also has getter methods for all of [`NodeData`]'s properties.
-    #[derive(Debug)]
-    pub struct Node<T: Display> {
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct Node<T: Display + PartialEq> {
         arc_ref: NodeDataRef<T>,
     }
 
     impl<T> Node<T>
     where
-        T: Display,
+        T: Display + PartialEq,
     {
         pub fn new(value: T) -> Node<T> {
             let new_node = NodeData {
@@ -64,18 +85,18 @@ pub(crate) mod tree {
             Node { arc_ref }
         }
 
-        pub fn get_copy_of_internal_arc(self: &Self) -> NodeDataRef<T> {
+        pub fn get_copy_of_internal_arc(&self) -> NodeDataRef<T> {
             Arc::clone(&self.arc_ref)
         }
 
-        pub fn create_and_add_child(self: &Self, value: T) -> NodeDataRef<T> {
+        pub fn create_and_add_child(&self, value: T) -> NodeDataRef<T> {
             let new_child = Node::new(value);
             self.add_child_and_update_its_parent(&new_child);
             new_child.get_copy_of_internal_arc()
         }
 
         /// 🔏 Write locks used.
-        pub fn add_child_and_update_its_parent(self: &Self, child: &Node<T>) {
+        pub fn add_child_and_update_its_parent(&self, child: &Node<T>) {
             {
                 let mut my_children = self.arc_ref.children.write().unwrap();
                 my_children.push(child.get_copy_of_internal_arc());
@@ -87,24 +108,29 @@ pub(crate) mod tree {
             } // `my_parent` guard dropped.
         }
 
-        pub fn has_parent(self: &Self) -> bool {
+        pub fn has_parent(&self) -> bool {
             self.get_parent().is_some()
         }
 
         /// 🔒 Read lock used.
-        pub fn get_parent(self: &Self) -> Option<NodeDataRef<T>> {
+        pub fn get_parent(&self) -> Option<NodeDataRef<T>> {
             let my_parent_weak = self.arc_ref.parent.read().unwrap();
+            /*
+            // Clippy says this bit is a manual implementation of `map`
             if let Some(my_parent_arc_ref) = my_parent_weak.upgrade() {
                 Some(my_parent_arc_ref)
             } else {
                 None
             }
+            */
+
+            my_parent_weak.upgrade()
         }
     }
 
     impl<T> Deref for Node<T>
     where
-        T: Display,
+        T: Display + PartialEq,
     {
         type Target = NodeData<T>;
 
@@ -113,9 +139,18 @@ pub(crate) mod tree {
         }
     }
 
+    impl<T> DerefMut for Node<T>
+    where
+        T: Display + PartialEq,
+    {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            Arc::get_mut(&mut self.arc_ref).unwrap()
+        }
+    }
+
     impl<T> fmt::Debug for NodeData<T>
     where
-        T: Debug + Display,
+        T: Debug + Display + PartialEq,
     {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             let mut parent_msg = String::new();

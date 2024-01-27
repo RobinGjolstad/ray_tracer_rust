@@ -207,7 +207,7 @@ mod tests {
         );
         let shape = w.objects.first().unwrap();
         let i = Intersection::new(4.0, shape.clone());
-        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
+        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let c = w.shade_hit(&comps, 1);
         assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855));
     }
@@ -224,7 +224,7 @@ mod tests {
         );
         let shape = w.objects[1].clone();
         let i = Intersection::new(0.5, shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
+        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let c = w.shade_hit(&comps, 1);
         assert_eq!(c, Color::new(0.90498, 0.90498, 0.90498));
     }
@@ -248,7 +248,7 @@ mod tests {
             Vector::new_vector(0.0, 0.0, 1.0),
         );
         let i = Intersection::new(4.0, s2);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
+        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let c = w.shade_hit(&comps, 1);
         assert_eq!(c, Color::new(0.1, 0.1, 0.1));
     }
@@ -339,7 +339,7 @@ mod tests {
         let shape = w.objects.get_mut(1).unwrap();
         shape.get_material().ambient = 1.0;
         let i = Intersection::new(1.0, shape.clone());
-        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
+        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let color = w.reflected_color(&comps, 1);
         assert_eq!(color, Color::new(0.0, 0.0, 0.0));
     }
@@ -357,7 +357,7 @@ mod tests {
             Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
+        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let color = w.reflected_color(&comps, 1);
         assert_eq!(color, Color::new(0.19032, 0.2379, 0.14274));
     }
@@ -375,7 +375,7 @@ mod tests {
             Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
+        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let color = w.shade_hit(&comps, 1);
         assert_eq!(color, Color::new(0.87677, 0.92436, 0.82918));
     }
@@ -416,7 +416,7 @@ mod tests {
             Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&vec![i]));
+        let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let color = w.reflected_color(&comps, 0);
         assert_eq!(color, Color::new(0.0, 0.0, 0.0));
     }

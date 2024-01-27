@@ -208,7 +208,7 @@ mod tests {
         let s = new_sphere();
         let i1 = Intersection::new(1.0, s.clone());
         let i2 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i1, i2]);
+        let xs = Intersections::new(&[i1, i2]);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, 1.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().t, 2.0));
@@ -218,7 +218,7 @@ mod tests {
         let s = new_sphere();
         let i1 = Intersection::new(1.0, s.clone());
         let i2 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i2, i1.clone()]);
+        let xs = Intersections::new(&[i2, i1.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i1));
     }
@@ -227,7 +227,7 @@ mod tests {
         let s = new_sphere();
         let i1 = Intersection::new(-1.0, s.clone());
         let i2 = Intersection::new(1.0, s);
-        let xs = Intersections::new(&vec![i1, i2.clone()]);
+        let xs = Intersections::new(&[i1, i2.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i2));
     }
@@ -236,7 +236,7 @@ mod tests {
         let s = new_sphere();
         let i1 = Intersection::new(-2.0, s.clone());
         let i2 = Intersection::new(-1.0, s);
-        let xs = Intersections::new(&vec![i2, i1]);
+        let xs = Intersections::new(&[i2, i1]);
         let i = xs.hit();
         assert_eq!(i, None);
     }
@@ -247,7 +247,7 @@ mod tests {
         let i2 = Intersection::new(7.0, s.clone());
         let i3 = Intersection::new(-3.0, s.clone());
         let i4 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&vec![i1, i2, i3, i4.clone()]);
+        let xs = Intersections::new(&[i1, i2, i3, i4.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i4));
     }

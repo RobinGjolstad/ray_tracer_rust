@@ -12,24 +12,13 @@ use crate::ray_tracer::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct Group {
     base: BaseShape,
-    parent: Option<BaseShape>,
-    children: Vec<Object>,
-    //children: Vec<ObjectEnum>,
 }
 
 impl Group {
     pub fn new() -> Self {
         Group {
             base: BaseShape::default(),
-            parent: None,
-            children: vec![],
         }
-    }
-    fn add_child(&mut self, child: Object) {
-        todo!()
-    }
-    fn update_children(&mut self) {
-        todo!()
     }
 }
 
@@ -62,16 +51,32 @@ impl Shapes for Group {
         Vector::new_vector(point.x, point.y, point.z)
     }
     fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
-        let mut xs: Vec<Intersection> = Vec::new();
-        for child in &self.children {
-            let mut child_xs = local_ray.intersect(child);
-            xs.append(&mut child_xs);
-        }
-        xs.sort_by(|a, b| a.get_time().partial_cmp(&b.get_time()).unwrap());
-        xs.dedup();
-
-        xs
+        todo!()
     }
+}
+
+pub(crate) fn group_local_intersect(obj: &Object, local_ray: Ray) -> Vec<Intersection> {
+    let children = obj.get_children();
+    if children.is_none() {
+        return vec![];
+    }
+
+    let mut retval = vec![];
+    let children = children.unwrap();
+    children.iter().for_each(|c| {
+        let child = c.read().unwrap();
+        //retval.append(&mut child.value.intersect(local_ray));
+        retval.append(&mut local_ray.intersect(obj));
+    });
+
+    retval.sort_by(|a, b| {
+        a.get_time()
+            .partial_cmp(&b.get_time())
+            .expect("Sorting intersections for group intersections failed.")
+    });
+    retval.dedup();
+
+    retval
 }
 
 #[cfg(test)]
@@ -82,31 +87,35 @@ mod tests {
 
     #[test]
     fn creating_a_group() {
-        let g = Group::default();
+        let g = new_group();
 
         assert_eq!(g.get_transform(), Matrix::new_identity());
-        assert!(g.children.is_empty());
+        assert!(!g.has_children());
     }
     #[test]
     fn adding_a_child_to_a_group() {
-        let mut g = Group::new();
+        let mut g = new_group();
         let mut s = new_test_shape();
-        g.add_child(s.clone());
+        g.add_child(&s);
 
-        // Test-hack to get around the fact that `s` doesn't get its parent set.
-        // Only the child cloned into the group gets its parent set.
-        //s.set_parent(&g.base);
-        todo!("Fix grouping and parents");
+        let children = g.get_children().unwrap();
 
-        dbg!(&g);
-        //assert!(!g.children.is_empty());
-        //assert!(g.children.contains(&s));
-        //assert!(s.get_parent().is_some());
-        //assert_eq!(s.get_parent().unwrap(), g.base);
+        let shape_ref = s.get_ref();
+
+        let mut child_contained = false;
+        children.iter().for_each(|c| {
+            if Arc::ptr_eq(c, &shape_ref) {
+                child_contained = true;
+            }
+        });
+
+        assert_eq!(children.len(), 1);
+        assert!(child_contained);
+        assert!(Arc::ptr_eq(&s.get_parent().unwrap(), &g.get_ref()));
     }
     #[test]
     fn intersecting_a_ray_with_an_empty_group() {
-        let g = Group::default();
+        let g = new_group();
         let r = Ray::new(
             Point::new_point(0.0, 0.0, 0.0),
             Vector::new_vector(0.0, 0.0, 1.0),
@@ -118,7 +127,7 @@ mod tests {
     }
     #[test]
     fn intersecting_a_ray_with_a_nonempty_group() {
-        let mut g = Group::default();
+        let mut g = new_group();
         let mut s1 = new_sphere();
         let mut s2 = new_sphere();
         let mut s3 = new_sphere();
@@ -126,17 +135,9 @@ mod tests {
         s2.set_transform(&Transform::translate(0.0, 0.0, -3.0));
         s3.set_transform(&Transform::translate(5.0, 0.0, 0.0));
 
-        let mut g = Group::new();
-        g.add_child(s1.clone());
-        g.add_child(s2.clone());
-        g.add_child(s3.clone());
-
-        // Test-hack to get around the fact that `s` doesn't get its parent set.
-        // Only the child cloned into the group gets its parent set.
-        //s1.set_parent(&g.base);
-        //s2.set_parent(&g.base);
-        //s3.set_parent(&g.base);
-        todo!("Fix grouping and parents");
+        g.add_child(&s1);
+        g.add_child(&s2);
+        g.add_child(&s3);
 
         let r = Ray::new(
             Point::new_point(0.0, 0.0, -5.0),
