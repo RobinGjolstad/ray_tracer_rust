@@ -43,7 +43,7 @@ impl Cone {
         if Cone::check_cap(self.minimum, ray, &t) {
             xs.push(Intersection::new(
                 t,
-                Object::new(ObjectEnum::Cone(self.clone())),
+                Object::Cone(self.clone()),
             ));
         }
 
@@ -51,7 +51,7 @@ impl Cone {
         if Cone::check_cap(self.maximum, ray, &t) {
             xs.push(Intersection::new(
                 t,
-                Object::new(ObjectEnum::Cone(self.clone())),
+                Object::Cone(self.clone()),
             ));
         }
     }
@@ -125,7 +125,7 @@ impl Shapes for Cone {
                 let t = -c / (2.0 * b);
                 xs.push(Intersection::new(
                     t,
-                    Object::new(ObjectEnum::Cone(self.clone())),
+                    Object::Cone(self.clone()),
                 ));
             }
         } else {
@@ -142,7 +142,7 @@ impl Shapes for Cone {
             if self.minimum < y0 && y0 < self.maximum {
                 xs.push(Intersection::new(
                     t0,
-                    Object::new(ObjectEnum::Cone(self.clone())),
+                    Object::Cone(self.clone()),
                 ));
             }
 
@@ -150,7 +150,7 @@ impl Shapes for Cone {
             if self.minimum < y1 && y1 < self.maximum {
                 xs.push(Intersection::new(
                     t1,
-                    Object::new(ObjectEnum::Cone(self.clone())),
+                    Object::Cone(self.clone()),
                 ));
             }
         }

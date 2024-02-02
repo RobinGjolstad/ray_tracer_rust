@@ -94,7 +94,7 @@ pub(crate) fn prepare_computations(
         eyev: -(ray.get_direction()),
         normalv: intersection
             .get_object()
-            .normal_at(&ray.position(intersection.t)),
+            .normal_at(ray.position(intersection.t)),
         reflectv: Vector::new_vector(0.0, 0.0, 0.0),
         inside: false,
         over_point: Point::new_point(0.0, 0.0, 0.0),
@@ -104,7 +104,7 @@ pub(crate) fn prepare_computations(
     };
 
     let point = ray.position(intersection.t);
-    let normalv = intersection.get_object().normal_at(&point);
+    let normalv = intersection.get_object().normal_at(point);
     let eyev = -(ray.get_direction());
     if Tuple::dot(&normalv, &eyev) < 0.0 {
         comps.inside = true;

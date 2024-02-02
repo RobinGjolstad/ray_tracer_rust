@@ -43,12 +43,12 @@ impl Cylinder {
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, &t) {
-            xs.push(Intersection::new(t, Object::new(ObjectEnum::Cylinder(self.clone()))));
+            xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Cylinder::check_cap(ray, &t) {
-            xs.push(Intersection::new(t, Object::new(ObjectEnum::Cylinder(self.clone()))));
+            xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
         }
     }
 }
@@ -116,12 +116,12 @@ impl Shapes for Cylinder {
 
         let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
         if self.minimum < y0 && y0 < self.maximum {
-            xs.push(Intersection::new(t0, Object::new(ObjectEnum::Cylinder(self.clone()))));
+            xs.push(Intersection::new(t0, Object::Cylinder(self.clone())));
         }
 
         let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
         if self.minimum < y1 && y1 < self.maximum {
-            xs.push(Intersection::new(t1, Object::new(ObjectEnum::Cylinder(self.clone()))));
+            xs.push(Intersection::new(t1, Object::Cylinder(self.clone())));
         }
 
         self.intersect_caps(&local_ray, &mut xs);
