@@ -8,6 +8,8 @@ use std::{
 
 use crate::ray_tracer::{tuples::Tuple, utils::is_float_equal};
 
+use super::utils::is_float_equal_low_precision;
+
 #[derive(Debug)]
 pub enum MatrixError {
     AsymmetricMatrix,
@@ -221,7 +223,7 @@ impl PartialEq for Matrix {
             // outer loop
             for j in 0..size {
                 // inner loop
-                if !is_float_equal(
+                if !is_float_equal_low_precision(
                     self.matrix.get(i).unwrap().get(j).unwrap(),
                     *other.matrix.get(i).unwrap().get(j).unwrap(),
                 ) {

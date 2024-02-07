@@ -123,7 +123,7 @@ impl Pattern {
         object: &Object,
         world_point: Point,
     ) -> Color {
-        let object_point = object.get_transform().get_inverted().unwrap() * world_point;
+        let object_point = object.world_to_object(&world_point);
         let pattern_point = pattern.get_transform().get_inverted().unwrap() * object_point;
 
         pattern.pattern_at(pattern_point)

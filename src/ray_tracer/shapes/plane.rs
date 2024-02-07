@@ -110,8 +110,8 @@ mod tests {
         );
         let xs = p.local_intersect(r);
         assert_eq!(xs.len(), 1);
-        assert_eq!(xs.get(0).unwrap().get_time(), 1.0);
-        assert_eq!(*xs.get(0).unwrap().get_object(), p_o);
+        assert_eq!(xs.first().unwrap().get_time(), 1.0);
+        assert_eq!(*xs.first().unwrap().get_object(), p_o);
     }
 
     #[test]
@@ -124,7 +124,7 @@ mod tests {
         );
         let xs = p.local_intersect(r);
         assert_eq!(xs.len(), 1);
-        assert_eq!(xs.get(0).unwrap().get_time(), 1.0);
-        assert_eq!(*xs.get(0).unwrap().get_object(), p_o);
+        assert_eq!(xs.first().unwrap().get_time(), 1.0);
+        assert_eq!(*xs.first().unwrap().get_object(), p_o);
     }
 }

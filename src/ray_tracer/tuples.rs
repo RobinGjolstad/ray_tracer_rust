@@ -1,5 +1,6 @@
-use crate::ray_tracer::utils::is_float_equal;
 use std::ops::{Add, Div, Mul, Neg, Sub};
+
+use super::utils::is_float_equal_low_precision;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Tuple {
@@ -83,11 +84,11 @@ impl Tuple {
     }
 
     pub fn is_point(&self) -> bool {
-        is_float_equal(&self.w, 1.0)
+        is_float_equal_low_precision(&self.w, 1.0)
     }
 
     pub fn is_vector(&self) -> bool {
-        is_float_equal(&self.w, 0.0)
+        is_float_equal_low_precision(&self.w, 0.0)
     }
 }
 
@@ -151,15 +152,17 @@ impl Div<f64> for Tuple {
 
 impl PartialEq for Tuple {
     fn eq(&self, other: &Self) -> bool {
-        is_float_equal(&self.x, other.x)
-            && is_float_equal(&self.y, other.y)
-            && is_float_equal(&self.z, other.z)
-            && is_float_equal(&self.w, other.w)
+        is_float_equal_low_precision(&self.x, other.x)
+            && is_float_equal_low_precision(&self.y, other.y)
+            && is_float_equal_low_precision(&self.z, other.z)
+            && is_float_equal_low_precision(&self.w, other.w)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::ray_tracer::utils::is_float_equal_low_precision;
+
     use super::*;
 
     #[test]
@@ -167,10 +170,10 @@ mod tests {
         let a = (4.3, -4.2, 3.1, 1.0);
         let tup = Tuple::new_tuple(a);
 
-        assert!(is_float_equal(&a.0, 4.3));
-        assert!(is_float_equal(&a.1, -4.2));
-        assert!(is_float_equal(&a.2, 3.1));
-        assert!(is_float_equal(&a.3, 1.0));
+        assert!(is_float_equal_low_precision(&a.0, 4.3));
+        assert!(is_float_equal_low_precision(&a.1, -4.2));
+        assert!(is_float_equal_low_precision(&a.2, 3.1));
+        assert!(is_float_equal_low_precision(&a.3, 1.0));
         assert!(tup.is_point());
         assert!(!tup.is_vector());
     }
@@ -180,10 +183,10 @@ mod tests {
         let a = (4.3, -4.2, 3.1, 0.0);
         let tup = Tuple::new_tuple(a);
 
-        assert!(is_float_equal(&a.0, 4.3));
-        assert!(is_float_equal(&a.1, -4.2));
-        assert!(is_float_equal(&a.2, 3.1));
-        assert!(is_float_equal(&a.3, 0.0));
+        assert!(is_float_equal_low_precision(&a.0, 4.3));
+        assert!(is_float_equal_low_precision(&a.1, -4.2));
+        assert!(is_float_equal_low_precision(&a.2, 3.1));
+        assert!(is_float_equal_low_precision(&a.3, 0.0));
         assert!(!tup.is_point());
         assert!(tup.is_vector());
     }
@@ -346,7 +349,7 @@ mod tests {
         let norm = v.normalize();
         let norm_mag = norm.magnitude();
 
-        assert!(is_float_equal(&norm_mag, 1.0));
+        assert!(is_float_equal_low_precision(&norm_mag, 1.0));
     }
 
     #[test]
@@ -354,7 +357,7 @@ mod tests {
         let a = Tuple::new_vector(1.0, 2.0, 3.0);
         let b = Tuple::new_vector(2.0, 3.0, 4.0);
 
-        assert!(is_float_equal(&Tuple::dot(&a, &b), 20.0));
+        assert!(is_float_equal_low_precision(&Tuple::dot(&a, &b), 20.0));
     }
 
     #[test]

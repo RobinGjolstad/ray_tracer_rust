@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul, Sub};
 
-use crate::ray_tracer::utils::is_float_equal;
+use super::utils::is_float_equal_low_precision;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
@@ -25,23 +25,23 @@ impl Color {
 
 impl PartialEq<Color> for Color {
     fn eq(&self, other: &Color) -> bool {
-        is_float_equal(&self.red, other.red)
-            && is_float_equal(&self.green, other.green)
-            && is_float_equal(&self.blue, other.blue)
+        is_float_equal_low_precision(&self.red, other.red)
+            && is_float_equal_low_precision(&self.green, other.green)
+            && is_float_equal_low_precision(&self.blue, other.blue)
     }
 }
 impl PartialEq<Color> for &Color {
     fn eq(&self, other: &Color) -> bool {
-        is_float_equal(&self.red, other.red)
-            && is_float_equal(&self.green, other.green)
-            && is_float_equal(&self.blue, other.blue)
+        is_float_equal_low_precision(&self.red, other.red)
+            && is_float_equal_low_precision(&self.green, other.green)
+            && is_float_equal_low_precision(&self.blue, other.blue)
     }
 }
 impl PartialEq<&Color> for Color {
     fn eq(&self, other: &&Color) -> bool {
-        is_float_equal(&self.red, other.red)
-            && is_float_equal(&self.green, other.green)
-            && is_float_equal(&self.blue, other.blue)
+        is_float_equal_low_precision(&self.red, other.red)
+            && is_float_equal_low_precision(&self.green, other.green)
+            && is_float_equal_low_precision(&self.blue, other.blue)
     }
 }
 impl Add<Color> for Color {
@@ -96,9 +96,9 @@ mod tests {
     fn colors_are_red_green_blue_tuples() {
         let c = Color::new(-0.5, 0.4, 1.7);
 
-        assert!(is_float_equal(&c.red, -0.5));
-        assert!(is_float_equal(&c.green, 0.4));
-        assert!(is_float_equal(&c.blue, 1.7));
+        assert!(is_float_equal_low_precision(&c.red, -0.5));
+        assert!(is_float_equal_low_precision(&c.green, 0.4));
+        assert!(is_float_equal_low_precision(&c.blue, 1.7));
     }
 
     #[test]

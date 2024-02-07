@@ -99,7 +99,7 @@ impl Object {
         inverted * *point
     }
     pub(crate) fn normal_at(&self, world_point: Point) -> Vector {
-        let local_point = self.world_point_to_local(&world_point);
+        let local_point = self.world_to_object(&world_point);
         let local_normal = match self {
             Object::Group(g) => g.local_normal_at(local_point),
             Object::Sphere(s) => s.local_normal_at(local_point),
@@ -112,7 +112,7 @@ impl Object {
             Object::TestShape(s) => s.local_normal_at(local_point),
         };
 
-        self.local_vector_to_world(&local_normal)
+        self.normal_to_world(&local_normal)
     }
     fn local_vector_to_world(&self, local_vector: &Vector) -> Vector {
         let inverted = match self {
@@ -198,20 +198,20 @@ impl Object {
         }
     }
 
-    fn world_to_object(&self, world_point: Point) -> Point {
+    pub(crate) fn world_to_object(&self, world_point: &Point) -> Point {
         // The shape's transform has already combined with its parent's transform
         // if it is part of a group.
-        self.get_transform().get_inverted().unwrap() * world_point
+        self.get_transform().get_inverted().unwrap() * *world_point
     }
 
-    fn normal_to_world(&self, local_normal: Vector) -> Vector {
+    fn normal_to_world(&self, local_normal: &Vector) -> Vector {
         let mut normal = self
             .get_transform()
             .get_inverted()
             .unwrap()
             .transpose()
             .unwrap()
-            * local_normal;
+            * *local_normal;
         normal.w = 0.0;
         normal.normalize()
     }
@@ -381,7 +381,7 @@ mod tests {
         };
         let s = g2.get_children().unwrap()[0].clone();
 
-        let p = s.world_to_object(Tuple::new_point(-2.0, 0.0, -10.0));
+        let p = s.world_to_object(&Tuple::new_point(-2.0, 0.0, -10.0));
 
         assert_eq!(p, Tuple::new_point(0.0, 0.0, -1.0));
     }
@@ -411,7 +411,7 @@ mod tests {
         };
         let s = g2.get_children().unwrap()[0].clone();
 
-        let n = s.normal_to_world(Vector::new_vector(
+        let n = s.normal_to_world(&Vector::new_vector(
             f64::sqrt(3.0) / 3.0,
             f64::sqrt(3.0) / 3.0,
             f64::sqrt(3.0) / 3.0,
@@ -419,5 +419,35 @@ mod tests {
 
         assert_eq!(n, Vector::new_vector(0.2857, 0.4286, -0.8571));
     }
-}
+    #[test]
+    fn finding_the_normal_on_a_child_object() {
+        let mut s = new_sphere();
+        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        let g2 = GroupBuilder::new()
+            .set_transform(Transform::scaling(1.0, 2.0, 3.0))
+            .add(s)
+            .build();
+        let g1 = GroupBuilder::new()
+            .set_transform(Transform::rotation_y(PI / 2.0))
+            .add(g2)
+            .build();
 
+        // Get the sphere from the groups
+        let g1 = if let Object::Group(g) = g1 {
+            g
+        } else {
+            panic!("Expected a group");
+        };
+        let g2 = if let Object::Group(g) = g1.get_children().unwrap()[0].clone() {
+            g
+        } else {
+            panic!("Expected a group");
+        };
+        let s = g2.get_children().unwrap()[0].clone();
+
+        let p = Point::new_point(1.7321, 1.1547, -5.5774);
+        let n = s.normal_at(p);
+
+        assert_eq!(n, Vector::new_vector(0.2857, 0.4286, -0.8571));
+    }
+}
