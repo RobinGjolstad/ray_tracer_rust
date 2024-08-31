@@ -7,13 +7,13 @@ use crate::ray_tracer::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct Ray {
+pub struct Ray {
     pub origin: Point,
     pub direction: Vector,
 }
 
 impl Ray {
-    pub(crate) fn new(origin: Point, direction: Vector) -> Self {
+    pub fn new(origin: Point, direction: Vector) -> Self {
         Ray { origin, direction }
     }
     pub(crate) fn get_direction(&self) -> Vector {

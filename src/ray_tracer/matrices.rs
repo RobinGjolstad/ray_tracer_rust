@@ -196,7 +196,7 @@ impl Matrix {
         !is_float_equal(&self.determinant(), 0.0)
     }
 
-    pub(crate) fn calculate_inverse(&mut self) -> Result<Self, MatrixError> {
+    pub fn calculate_inverse(&mut self) -> Result<Self, MatrixError> {
         if !self.invertible() {
             return Err(MatrixError::NonInvertible);
         }

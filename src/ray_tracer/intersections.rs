@@ -6,12 +6,12 @@ use crate::ray_tracer::{
 };
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct Intersection {
+pub struct Intersection {
     t: f64,
     object: Object,
 }
 impl Intersection {
-    pub(crate) fn new(time: f64, object: Object) -> Self {
+    pub fn new(time: f64, object: Object) -> Self {
         Intersection { t: time, object }
     }
     pub(crate) fn get_time(&self) -> f64 {
@@ -27,12 +27,11 @@ impl Intersection {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct Intersections {
-    pub(crate) list: Vec<Intersection>,
+pub struct Intersections {
+    pub list: Vec<Intersection>,
 }
 impl Intersections {
-    #[cfg(test)]
-    pub(crate) fn new(intersect_list: &[Intersection]) -> Self {
+    pub fn new(intersect_list: &[Intersection]) -> Self {
         let mut i = Intersections {
             list: intersect_list.to_vec(),
         };
@@ -55,7 +54,7 @@ impl Intersections {
             None
         }
     }
-    pub(crate) fn hit(&self) -> Option<Intersection> {
+    pub fn hit(&self) -> Option<Intersection> {
         let mut list = self.list.clone();
         list.retain(|x| x.t.is_sign_positive());
         list.iter()
@@ -69,7 +68,7 @@ impl Intersections {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct IntersectComp {
+pub struct IntersectComp {
     pub(crate) t: f64,
     pub(crate) object: Object,
     pub(crate) point: Point,
@@ -82,7 +81,7 @@ pub(crate) struct IntersectComp {
     pub(crate) n1: f64,
     pub(crate) n2: f64,
 }
-pub(crate) fn prepare_computations(
+pub fn prepare_computations(
     intersection: &Intersection,
     ray: &Ray,
     intersections: &Intersections,
@@ -159,7 +158,7 @@ fn get_refractive_index_from_intersections(
 
 /// Calculate the `reflectance` of an intersection.
 /// Reflectance describes a fraction of light being reflected.
-pub(crate) fn schlick(comps: &IntersectComp) -> f64 {
+pub fn schlick(comps: &IntersectComp) -> f64 {
     // Find the cosine of the angle between the eye and normal vectors
     let mut cos = Tuple::dot(&comps.eyev, &comps.normalv);
 

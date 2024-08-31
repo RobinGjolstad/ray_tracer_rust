@@ -20,6 +20,22 @@ dyn-clonable = "0.9.0"
 criterion = { version = "0.5.1", features = ["html_reports"] }
 
 [[bench]]
-name = "benchmarks"
+name = "matrix"
+harness = false
+
+[[bench]]
+name = "render"
+harness = false
+
+[[bench]]
+name = "camera"
+harness = false
+
+[[bench]]
+name = "tuple"
+harness = false
+
+[[bench]]
+name = "intersections"
 harness = false
 

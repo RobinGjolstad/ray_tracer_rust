@@ -49,7 +49,7 @@ impl Camera {
         self.transform.calculate_inverse().unwrap();
     }
 
-    pub(crate) fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
+    pub fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
         // The offset from the edge of the canvas to the pixel's center
         let xoffset = (px as f64 + 0.5) * self.pixel_size;
         let yoffset = (py as f64 + 0.5) * self.pixel_size;
