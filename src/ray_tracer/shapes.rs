@@ -46,7 +46,7 @@ pub(super) trait Shapes: Debug + Default + Sync {
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
     fn local_normal_at(&self, point: Point) -> Vector;
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
+    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>);
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -184,17 +184,21 @@ impl Object {
             Object::TestShape(s) => s.get_material(),
         }
     }
-    pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    pub(crate) fn local_intersect(
+        &self,
+        local_ray: Ray,
+        intersection_list: &mut Vec<Intersection>,
+    ) {
         match self {
-            Object::Group(g) => g.local_intersect(local_ray),
-            Object::Sphere(s) => s.local_intersect(local_ray),
-            Object::Plane(p) => p.local_intersect(local_ray),
-            Object::Cube(c) => c.local_intersect(local_ray),
-            Object::Cylinder(c) => c.local_intersect(local_ray),
-            Object::Cone(c) => c.local_intersect(local_ray),
+            Object::Group(g) => g.local_intersect(local_ray, intersection_list),
+            Object::Sphere(s) => s.local_intersect(local_ray, intersection_list),
+            Object::Plane(p) => p.local_intersect(local_ray, intersection_list),
+            Object::Cube(c) => c.local_intersect(local_ray, intersection_list),
+            Object::Cylinder(c) => c.local_intersect(local_ray, intersection_list),
+            Object::Cone(c) => c.local_intersect(local_ray, intersection_list),
 
             #[cfg(test)]
-            Object::TestShape(s) => s.local_intersect(local_ray),
+            Object::TestShape(s) => s.local_intersect(local_ray, intersection_list),
         }
     }
 
@@ -308,7 +312,8 @@ mod tests {
         );
         let mut s = new_test_shape();
         s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
-        let _xs = r.intersect(&s);
+        let mut _xs = Vec::new();
+        r.intersect(&s, &mut _xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
         assert_eq!(saved_ray.origin, Tuple::new_point(0.0, 0.0, -2.5));
         assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 0.5));
@@ -321,7 +326,8 @@ mod tests {
         );
         let mut s = new_test_shape();
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
-        let _xs = r.intersect(&s);
+        let mut _xs = Vec::new();
+        r.intersect(&s, &mut _xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
         assert_eq!(saved_ray.origin, Tuple::new_point(-5.0, 0.0, -5.0));
         assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 1.0));

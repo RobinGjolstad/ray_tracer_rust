@@ -26,7 +26,7 @@ impl Ray {
         self.transform(object.get_transform().get_inverted().unwrap())
     }
 
-    pub(crate) fn intersect(&self, object: &Object) -> Vec<Intersection> {
+    pub(crate) fn intersect(&self, object: &Object, intersection_list: &mut Vec<Intersection>) {
         let local_ray = if let Object::Group(_) = object {
             // Do not convert ray to local space if object is a group.
             // Conversions are taken care of in the group's intersect method.
@@ -35,14 +35,15 @@ impl Ray {
             self.global_to_local(object)
         };
 
-        object.local_intersect(local_ray)
+        object.local_intersect(local_ray, intersection_list);
     }
 
     pub(crate) fn intersect_world(&self, world: &World) -> Intersections {
         let mut intersections = Intersections { list: Vec::new() };
         for object in &world.objects {
-            intersections.put_elements(&self.intersect(object));
+            self.intersect(object, &mut intersections.list);
         }
+        intersections.sort();
         intersections
     }
 
@@ -90,7 +91,8 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 4.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 6.0));
@@ -102,7 +104,8 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 5.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 5.0));
@@ -114,7 +117,8 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 0);
     }
     #[test]
@@ -124,7 +128,8 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), -1.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 1.0));
@@ -136,7 +141,8 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), -6.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), -4.0));
@@ -149,7 +155,8 @@ mod tests {
             Tuple::new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
         dbg!(&s);
         dbg!(&xs);
@@ -186,7 +193,8 @@ mod tests {
         );
         let mut s = new_sphere();
         s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 3.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 7.0));
@@ -199,7 +207,8 @@ mod tests {
         );
         let mut s = new_sphere();
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
-        let xs = Intersections::new(&r.intersect(&s));
+        let mut xs = Intersections::default();
+        r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 0);
     }
 }

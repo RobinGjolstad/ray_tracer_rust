@@ -55,13 +55,13 @@ impl Shapes for Plane {
     fn local_normal_at(&self, point: Point) -> Vector {
         Vector::new_vector(0.0, 1.0, 0.0)
     }
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         if f64::abs(local_ray.direction.y) < EPSILON {
-            return Vec::new();
+            return;
         }
 
         let t = -local_ray.origin.y / local_ray.direction.y;
-        vec![Intersection::new(t, Object::Plane(self.clone()))]
+        intersection_list.push(Intersection::new(t, Object::Plane(self.clone())));
     }
 }
 
@@ -87,7 +87,8 @@ mod tests {
             Point::new_point(0.0, 10.0, 1.0),
             Vector::new_vector(0.0, 0.0, 1.0),
         );
-        let xs = p.local_intersect(r);
+        let mut xs = Vec::new();
+        p.local_intersect(r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]
@@ -97,7 +98,8 @@ mod tests {
             Point::new_point(0.0, 0.0, 0.0),
             Vector::new_vector(0.0, 0.0, 1.0),
         );
-        let xs = p.local_intersect(r);
+        let mut xs = Vec::new();
+        p.local_intersect(r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]
@@ -108,7 +110,8 @@ mod tests {
             Point::new_point(0.0, 1.0, 0.0),
             Vector::new_vector(0.0, -1.0, 0.0),
         );
-        let xs = p.local_intersect(r);
+        let mut xs = Vec::new();
+        p.local_intersect(r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs.first().unwrap().get_time(), 1.0);
         assert_eq!(*xs.first().unwrap().get_object(), p_o);
@@ -122,7 +125,8 @@ mod tests {
             Point::new_point(0.0, -1.0, 0.0),
             Vector::new_vector(0.0, 1.0, 0.0),
         );
-        let xs = p.local_intersect(r);
+        let mut xs = Vec::new();
+        p.local_intersect(r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs.first().unwrap().get_time(), 1.0);
         assert_eq!(*xs.first().unwrap().get_object(), p_o);

@@ -26,7 +26,7 @@ impl Intersection {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Default, PartialEq, Clone)]
 pub struct Intersections {
     pub list: Vec<Intersection>,
 }
@@ -38,7 +38,7 @@ impl Intersections {
         i.sort();
         i
     }
-    fn sort(&mut self) {
+    pub fn sort(&mut self) {
         self.list
             .sort_unstable_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
     }

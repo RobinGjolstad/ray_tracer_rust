@@ -73,18 +73,21 @@ impl Shapes for Group {
     fn local_normal_at(&self, point: Point) -> Vector {
         Vector::new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         // All children have their transformations already prepared for conversion to world space.
         // So, we can just intersect the ray with each child.
         let children = if let Some(c) = self.get_children() {
             c
         } else {
-            return vec![];
+            return;
         };
 
-        let mut retval = vec![];
+        // TODO: Restructure to avoid temporary list.
+        // Is is necessary to sort and dedup?
+        // Anyways, reserve a vector with enough space for two intersections for each child.
+        let mut retval = Vec::with_capacity(children.len() * 2);
         children.iter().for_each(|child| {
-            retval.append(&mut local_ray.intersect(child));
+            local_ray.intersect(child, &mut retval);
         });
 
         retval.sort_by(|a, b| {
@@ -94,7 +97,7 @@ impl Shapes for Group {
         });
         retval.dedup();
 
-        retval
+        intersection_list.extend(retval);
     }
 }
 
@@ -212,7 +215,8 @@ mod tests {
             Vector::new_vector(0.0, 0.0, 1.0),
         );
 
-        let xs = g.local_intersect(r);
+        let mut xs = Vec::new();
+        g.local_intersect(r, &mut xs);
 
         assert!(xs.is_empty());
     }
@@ -231,7 +235,8 @@ mod tests {
             Vector::new_vector(0.0, 0.0, 1.0),
         );
 
-        let xs = g.local_intersect(r);
+        let mut xs = Vec::new();
+        g.local_intersect(r, &mut xs);
 
         assert_eq!(xs.len(), 4);
         assert_eq!(xs[0].get_object(), &s2);
@@ -253,7 +258,8 @@ mod tests {
             Vector::new_vector(0.0, 0.0, 1.0),
         );
 
-        let xs = r.intersect(&g);
+        let mut xs = Vec::new();
+        r.intersect(&g, &mut xs);
 
         assert_eq!(xs.len(), 2);
     }

@@ -53,7 +53,7 @@ impl Shapes for Sphere {
     fn local_normal_at(&self, point: Point) -> Vector {
         point - Point::new_point(0.0, 0.0, 0.0)
     }
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         let sphere_to_ray = local_ray.origin - self.get_position();
         let a = Tuple::dot(&local_ray.direction, &local_ray.direction);
         let b = 2.0 * Tuple::dot(&local_ray.direction, &sphere_to_ray);
@@ -63,18 +63,16 @@ impl Shapes for Sphere {
         let discriminant_sqrt = discriminant.sqrt();
 
         if discriminant < 0.0 {
-            Vec::new()
+            return;
         } else {
-            vec![
-                Intersection::new(
-                    (-b - discriminant_sqrt) / (2.0 * a),
-                    Object::Sphere(self.clone()),
-                ),
-                Intersection::new(
-                    (-b + discriminant_sqrt) / (2.0 * a),
-                    Object::Sphere(self.clone()),
-                ),
-            ]
+            intersection_list.push(Intersection::new(
+                (-b - discriminant_sqrt) / (2.0 * a),
+                Object::Sphere(self.clone()),
+            ));
+            intersection_list.push(Intersection::new(
+                (-b + discriminant_sqrt) / (2.0 * a),
+                Object::Sphere(self.clone()),
+            ));
         }
     }
 }

@@ -41,18 +41,12 @@ impl Cone {
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Cone::check_cap(self.minimum, ray, &t) {
-            xs.push(Intersection::new(
-                t,
-                Object::Cone(self.clone()),
-            ));
+            xs.push(Intersection::new(t, Object::Cone(self.clone())));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Cone::check_cap(self.maximum, ray, &t) {
-            xs.push(Intersection::new(
-                t,
-                Object::Cone(self.clone()),
-            ));
+            xs.push(Intersection::new(t, Object::Cone(self.clone())));
         }
     }
 }
@@ -102,7 +96,7 @@ impl Shapes for Cone {
             Vector::new_vector(point.x, y, point.z)
         }
     }
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         let a = local_ray.direction.x.powi(2) - local_ray.direction.y.powi(2)
             + local_ray.direction.z.powi(2);
         let b = (2.0 * local_ray.origin.x * local_ray.direction.x)
@@ -113,26 +107,21 @@ impl Shapes for Cone {
 
         // Forward declare. Different calculation if a single or double intersection.
 
-        let mut xs = vec![];
-
         if is_float_equal(&a, 0.0) {
             if is_float_equal(&b, 0.0) {
                 // No intersections.
-                return vec![];
+                return;
             } else {
                 // Parallel to one of the halves.
                 // One intersection.
                 let t = -c / (2.0 * b);
-                xs.push(Intersection::new(
-                    t,
-                    Object::Cone(self.clone()),
-                ));
+                intersection_list.push(Intersection::new(t, Object::Cone(self.clone())));
             }
         } else {
             let disc = b.powi(2) - 4.0 * a * c;
             if disc < 0.0 {
                 // Ray doesn't intersect the cone.
-                return vec![];
+                return;
             }
 
             let t0 = (-b - disc.sqrt()) / (2.0 * a);
@@ -140,24 +129,16 @@ impl Shapes for Cone {
 
             let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
             if self.minimum < y0 && y0 < self.maximum {
-                xs.push(Intersection::new(
-                    t0,
-                    Object::Cone(self.clone()),
-                ));
+                intersection_list.push(Intersection::new(t0, Object::Cone(self.clone())));
             }
 
             let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
             if self.minimum < y1 && y1 < self.maximum {
-                xs.push(Intersection::new(
-                    t1,
-                    Object::Cone(self.clone()),
-                ));
+                intersection_list.push(Intersection::new(t1, Object::Cone(self.clone())));
             }
         }
 
-        self.intersect_caps(&local_ray, &mut xs);
-
-        xs
+        self.intersect_caps(&local_ray, intersection_list);
     }
 }
 
@@ -195,7 +176,8 @@ mod tests {
                 origin: example.0,
                 direction,
             };
-            let xs = shape.local_intersect(r);
+            let mut xs = Vec::new();
+            shape.local_intersect(r, &mut xs);
             assert_eq!(xs.len(), 2);
             assert!(is_float_equal(&xs[0].get_time(), example.2));
             assert!(is_float_equal(&xs[1].get_time(), example.3));
@@ -208,7 +190,8 @@ mod tests {
         let direction = Vector::new_vector(0.0, 1.0, 1.0).normalize();
         let r = Ray::new(Point::new_point(0.0, 0.0, -1.0), direction);
 
-        let xs = shape.local_intersect(r);
+        let mut xs = Vec::new();
+        shape.local_intersect(r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal(&xs[0].get_time(), 0.35355));
     }
@@ -226,7 +209,8 @@ mod tests {
         for example in examples {
             let direction = example.1;
             let ray = Ray::new(example.0, direction.normalize());
-            let xs = cone.local_intersect(ray);
+            let mut xs = Vec::new();
+            cone.local_intersect(ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }
@@ -305,7 +289,8 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let xs = cone.local_intersect(r);
+            let mut xs = Vec::new();
+            cone.local_intersect(r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -345,7 +330,8 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let xs = cone.local_intersect(r);
+            let mut xs = Vec::new();
+            cone.local_intersect(r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -410,7 +396,8 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let xs = cone.local_intersect(r);
+            let mut xs = Vec::new();
+            cone.local_intersect(r, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }

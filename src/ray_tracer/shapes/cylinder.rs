@@ -92,12 +92,12 @@ impl Shapes for Cylinder {
             Vector::new_vector(point.x, 0.0, point.z)
         }
     }
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         let a = local_ray.direction.x.powi(2) + local_ray.direction.z.powi(2);
         if is_float_equal(&a, 0.0) {
-            let mut xs = vec![];
-            self.intersect_caps(&local_ray, &mut xs);
-            return xs;
+            self.intersect_caps(&local_ray, intersection_list);
+
+            return;
         }
 
         let b = 2.0 * local_ray.origin.x * local_ray.direction.x
@@ -106,27 +106,23 @@ impl Shapes for Cylinder {
         let disc = b.powi(2) - 4.0 * a * c;
         if disc < 0.0 {
             // Ray doesn't intersect the cylinder
-            return vec![];
+            return;
         }
 
         let t0 = (-b - disc.sqrt()) / (2.0 * a);
         let t1 = (-b + disc.sqrt()) / (2.0 * a);
 
-        let mut xs = vec![];
-
         let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
         if self.minimum < y0 && y0 < self.maximum {
-            xs.push(Intersection::new(t0, Object::Cylinder(self.clone())));
+            intersection_list.push(Intersection::new(t0, Object::Cylinder(self.clone())));
         }
 
         let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
         if self.minimum < y1 && y1 < self.maximum {
-            xs.push(Intersection::new(t1, Object::Cylinder(self.clone())));
+            intersection_list.push(Intersection::new(t1, Object::Cylinder(self.clone())));
         }
 
-        self.intersect_caps(&local_ray, &mut xs);
-
-        xs
+        self.intersect_caps(&local_ray, intersection_list);
     }
 }
 
@@ -155,7 +151,8 @@ mod tests {
         for example in examples {
             let direction = example.1;
             let ray = Ray::new(example.0, direction.normalize());
-            let xs = cyl.local_intersect(ray);
+            let mut xs = Vec::new();
+            cyl.local_intersect(ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }
@@ -187,7 +184,8 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let ray = Ray::new(example.0, direction);
-            let xs = cyl.local_intersect(ray);
+            let mut xs = Vec::new();
+            cyl.local_intersect(ray, &mut xs);
             assert_eq!(2, xs.len());
             assert!(is_float_equal(&example.2, xs[0].get_time()));
             assert!(is_float_equal(&example.3, xs[1].get_time()));
@@ -272,7 +270,8 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let xs = cyl.local_intersect(r);
+            let mut xs = Vec::new();
+            cyl.local_intersect(r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -322,7 +321,8 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let xs = cyl.local_intersect(r);
+            let mut xs = Vec::new();
+            cyl.local_intersect(r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }

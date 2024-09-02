@@ -68,7 +68,7 @@ impl Shapes for Cube {
             panic!("Intersection did not match any axis")
         }
     }
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         let (xtmin, xtmax): (f64, f64) = check_axis(local_ray.origin.x, local_ray.direction.x);
         let (ytmin, ytmax): (f64, f64) = check_axis(local_ray.origin.y, local_ray.direction.y);
         let (ztmin, ztmax): (f64, f64) = check_axis(local_ray.origin.z, local_ray.direction.z);
@@ -85,12 +85,10 @@ impl Shapes for Cube {
             .to_owned();
 
         if tmin > tmax {
-            Vec::new()
+            return;
         } else {
-            vec![
-                Intersection::new(tmin, Object::Cube(self.clone())),
-                Intersection::new(tmax, Object::Cube(self.clone())),
-            ]
+            intersection_list.push(Intersection::new(tmin, Object::Cube(self.clone())));
+            intersection_list.push(Intersection::new(tmax, Object::Cube(self.clone())));
         }
     }
 }
@@ -186,7 +184,8 @@ mod tests {
         ];
 
         for intersection in examples {
-            let xs = c.local_intersect(intersection.0);
+            let mut xs = Vec::new();
+            c.local_intersect(intersection.0, &mut xs);
             assert_eq!(xs.len(), 2);
             assert_eq!(xs[0].get_time(), intersection.1);
             assert_eq!(xs[1].get_time(), intersection.2);
@@ -225,7 +224,8 @@ mod tests {
         ];
 
         for ray in examples {
-            let xs = c.local_intersect(ray);
+            let mut xs = Vec::new();
+            c.local_intersect(ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }
