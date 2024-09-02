@@ -34,4 +34,9 @@ Performs tests on all tuple methods.
 - [ ] `.par_iter()`
 - [ ] Trait objects?
 - [ ] Fixed matrix-size?
+- [ ] Limit inverse calculations?
+- [ ] Unify matrix/tuple?
+- [ ] `Intersections::hit()`, avoid clone.
+- [ ] `Ray::intersect_world()`, accept `Intersections` as parameter.
+- [ ] `World::shade_hit()`, calls `Ray::intersect_world()`. Pass `Intersections` in here as well?
 
