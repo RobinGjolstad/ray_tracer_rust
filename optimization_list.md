@@ -39,4 +39,9 @@ Performs tests on all tuple methods.
 - [ ] `Intersections::hit()`, avoid clone.
 - [ ] `Ray::intersect_world()`, accept `Intersections` as parameter.
 - [ ] `World::shade_hit()`, calls `Ray::intersect_world()`. Pass `Intersections` in here as well?
-
+- [ ] `World::is_shadowed()` calls `Ray::intersect_world()`, but should only care about the first hit. Add `Ray::intersect_world_once()` to stop on first intersection? Is there a way to find the closest object and only calculate for that one?
+- [ ] `World::refracted_color()` calls `World::color_at()` which again calls `Ray::intersect_world()`. Share intersection vector?
+- [ ] `World::reflected_color()` calls `World::color_at()` which again calls `Ray::intersect_world()`. Share intersection vector?
+- [ ] `Shapes` use `get_position()` internally. Replace with direct access to the object.
+- [ ] `Object` "owns" a `Shape` which requires a clone. Change to hold a reference? Eliminates `.clone()`.
+- [ ] Store `transpose` of all matrices on objects.
