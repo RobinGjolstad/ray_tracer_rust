@@ -40,7 +40,7 @@ impl Ray {
 
     pub(crate) fn intersect_world(&self, world: &World) -> Intersections {
         let mut intersections = Intersections { list: Vec::new() };
-        for object in &world.objects {
+        for object in world.objects.iter() {
             self.intersect(object, &mut intersections.list);
         }
         intersections.sort();

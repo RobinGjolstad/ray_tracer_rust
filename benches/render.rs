@@ -8,7 +8,7 @@ use ray_tracer_rust::ray_tracer::{
 };
 
 fn build_scene(x: usize, y: usize) -> (World, Camera) {
-    let mut world = World::new();
+    let mut world_builder = World::builder();
 
     let mut floor = new_plane();
     floor.set_transform(&Transform::scaling(1.0, 1.0, 1.0));
@@ -17,7 +17,7 @@ fn build_scene(x: usize, y: usize) -> (World, Camera) {
     material.specular = 0.0;
     material.reflective = 0.25;
     floor.set_material(&material);
-    world.objects.push(floor);
+    world_builder.object(floor);
 
     let mut cylinder = new_cylinder(Some((1.0, 0.0)));
     let mut trans = Transform::scaling(0.25, 1.0, 0.25);
@@ -26,7 +26,7 @@ fn build_scene(x: usize, y: usize) -> (World, Camera) {
     material.color = Color::new(0.545098, 0.270588, 0.07451);
     material.reflective = 0.0;
     cylinder.set_material(&material);
-    world.objects.push(cylinder);
+    world_builder.object(cylinder);
 
     let mut cone = new_cone(Some((0.0, -1.0)));
     trans = Transform::translate(0.0, 3.0, 0.0) * Transform::scaling(0.75, 2.0, 0.75);
@@ -34,12 +34,14 @@ fn build_scene(x: usize, y: usize) -> (World, Camera) {
     material = Material::new();
     material.color = Color::new(0.133333, 0.545098, 0.133333);
     cone.set_material(&material);
-    world.objects.push(cone);
+    world_builder.object(cone);
 
-    world.lights.push(Light::point_light(
+    world_builder.light(Light::point_light(
         &Tuple::new_point(-10.0, 10.0, -10.0),
         &Color::new(1.0, 1.0, 1.0),
     ));
+
+    let world = world_builder.build();
 
     let mut camera = Camera::new(x, y, PI / 3.0);
     camera.set_transform(Transform::view_transform(
