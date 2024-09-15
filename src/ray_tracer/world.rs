@@ -120,7 +120,7 @@ impl World {
         let direction = v.normalize();
 
         let r = Ray::new(*point, direction);
-        let intersections = r.intersect_world(self);
+        let intersections = r.intersect_world_first(self);
         let h = intersections.hit();
 
         if let Some(hit) = h {
@@ -613,5 +613,17 @@ mod tests {
         let comps = prepare_computations(&xs.list[0], &r, &xs);
         let color = w.shade_hit(&comps, 5);
         assert_eq!(color, Color::new(0.93391, 0.69643, 0.69243));
+    }
+    #[test]
+    fn intersect_a_world_once() {
+        let w = default_world();
+        let r = Ray::new(
+            Point::new_point(0.0, 0.0, -5.0),
+            Vector::new_vector(0.0, 0.0, 1.0),
+        );
+        let xs = r.intersect_world_first(&w);
+
+        assert!(xs.count() > 0);
+        assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 4.0));
     }
 }

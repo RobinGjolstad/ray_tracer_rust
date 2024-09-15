@@ -47,6 +47,19 @@ impl Ray {
         intersections
     }
 
+    pub(crate) fn intersect_world_first(&self, world: &World) -> Intersections {
+        let mut intersections = Intersections { list: Vec::new() };
+        for object in world.objects.iter() {
+            self.intersect(object, &mut intersections.list);
+            if !intersections.list.is_empty() {
+                // Stop on first intersection.
+                break;
+            }
+        }
+        intersections.sort();
+        intersections
+    }
+
     pub(crate) fn transform(&self, transformation: Matrix) -> Self {
         Ray {
             origin: transformation * self.origin,
