@@ -9,21 +9,21 @@ pub(super) struct Stripes {
 }
 
 impl Stripes {
-    pub(super) fn new(color_a: Color, color_b: Color) -> Self {
-        Stripes { color_a, color_b }
+    pub(super) const fn new(color_a: Color, color_b: Color) -> Self {
+        Self { color_a, color_b }
     }
 }
 
 #[cfg(test)]
 impl Stripes {
-    pub(super) fn get_colors(&self) -> (Color, Color) {
+    pub(super) const fn get_colors(&self) -> (Color, Color) {
         (self.color_a, self.color_b)
     }
 }
 
 impl Default for Stripes {
     fn default() -> Self {
-        Stripes {
+        Self {
             color_a: Color::new(1.0, 1.0, 1.0),
             color_b: Color::new(0.0, 0.0, 0.0),
         }
@@ -32,6 +32,7 @@ impl Default for Stripes {
 
 impl Patterns for Stripes {
     fn color_at(&self, point: Point) -> Color {
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         if point.x.floor() as isize % 2 == 0 {
             self.color_a
         } else {

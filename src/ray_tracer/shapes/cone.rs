@@ -1,5 +1,5 @@
 #![allow(unused)]
-use super::*;
+use super::{BaseShape, Debug, Object, Shapes};
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
@@ -18,6 +18,7 @@ pub struct Cone {
 }
 
 impl Cone {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             base: BaseShape::default(),
@@ -27,11 +28,15 @@ impl Cone {
         }
     }
 
-    fn check_cap(y_plane: f64, ray: &Ray, t: &f64) -> bool {
-        let x = ray.origin.x + t * ray.direction.x;
-        let z = ray.origin.z + t * ray.direction.z;
+    fn check_cap(y_plane: f64, ray: &Ray, t: f64) -> bool {
+        // Original:
+        // let x = ray.origin.x + t * ray.direction.x;
+        // let z = ray.origin.z + t * ray.direction.z;
+        // (x.powi(2) + z.powi(2)) <= y_plane.powi(2)
 
-        (x.powi(2) + z.powi(2)) <= y_plane.powi(2)
+        let x = t.mul_add(ray.direction.x, ray.origin.x);
+        let z = t.mul_add(ray.direction.z, ray.origin.z);
+        x.mul_add(x, z.powi(2)) <= y_plane.powi(2)
     }
 
     fn intersect_caps(&self, ray: &Ray, xs: &mut Vec<Intersection>) {
@@ -40,12 +45,12 @@ impl Cone {
         }
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
-        if Cone::check_cap(self.minimum, ray, &t) {
+        if Self::check_cap(self.minimum, ray, t) {
             xs.push(Intersection::new(t, Object::Cone(self.clone())));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
-        if Cone::check_cap(self.maximum, ray, &t) {
+        if Self::check_cap(self.maximum, ray, t) {
             xs.push(Intersection::new(t, Object::Cone(self.clone())));
         }
     }
@@ -80,7 +85,9 @@ impl Shapes for Cone {
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         // Compute the square of the distance from the y-axis
-        let dist = point.x.powi(2) + point.z.powi(2);
+
+        // let dist = point.x.powi(2) + point.z.powi(2);
+        let dist = point.x.mul_add(point.x, point.z.powi(2));
 
         if dist < 1.0 && point.y >= (self.maximum - EPSILON) {
             // Check top cap
@@ -97,28 +104,61 @@ impl Shapes for Cone {
         }
     }
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
-        let a = local_ray.direction.x.powi(2) - local_ray.direction.y.powi(2)
-            + local_ray.direction.z.powi(2);
-        let b = (2.0 * local_ray.origin.x * local_ray.direction.x)
-            - (2.0 * local_ray.origin.y * local_ray.direction.y)
-            + (2.0 * local_ray.origin.z * local_ray.direction.z);
-        let c =
-            local_ray.origin.x.powi(2) - local_ray.origin.y.powi(2) + local_ray.origin.z.powi(2);
+        // Original version. Trying FMA.
+        //
+        // let a = local_ray.direction.x.powi(2) - local_ray.direction.y.powi(2)
+        //     + local_ray.direction.z.powi(2);
+        let a = local_ray.direction.z.mul_add(
+            local_ray.direction.z,
+            local_ray
+                .direction
+                .x
+                .mul_add(local_ray.direction.x, -local_ray.direction.y.powi(2)),
+        );
 
-        // Forward declare. Different calculation if a single or double intersection.
+        // Original version. Trying FMA.
+        //
+        // let b = (2.0 * local_ray.origin.x * local_ray.direction.x)
+        //     - (2.0 * local_ray.origin.y * local_ray.direction.y)
+        //     + (2.0 * local_ray.origin.z * local_ray.direction.z);
+        let b = (2.0 * local_ray.origin.z).mul_add(
+            local_ray.direction.z,
+            (2.0 * local_ray.origin.x).mul_add(
+                local_ray.direction.x,
+                -(2.0 * local_ray.origin.y * local_ray.direction.y),
+            ),
+        );
+
+        // Original version. Trying FMA.
+        //
+        // let c =
+        //     local_ray.origin.x.powi(2) - local_ray.origin.y.powi(2) + local_ray.origin.z.powi(2);
+        let c = local_ray.origin.z.mul_add(
+            local_ray.origin.z,
+            local_ray
+                .origin
+                .x
+                .mul_add(local_ray.origin.x, -local_ray.origin.y.powi(2)),
+        );
 
         if is_float_equal(&a, 0.0) {
             if is_float_equal(&b, 0.0) {
                 // No intersections.
                 return;
-            } else {
-                // Parallel to one of the halves.
-                // One intersection.
-                let t = -c / (2.0 * b);
-                intersection_list.push(Intersection::new(t, Object::Cone(self.clone())));
             }
+
+            // Parallel to one of the halves.
+            // One intersection.
+            let t = -c / (2.0 * b);
+            intersection_list.push(Intersection::new(t, Object::Cone(self.clone())));
         } else {
-            let disc = b.powi(2) - 4.0 * a * c;
+            // TODO: Figure out which version is faster.
+            #[allow(clippy::suboptimal_flops)]
+            let disc = b.powi(2) - (4.0 * a * c);
+            // let disc = (b * b) - (4.0 * a * c);
+            // let disc = (4.0 * a).mul_add(-c, b.powi(2));
+            // let disc = b.mul_add(b, -(4.0 * a * c));
+
             if disc < 0.0 {
                 // Ray doesn't intersect the cone.
                 return;
@@ -127,12 +167,14 @@ impl Shapes for Cone {
             let t0 = (-b - disc.sqrt()) / (2.0 * a);
             let t1 = (-b + disc.sqrt()) / (2.0 * a);
 
-            let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
+            // let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
+            let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y0 && y0 < self.maximum {
                 intersection_list.push(Intersection::new(t0, Object::Cone(self.clone())));
             }
 
-            let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
+            // let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
+            let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y1 && y1 < self.maximum {
                 intersection_list.push(Intersection::new(t1, Object::Cone(self.clone())));
             }

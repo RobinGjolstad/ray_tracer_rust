@@ -2,7 +2,7 @@ use crate::ray_tracer::{
     colors::Color,
     lights::Light,
     patterns::Pattern,
-    shapes::*,
+    shapes::Object,
     tuples::{Point, Tuple},
 };
 
@@ -19,8 +19,9 @@ pub struct Material {
     pub refractive_index: f64,
 }
 impl Material {
-    pub fn new() -> Material {
-        Material {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
             color: Color::new(1.0, 1.0, 1.0),
             ambient: 0.1,
             diffuse: 0.9,
@@ -85,12 +86,12 @@ impl Material {
             }
         }
 
-        if !in_shadow {
-            // add the three contributions together to get the final shading
-            ambient + diffuse + specular
-        } else {
+        if in_shadow {
             // Only ambient lighting applies if the zone is in shadow
             ambient
+        } else {
+            // add the three contributions together to get the final shading
+            ambient + diffuse + specular
         }
     }
 }
@@ -104,7 +105,7 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
 
-    use crate::ray_tracer::{tuples::Vector, utils::is_float_equal};
+    use crate::ray_tracer::{shapes::new_sphere, tuples::Vector, utils::is_float_equal};
 
     use super::*;
 
@@ -118,7 +119,7 @@ mod tests {
         assert!(is_float_equal(&m.shininess, 200.0));
     }
 
-    fn setup_lighting() -> (Material, Tuple) {
+    const fn setup_lighting() -> (Material, Tuple) {
         (Material::new(), Tuple::new_point(0.0, 0.0, 0.0))
     }
 

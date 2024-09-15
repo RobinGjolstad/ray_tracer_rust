@@ -6,7 +6,7 @@ use self::test_pattern::TestPattern;
 #[cfg(test)]
 use std::io::ErrorKind;
 
-use crate::ray_tracer::{colors::Color, matrices::Matrix, shapes::*, tuples::Point};
+use crate::ray_tracer::{colors::Color, matrices::Matrix, shapes::Object, tuples::Point};
 
 use self::{checker::Checker, gradient::Gradient, rings::Ring, solid::Solid, stripes::Stripes};
 
@@ -42,65 +42,75 @@ pub struct Pattern {
     transform: Matrix,
 }
 impl Pattern {
+    #[must_use]
     pub fn stripe_default() -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Stripes(Stripes::default()),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    #[must_use]
     pub fn stripe(color_a: Color, color_b: Color) -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Stripes(Stripes::new(color_a, color_b)),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    #[must_use]
     pub fn gradient(color_a: Color, color_b: Color) -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Gradient(Gradient::new(color_a, color_b)),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    #[must_use]
     pub fn gradient_default() -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Gradient(Gradient::default()),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
 
+    #[must_use]
     pub fn ring(color_a: Color, color_b: Color) -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Ring(Ring::new(color_a, color_b)),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    #[must_use]
     pub fn ring_default() -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Ring(Ring::default()),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
 
+    #[must_use]
     pub fn checker(color_a: Color, color_b: Color) -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Checker(Checker::new(color_a, color_b)),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    #[must_use]
     pub fn checker_default() -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Checker(Checker::default()),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
 
+    #[must_use]
     pub fn solid(color: Color) -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Solid(Solid::new(color)),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
     }
+    #[must_use]
     pub fn solid_default() -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::Solid(Solid::default()),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
@@ -118,11 +128,7 @@ impl Pattern {
             PatternType::TestPattern(tp) => tp.color_at(point),
         }
     }
-    pub(crate) fn pattern_at_object(
-        pattern: Pattern,
-        object: &Object,
-        world_point: Point,
-    ) -> Color {
+    pub(crate) fn pattern_at_object(pattern: Self, object: &Object, world_point: Point) -> Color {
         let object_point = object.world_to_object(&world_point);
         let pattern_point = pattern.get_transform().get_inverted().unwrap() * object_point;
 
@@ -135,14 +141,15 @@ impl Pattern {
         self.transform = transform;
     }
 
-    pub fn get_transform(&self) -> Matrix {
+    #[must_use]
+    pub const fn get_transform(&self) -> Matrix {
         self.transform
     }
 }
 
 #[cfg(test)]
 impl Pattern {
-    fn get_stripe(&self) -> Result<Stripes, ErrorKind> {
+    const fn get_stripe(&self) -> Result<Stripes, ErrorKind> {
         match self.pattern {
             PatternType::Stripes(s) => Ok(s),
             _ => Err(ErrorKind::NotFound),
@@ -150,7 +157,7 @@ impl Pattern {
     }
 
     pub(crate) fn test_pattern_default() -> Self {
-        Pattern {
+        Self {
             pattern: PatternType::TestPattern(TestPattern::default()),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
         }
@@ -160,6 +167,7 @@ impl Pattern {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ray_tracer::shapes::new_sphere;
     use crate::ray_tracer::transformations::Transform;
 
     #[test]

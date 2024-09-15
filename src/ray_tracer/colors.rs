@@ -9,22 +9,26 @@ pub struct Color {
     pub blue: f64,
 }
 impl Color {
-    pub fn new(r: f64, g: f64, b: f64) -> Self {
-        Color {
+    #[must_use]
+    pub const fn new(r: f64, g: f64, b: f64) -> Self {
+        Self {
             red: r,
             green: g,
             blue: b,
         }
     }
 
+    /// Convert a 0.0 - 1.0 color value to a 0-255 value.
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn float_to_u8(color: &f64) -> u8 {
         let col = 255_f64 * *color;
         col.ceil() as u8
     }
 }
 
-impl PartialEq<Color> for Color {
-    fn eq(&self, other: &Color) -> bool {
+impl PartialEq<Self> for Color {
+    fn eq(&self, other: &Self) -> bool {
         is_float_equal_low_precision(&self.red, other.red)
             && is_float_equal_low_precision(&self.green, other.green)
             && is_float_equal_low_precision(&self.blue, other.blue)
@@ -37,17 +41,17 @@ impl PartialEq<Color> for &Color {
             && is_float_equal_low_precision(&self.blue, other.blue)
     }
 }
-impl PartialEq<&Color> for Color {
-    fn eq(&self, other: &&Color) -> bool {
+impl PartialEq<&Self> for Color {
+    fn eq(&self, other: &&Self) -> bool {
         is_float_equal_low_precision(&self.red, other.red)
             && is_float_equal_low_precision(&self.green, other.green)
             && is_float_equal_low_precision(&self.blue, other.blue)
     }
 }
-impl Add<Color> for Color {
+impl Add<Self> for Color {
     type Output = Self;
-    fn add(self, rhs: Color) -> Self::Output {
-        Color {
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
             red: self.red + rhs.red,
             green: self.green + rhs.green,
             blue: self.blue + rhs.blue,
@@ -55,10 +59,10 @@ impl Add<Color> for Color {
     }
 }
 
-impl Sub<Color> for Color {
-    type Output = Color;
-    fn sub(self, rhs: Color) -> Self::Output {
-        Color {
+impl Sub<Self> for Color {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
             red: self.red - rhs.red,
             green: self.green - rhs.green,
             blue: self.blue - rhs.blue,
@@ -66,10 +70,10 @@ impl Sub<Color> for Color {
     }
 }
 
-impl Mul<Color> for Color {
-    type Output = Color;
-    fn mul(self, rhs: Color) -> Self::Output {
-        Color {
+impl Mul<Self> for Color {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
             red: self.red * rhs.red,
             green: self.green * rhs.green,
             blue: self.blue * rhs.blue,
@@ -78,9 +82,9 @@ impl Mul<Color> for Color {
 }
 
 impl Mul<f64> for Color {
-    type Output = Color;
+    type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
-        Color {
+        Self {
             red: self.red * rhs,
             green: self.green * rhs,
             blue: self.blue * rhs,

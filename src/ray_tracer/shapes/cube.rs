@@ -85,7 +85,6 @@ impl Shapes for Cube {
             .to_owned();
 
         if tmin > tmax {
-            return;
         } else {
             intersection_list.push(Intersection::new(tmin, Object::Cube(self.clone())));
             intersection_list.push(Intersection::new(tmax, Object::Cube(self.clone())));

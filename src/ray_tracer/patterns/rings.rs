@@ -9,7 +9,7 @@ pub(super) struct Ring {
 }
 
 impl Ring {
-    pub(super) fn new(color_a: Color, color_b: Color) -> Self {
+    pub(super) const fn new(color_a: Color, color_b: Color) -> Self {
         Self { color_a, color_b }
     }
 }
@@ -25,8 +25,12 @@ impl Default for Ring {
 
 impl Patterns for Ring {
     fn color_at(&self, point: tuples::Point) -> Color {
+        #[allow(clippy::suboptimal_flops)]
         let inside = point.x.powi(2) + point.z.powi(2);
+
         let magnitude = inside.sqrt();
+
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         if magnitude.floor() as usize % 2 == 0 {
             self.color_a
         } else {

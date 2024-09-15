@@ -9,7 +9,7 @@ pub(super) struct Gradient {
 }
 
 impl Gradient {
-    pub(super) fn new(color_a: Color, color_b: Color) -> Self {
+    pub(super) const fn new(color_a: Color, color_b: Color) -> Self {
         Self { color_a, color_b }
     }
 }

@@ -1,7 +1,7 @@
 use crate::ray_tracer::{
     intersections::{Intersection, Intersections},
     matrices::Matrix,
-    shapes::*,
+    shapes::Object,
     tuples::{Point, Vector},
     world::World,
 };
@@ -13,17 +13,18 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn new(origin: Point, direction: Vector) -> Self {
-        Ray { origin, direction }
+    #[must_use]
+    pub const fn new(origin: Point, direction: Vector) -> Self {
+        Self { origin, direction }
     }
-    pub(crate) fn get_direction(&self) -> Vector {
+    pub(crate) const fn get_direction(&self) -> Vector {
         self.direction
     }
     pub(crate) fn position(&self, time: f64) -> Point {
         self.origin + self.direction * time
     }
-    fn global_to_local(&self, object: &Object) -> Ray {
-        self.transform(object.get_transform().get_inverted().unwrap())
+    fn global_to_local(&self, object: &Object) -> Self {
+        self.transform(&object.get_transform().get_inverted().unwrap())
     }
 
     pub(crate) fn intersect(&self, object: &Object, intersection_list: &mut Vec<Intersection>) {
@@ -39,16 +40,20 @@ impl Ray {
     }
 
     pub(crate) fn intersect_world(&self, world: &World) -> Intersections {
-        let mut intersections = Intersections { list: Vec::new() };
-        for object in world.objects.iter() {
-            self.intersect(object, &mut intersections.list);
-        }
+        let mut intersections = Intersections::default();
+        world
+            .objects
+            .iter()
+            .for_each(|object| self.intersect(object, &mut intersections.list));
+
         intersections.sort();
         intersections
     }
 
     pub(crate) fn intersect_world_first(&self, world: &World) -> Intersections {
-        let mut intersections = Intersections { list: Vec::new() };
+        let mut intersections = Intersections::default();
+
+        // "Manual" loop to be able to break out early.
         for object in world.objects.iter() {
             self.intersect(object, &mut intersections.list);
             if !intersections.list.is_empty() {
@@ -56,14 +61,15 @@ impl Ray {
                 break;
             }
         }
+
         intersections.sort();
         intersections
     }
 
-    pub(crate) fn transform(&self, transformation: Matrix) -> Self {
-        Ray {
-            origin: transformation * self.origin,
-            direction: transformation * self.direction,
+    pub(crate) fn transform(&self, transformation: &Matrix) -> Self {
+        Self {
+            origin: *transformation * self.origin,
+            direction: *transformation * self.direction,
         }
     }
 }
@@ -71,7 +77,9 @@ impl Ray {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ray_tracer::{transformations::Transform, tuples::Tuple, utils::is_float_equal};
+    use crate::ray_tracer::{
+        shapes::new_sphere, transformations::Transform, tuples::Tuple, utils::is_float_equal,
+    };
 
     #[test]
     fn creating_and_querying_a_ray() {
@@ -183,7 +191,7 @@ mod tests {
             Tuple::new_vector(0.0, 1.0, 0.0),
         );
         let m = Transform::translate(3.0, 4.0, 5.0);
-        let r2 = r.transform(m);
+        let r2 = r.transform(&m);
         assert_eq!(r2.origin, Tuple::new_point(4.0, 6.0, 8.0));
         assert_eq!(r2.direction, Tuple::new_vector(0.0, 1.0, 0.0));
     }
@@ -194,7 +202,7 @@ mod tests {
             Tuple::new_vector(0.0, 1.0, 0.0),
         );
         let m = Transform::scaling(2.0, 3.0, 4.0);
-        let r2 = r.transform(m);
+        let r2 = r.transform(&m);
         assert_eq!(r2.origin, Tuple::new_point(2.0, 6.0, 12.0));
         assert_eq!(r2.direction, Tuple::new_vector(0.0, 3.0, 0.0));
     }

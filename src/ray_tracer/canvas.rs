@@ -11,19 +11,21 @@ pub struct Canvas {
 }
 
 impl Canvas {
+    #[must_use]
     pub fn new(width: usize, height: usize) -> Self {
         // Instantiate the canvas with defined dimensions and empty fields
         // Calculate a string size for the image.
         // Each pixel has 3 colors, each with up to 5 characters
         // Let's also add a little bit of overhead
         let strlen = (width * height * 3 * 5) + 128;
-        Canvas {
+        Self {
             pixels: vec![vec![Color::new(0.0, 0.0, 0.0); width]; height],
             width,
             height,
             ppm: String::with_capacity(strlen),
         }
     }
+    #[must_use]
     pub fn pixel_at(&self, x: usize, y: usize) -> &Color {
         self.pixels.get(y).unwrap().get(x).unwrap()
     }
@@ -43,7 +45,8 @@ impl Canvas {
             .push_str(format!("{} {}\n", self.width, self.height).as_str());
         self.ppm.push_str("255\n");
 
-        let mut _color_str_array: [String; 3] = [
+        #[allow(unused_assignments)]
+        let mut color_str_array: [String; 3] = [
             String::with_capacity(5),
             String::with_capacity(5),
             String::with_capacity(5),
@@ -53,14 +56,14 @@ impl Canvas {
         for row in &self.pixels {
             let mut num_chars = 0;
             for column in row {
-                _color_str_array = [
+                color_str_array = [
                     format!("{} ", Color::float_to_u8(&column.red)),
                     format!("{} ", Color::float_to_u8(&column.green)),
                     format!("{} ", Color::float_to_u8(&column.blue)),
                 ];
 
                 // PPM lines should stop at 70 characters
-                for color_pixel in &_color_str_array {
+                for color_pixel in &color_str_array {
                     if num_chars + color_pixel.len() >= 70 {
                         // Replace trailing whitespace with a newline
                         self.ppm.pop().unwrap();
@@ -86,11 +89,13 @@ impl Canvas {
         }
     }
 
-    pub fn width(&self) -> usize {
+    #[must_use]
+    pub const fn width(&self) -> usize {
         self.width
     }
 
-    pub fn height(&self) -> usize {
+    #[must_use]
+    pub const fn height(&self) -> usize {
         self.height
     }
 

@@ -1,3 +1,4 @@
+#![allow(clippy::pedantic)]
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use super::utils::is_float_equal_low_precision;
@@ -17,11 +18,11 @@ impl Tuple {
     ////////////////////////////////////////////////////////////////////////////
     // Generic tuple things
     ////////////////////////////////////////////////////////////////////////////
-    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
-        Tuple { x, y, z, w }
+    pub const fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
+        Self { x, y, z, w }
     }
-    pub fn new_tuple(input: (f64, f64, f64, f64)) -> Self {
-        Tuple {
+    pub const fn new_tuple(input: (f64, f64, f64, f64)) -> Self {
+        Self {
             x: input.0,
             y: input.1,
             z: input.2,
@@ -32,15 +33,15 @@ impl Tuple {
     ////////////////////////////////////////////////////////////////////////////
     // Point-land!
     ////////////////////////////////////////////////////////////////////////////
-    pub fn new_point(x: f64, y: f64, z: f64) -> Self {
-        Tuple { x, y, z, w: 1.0 }
+    pub const fn new_point(x: f64, y: f64, z: f64) -> Self {
+        Self { x, y, z, w: 1.0 }
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector-land!
     ////////////////////////////////////////////////////////////////////////////
-    pub fn new_vector(x: f64, y: f64, z: f64) -> Self {
-        Tuple { x, y, z, w: 0.0 }
+    pub const fn new_vector(x: f64, y: f64, z: f64) -> Self {
+        Self { x, y, z, w: 0.0 }
     }
     pub fn magnitude(&self) -> f64 {
         assert_eq!(self.w, 0.0, "Magnitude is only valid for vectors!");
@@ -53,7 +54,7 @@ impl Tuple {
     }
     pub fn normalize(&self) -> Self {
         assert_eq!(self.w, 0.0, "Normalize is only valid for vectors!");
-        Tuple::new(
+        Self::new(
             self.x / self.magnitude(),
             self.y / self.magnitude(),
             self.z / self.magnitude(),
@@ -73,14 +74,19 @@ impl Tuple {
     pub fn cross(a: &Self, b: &Self) -> Self {
         assert_eq!(a.w, 0.0, "Cross-product is only valid for vectors!");
         assert_eq!(b.w, 0.0, "Cross-product is only valid for vectors!");
-        Tuple::new_vector(
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x,
+        // Self::new_vector(
+        //     a.y * b.z - a.z * b.y,
+        //     a.z * b.x - a.x * b.z,
+        //     a.x * b.y - a.y * b.x,
+        // )
+        Self::new_vector(
+            a.y.mul_add(b.z, -(a.z * b.y)),
+            a.z.mul_add(b.x, -(a.x * b.z)),
+            a.x.mul_add(b.y, -(a.y * b.x)),
         )
     }
     pub fn reflect(vector: &Self, normal: &Self) -> Self {
-        *vector - *normal * 2.0 * Tuple::dot(vector, normal)
+        *vector - *normal * 2.0 * Self::dot(vector, normal)
     }
 
     pub fn is_point(&self) -> bool {
@@ -92,10 +98,10 @@ impl Tuple {
     }
 }
 
-impl Add<Tuple> for Tuple {
+impl Add<Self> for Tuple {
     type Output = Self;
-    fn add(self, rhs: Tuple) -> Self::Output {
-        Tuple {
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
             z: self.z + rhs.z,
@@ -104,10 +110,10 @@ impl Add<Tuple> for Tuple {
     }
 }
 
-impl Sub<Tuple> for Tuple {
-    type Output = Tuple;
-    fn sub(self, rhs: Tuple) -> Self::Output {
-        Tuple {
+impl Sub<Self> for Tuple {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
             z: self.z - rhs.z,
@@ -117,9 +123,9 @@ impl Sub<Tuple> for Tuple {
 }
 
 impl Neg for Tuple {
-    type Output = Tuple;
+    type Output = Self;
     fn neg(self) -> Self::Output {
-        Tuple {
+        Self {
             x: -self.x,
             y: -self.y,
             z: -self.z,
@@ -130,7 +136,7 @@ impl Neg for Tuple {
 impl Mul<f64> for Tuple {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
-        Tuple {
+        Self {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
@@ -141,7 +147,7 @@ impl Mul<f64> for Tuple {
 impl Div<f64> for Tuple {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
-        Tuple {
+        Self {
             x: self.x / rhs,
             y: self.y / rhs,
             z: self.z / rhs,

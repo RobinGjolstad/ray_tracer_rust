@@ -19,28 +19,29 @@ pub struct Camera {
 }
 
 impl Camera {
+    #[must_use]
     pub fn new(hsize: usize, vsize: usize, field_of_view: f64) -> Self {
         let half_view = f64::tan(field_of_view / 2.0);
+        #[allow(clippy::cast_precision_loss)]
         let aspect: f64 = hsize as f64 / vsize as f64;
-        let mut _half_width = 0.0;
-        let mut _half_height = 0.0;
-        if aspect >= 1.0 {
-            _half_width = half_view;
-            _half_height = half_view / aspect;
+
+        let (half_width, half_height) = if aspect >= 1.0 {
+            (half_view, half_view / aspect)
         } else {
-            _half_width = half_view * aspect;
-            _half_height = half_view;
-        }
+            (half_view * aspect, half_view)
+        };
+
         let mut transform = Matrix::new_identity();
         transform.calculate_inverse().unwrap();
-        Camera {
+        Self {
             hsize,
             vsize,
             field_of_view,
             transform,
-            pixel_size: (_half_width * 2.0) / hsize as f64,
-            half_height: _half_height,
-            half_width: _half_width,
+            #[allow(clippy::cast_precision_loss)]
+            pixel_size: (half_width * 2.0) / hsize as f64,
+            half_height,
+            half_width,
         }
     }
 
@@ -49,6 +50,8 @@ impl Camera {
         self.transform.calculate_inverse().unwrap();
     }
 
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn ray_for_pixel(&self, px: usize, py: usize) -> Ray {
         // The offset from the edge of the canvas to the pixel's center
         let xoffset = (px as f64 + 0.5) * self.pixel_size;
@@ -70,6 +73,7 @@ impl Camera {
         Ray::new(origin, direction)
     }
 
+    #[must_use]
     pub fn render(&self, w: &World, num_reflections: usize) -> Canvas {
         let mut image = Canvas::new(self.hsize, self.vsize);
 
@@ -84,6 +88,7 @@ impl Camera {
         image
     }
 
+    #[must_use]
     pub fn render_multithreaded(
         &self,
         w: &World,
@@ -92,10 +97,12 @@ impl Camera {
     ) -> Canvas {
         let image = Arc::new(Mutex::new(Canvas::new(self.hsize, self.vsize)));
 
-        let mut pixels_per_thread = self.vsize;
-        if thread_num > 0 {
-            pixels_per_thread = self.vsize / thread_num;
-        }
+        let pixels_per_thread = if thread_num == 0 {
+            self.vsize
+        } else {
+            self.vsize / thread_num
+        };
+
         let (tx, rx) = mpsc::channel();
         thread::scope(|s| {
             let mut thread_handles = Vec::new();
@@ -164,6 +171,7 @@ impl Camera {
         ret_img
     }
 
+    #[must_use]
     pub fn render_multithreaded_improved(
         &self,
         w: &World,

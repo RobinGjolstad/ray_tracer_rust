@@ -1,3 +1,5 @@
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+
 use crate::ray_tracer::{
     rays::Ray,
     shapes::Object,
@@ -11,17 +13,18 @@ pub struct Intersection {
     object: Object,
 }
 impl Intersection {
-    pub fn new(time: f64, object: Object) -> Self {
-        Intersection { t: time, object }
+    #[must_use]
+    pub const fn new(time: f64, object: Object) -> Self {
+        Self { t: time, object }
     }
-    pub(crate) fn get_time(&self) -> f64 {
+    pub(crate) const fn get_time(&self) -> f64 {
         self.t
     }
     #[cfg(test)]
-    pub(crate) fn get_object_raw(&self) -> &Object {
+    pub(crate) const fn get_object_raw(&self) -> &Object {
         &self.object
     }
-    pub(crate) fn get_object(&self) -> &Object {
+    pub(crate) const fn get_object(&self) -> &Object {
         &self.object
     }
 }
@@ -31,8 +34,9 @@ pub struct Intersections {
     pub list: Vec<Intersection>,
 }
 impl Intersections {
+    #[must_use]
     pub fn new(intersect_list: &[Intersection]) -> Self {
-        let mut i = Intersections {
+        let mut i = Self {
             list: intersect_list.to_vec(),
         };
         i.sort();
@@ -54,16 +58,21 @@ impl Intersections {
             None
         }
     }
+    #[must_use]
     pub fn hit(&self) -> Option<Intersection> {
-        let mut list = self.list.clone();
-        list.retain(|x| x.t.is_sign_positive());
-        list.iter()
+        // with clone
+        // let mut list = self.list.clone();
+        // list.retain(|x| x.t.is_sign_positive());
+        // list.iter()
+        //     .min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap())
+        //     .cloned()
+
+        // Avoid clone
+        self.list
+            .par_iter()
+            .filter(|x| x.t.is_sign_positive())
             .min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap())
             .cloned()
-    }
-    pub(crate) fn put_elements(&mut self, intersection: &[Intersection]) {
-        self.list.extend(intersection.to_owned());
-        self.sort();
     }
 }
 
@@ -81,6 +90,7 @@ pub struct IntersectComp {
     pub(crate) n1: f64,
     pub(crate) n2: f64,
 }
+#[must_use]
 pub fn prepare_computations(
     intersection: &Intersection,
     ray: &Ray,
@@ -158,6 +168,7 @@ fn get_refractive_index_from_intersections(
 
 /// Calculate the `reflectance` of an intersection.
 /// Reflectance describes a fraction of light being reflected.
+#[must_use]
 pub fn schlick(comps: &IntersectComp) -> f64 {
     // Find the cosine of the angle between the eye and normal vectors
     let mut cos = Tuple::dot(&comps.eyev, &comps.normalv);
@@ -165,26 +176,28 @@ pub fn schlick(comps: &IntersectComp) -> f64 {
     // Total internal reflection can only occur if n1 > n2
     if comps.n1 > comps.n2 {
         let n = comps.n1 / comps.n2;
-        let sin2_t = n.powi(2) * (1.0 - cos.powi(2));
+        let sin2_t = n.powi(2) * cos.mul_add(-cos, 1.0);
 
         if sin2_t > 1.0 {
             return 1.0;
-        } else {
-            // Compute cosine of theta_t using trig identity
-            let cos_t = (1.0 - sin2_t).sqrt();
-
-            // when n1 > n2, use cos(theta_t) instead
-            cos = cos_t;
         }
+
+        // Compute cosine of theta_t using trig identity
+        let cos_t = (1.0 - sin2_t).sqrt();
+
+        // when n1 > n2, use cos(theta_t) instead
+        cos = cos_t;
     }
 
     let r0 = ((comps.n1 - comps.n2) / (comps.n1 + comps.n2)).powi(2);
 
-    r0 + (1.0 - r0) * (1.0 - cos).powi(5)
+    (1.0 - r0).mul_add((1.0 - cos).powi(5), r0)
 }
 
 #[cfg(test)]
 mod tests {
+
+    use utils::is_float_equal_low_precision;
 
     use crate::ray_tracer::{
         shapes::*,
@@ -375,8 +388,8 @@ mod tests {
 
         for (i, result) in results.iter().enumerate() {
             let comps = prepare_computations(&xs.list[i], &r, &xs);
-            assert_eq!(comps.n1, result[0]);
-            assert_eq!(comps.n2, result[1]);
+            assert!(is_float_equal_low_precision(&comps.n1, result[0]));
+            assert!(is_float_equal_low_precision(&comps.n2, result[1]));
         }
     }
 

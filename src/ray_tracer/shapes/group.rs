@@ -33,7 +33,7 @@ impl Group {
         self.children.clone()
     }
 
-    fn has_children(&self) -> bool {
+    const fn has_children(&self) -> bool {
         self.children.is_some()
     }
 }
@@ -132,7 +132,7 @@ impl GroupBuilder {
             .expect("Failed to calculate inverse.");
         self
     }
-    pub fn set_material(mut self, material: Material) -> GroupBuilder {
+    pub const fn set_material(mut self, material: Material) -> GroupBuilder {
         self.material = Some(material);
         self
     }

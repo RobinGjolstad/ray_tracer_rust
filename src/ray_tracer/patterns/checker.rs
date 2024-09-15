@@ -9,7 +9,7 @@ pub(super) struct Checker {
 }
 
 impl Checker {
-    pub(super) fn new(color_a: Color, color_b: Color) -> Self {
+    pub(super) const fn new(color_a: Color, color_b: Color) -> Self {
         Self { color_a, color_b }
     }
 }
@@ -25,6 +25,7 @@ impl Default for Checker {
 
 impl Patterns for Checker {
     fn color_at(&self, point: tuples::Point) -> Color {
+        #[allow(clippy::cast_possible_truncation)]
         if (point.x.floor() + point.y.floor() + point.z.floor()) as isize % 2 == 0 {
             self.color_a
         } else {

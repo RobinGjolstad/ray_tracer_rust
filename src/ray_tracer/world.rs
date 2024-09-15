@@ -368,7 +368,7 @@ mod tests {
         let mut material = shape.get_material();
         material.ambient = 1.0;
         shape.set_material(&material);
-        std::mem::replace(w.objects.get_mut(1).unwrap(), shape.to_owned());
+        let _ = std::mem::replace(w.objects.get_mut(1).unwrap(), shape.to_owned());
         let w = w.build();
 
         let r = Ray::new(

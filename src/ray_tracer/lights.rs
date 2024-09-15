@@ -7,16 +7,19 @@ pub struct Light {
 }
 
 impl Light {
-    pub fn point_light(position: &Tuple, intensity: &Color) -> Light {
-        Light {
+    #[must_use]
+    pub const fn point_light(position: &Tuple, intensity: &Color) -> Self {
+        Self {
             position: *position,
             intensity: *intensity,
         }
     }
-    pub fn get_position(&self) -> Tuple {
+    #[must_use]
+    pub const fn get_position(&self) -> Tuple {
         self.position
     }
-    pub fn get_intensity(&self) -> Color {
+    #[must_use]
+    pub const fn get_intensity(&self) -> Color {
         self.intensity
     }
 }

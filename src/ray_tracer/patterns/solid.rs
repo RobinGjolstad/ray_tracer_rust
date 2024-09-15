@@ -8,7 +8,7 @@ pub(super) struct Solid {
 }
 
 impl Solid {
-    pub(super) fn new(color: Color) -> Self {
+    pub(super) const fn new(color: Color) -> Self {
         Self { color }
     }
 }

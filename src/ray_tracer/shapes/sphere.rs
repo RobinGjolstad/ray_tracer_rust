@@ -63,7 +63,6 @@ impl Shapes for Sphere {
         let discriminant_sqrt = discriminant.sqrt();
 
         if discriminant < 0.0 {
-            return;
         } else {
             intersection_list.push(Intersection::new(
                 (-b - discriminant_sqrt) / (2.0 * a),

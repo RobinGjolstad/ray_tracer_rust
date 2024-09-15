@@ -1,5 +1,5 @@
 // Allow using `.get(0)` on vectors to make the matrix calculations more obvious
-#![allow(clippy::get_first)]
+#![allow(clippy::get_first, clippy::missing_errors_doc)]
 
 use std::{
     fmt::{Display, Formatter},
@@ -27,7 +27,7 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new(input: Vec<Vec<f64>>) -> Result<Matrix, MatrixError> {
+    pub fn new(input: Vec<Vec<f64>>) -> Result<Self, MatrixError> {
         // Ensure the input is a symmetrical matrix
         let x = input.len();
         for i in 0..x {
@@ -41,7 +41,7 @@ impl Matrix {
             return Err(MatrixError::InvalidSize);
         }
 
-        let mut m = Matrix {
+        let mut m = Self {
             matrix: [[0.0; 4]; 4],
             size: 4,
             inverse: [[0.0; 4]; 4],
@@ -59,9 +59,9 @@ impl Matrix {
         Ok(m)
     }
 
-    pub fn new_empty(size: usize) -> Result<Matrix, MatrixError> {
+    pub const fn new_empty(size: usize) -> Result<Self, MatrixError> {
         if size > 1 && size < 5 {
-            Ok(Matrix {
+            Ok(Self {
                 matrix: [[0.0; 4]; 4],
                 size,
                 inverse: [[0.0; 4]; 4],
@@ -72,8 +72,9 @@ impl Matrix {
         }
     }
 
-    pub fn new_identity() -> Matrix {
-        Matrix {
+    #[must_use]
+    pub const fn new_identity() -> Self {
+        Self {
             matrix: [
                 [1.0, 0.0, 0.0, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
@@ -86,7 +87,8 @@ impl Matrix {
         }
     }
 
-    pub fn get_element(&self, x: usize, y: usize) -> f64 {
+    #[must_use]
+    pub const fn get_element(&self, x: usize, y: usize) -> f64 {
         self.matrix[x][y]
     }
 
@@ -94,39 +96,42 @@ impl Matrix {
         self.matrix[x][y] = val;
     }
 
-    pub fn size(&self) -> usize {
+    #[must_use]
+    pub const fn size(&self) -> usize {
         self.size
     }
 
-    pub fn get_matrix(&self) -> [[f64; 4]; 4] {
+    #[must_use]
+    pub const fn get_matrix(&self) -> [[f64; 4]; 4] {
         self.matrix
     }
 
-    pub fn is_inverted(&self) -> bool {
+    #[must_use]
+    pub const fn is_inverted(&self) -> bool {
         self.is_inverted
     }
 
-    pub fn get_inverted(&self) -> Result<Matrix, MatrixError> {
-        if !self.is_inverted {
-            Err(MatrixError::NotInverted)
-        } else {
-            Ok(Matrix {
+    pub const fn get_inverted(&self) -> Result<Self, MatrixError> {
+        if self.is_inverted {
+            Ok(Self {
                 matrix: self.inverse,
                 size: self.size,
                 inverse: [[0.0; 4]; 4],
                 is_inverted: false,
             })
+        } else {
+            Err(MatrixError::NotInverted)
         }
     }
 
-    pub fn transpose(&self) -> Result<Matrix, MatrixError> {
+    pub fn transpose(&self) -> Result<Self, MatrixError> {
         let size = self.size;
         if size != 4 {
             return Err(MatrixError::InvalidSize);
         }
 
         // Start with an identity matrix, just because that doesn't require any input parameters
-        let mut mat = Matrix::new_identity();
+        let mut mat = Self::new_identity();
         for row in 0..size {
             for column in 0..size {
                 mat.matrix[row][column] = self.matrix[column][row];
@@ -136,24 +141,27 @@ impl Matrix {
         Ok(mat)
     }
 
+    #[must_use]
     pub fn determinant(&self) -> f64 {
-        let mut det = 0.0;
         if self.size == 2 {
             let ad = self.matrix[0][0] * self.matrix[1][1];
             let bc = self.matrix[0][1] * self.matrix[1][0];
-            det = ad - bc;
+
+            ad - bc
         } else {
+            let mut det = 0.0;
+
             for column in 0..self.size() {
                 det += self.matrix[0][column] * self.cofactor(0, column);
             }
-        }
 
-        det
+            det
+        }
     }
 
-    fn submatrix(&self, row: usize, column: usize) -> Matrix {
+    fn submatrix(&self, row: usize, column: usize) -> Self {
         let size = self.size;
-        let mut mat = Matrix::new_empty(size - 1).unwrap();
+        let mut mat = Self::new_empty(size - 1).unwrap();
         let mut row_ctr = 0;
 
         for row_id in 0..size {
@@ -241,7 +249,7 @@ impl Mul for Matrix {
     fn mul(self, rhs: Self) -> Self::Output {
         let size = self.size();
         assert_eq!(size, 4, "Only 4x4 matrix is supported!"); // Only 4x4 matrix is supported
-        let mut m = Matrix {
+        let mut m = Self {
             matrix: [[0.0; 4], [0.0; 4], [0.0; 4], [0.0; 4]],
             size: 4,
             inverse: [[0.0; 4]; 4],
@@ -249,10 +257,20 @@ impl Mul for Matrix {
         };
         for row in 0..size {
             for column in 0..size {
-                m.matrix[row][column] = (self.matrix[row][0] * rhs.matrix[0][column])
-                    + (self.matrix[row][1] * rhs.matrix[1][column])
-                    + (self.matrix[row][2] * rhs.matrix[2][column])
-                    + (self.matrix[row][3] * rhs.matrix[3][column]);
+                // m.matrix[row][column] = (self.matrix[row][0] * rhs.matrix[0][column])
+                //     + (self.matrix[row][1] * rhs.matrix[1][column])
+                //     + (self.matrix[row][2] * rhs.matrix[2][column])
+                //     + (self.matrix[row][3] * rhs.matrix[3][column]);
+                m.matrix[row][column] = self.matrix[row][3].mul_add(
+                    rhs.matrix[3][column],
+                    self.matrix[row][2].mul_add(
+                        rhs.matrix[2][column],
+                        self.matrix[row][0].mul_add(
+                            rhs.matrix[0][column],
+                            self.matrix[row][1] * rhs.matrix[1][column],
+                        ),
+                    ),
+                );
             }
         }
 
@@ -267,10 +285,17 @@ impl Mul<Tuple> for Matrix {
         assert_eq!(4, size);
         let mut tup = [0.0; 4];
         for (row, item) in tup.iter_mut().enumerate().take(size) {
-            *item = self.matrix[row][0] * rhs.x
-                + self.matrix[row][1] * rhs.y
-                + self.matrix[row][2] * rhs.z
-                + self.matrix[row][3] * rhs.w;
+            // *item = self.matrix[row][0] * rhs.x
+            //     + self.matrix[row][1] * rhs.y
+            //     + self.matrix[row][2] * rhs.z
+            //     + self.matrix[row][3] * rhs.w;
+            *item = self.matrix[row][3].mul_add(
+                rhs.w,
+                self.matrix[row][2].mul_add(
+                    rhs.z,
+                    self.matrix[row][0].mul_add(rhs.x, self.matrix[row][1] * rhs.y),
+                ),
+            );
         }
 
         Tuple::new(tup[0], tup[1], tup[2], tup[3])
@@ -291,7 +316,7 @@ impl Display for Matrix {
             output.push_str("]\n");
         }
 
-        write!(f, "{}", output)
+        write!(f, "{output}")
     }
 }
 

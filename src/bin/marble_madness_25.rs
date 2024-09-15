@@ -5,7 +5,7 @@ use ray_tracer_rust::ray_tracer::{
     lights::Light,
     shapes::*,
     transformations::Transform,
-    tuples::{Point, Tuple},
+    tuples::Tuple,
     world::World,
 };
 use std::{fs, path::Path, time::Instant};
