@@ -30,13 +30,13 @@ Performs tests on all tuple methods.
 ## List of improvements
 
 - [ ] Reduce temporary lists in intersections.
-- [ ] Unroll matrices.
 - [ ] `.par_iter()`
 - [ ] Trait objects?
+- [ ] Unroll matrices.
 - [ ] Fixed matrix-size?
-- [ ] Limit inverse calculations?
 - [ ] Separate matrix/tuple types for different sizes.
 - [ ] Unify matrix/tuple?
+- [ ] Limit inverse calculations?
 - [ ] `Intersections::hit()`, avoid clone.
 - [ ] `Ray::intersect_world()`, accept `Intersections` as parameter.
 - [ ] `World::shade_hit()`, calls `Ray::intersect_world()`. Pass `Intersections` in here as well?
