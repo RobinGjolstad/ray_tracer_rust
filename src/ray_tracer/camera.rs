@@ -3,9 +3,9 @@ use std::{
     thread,
 };
 
-use crate::ray_tracer::{
-    canvas::Canvas, colors::Color, matrices::Matrix, rays::Ray, tuples::Tuple, world::World,
-};
+use crate::ray_tracer::{canvas::Canvas, colors::Color, matrices::Matrix, rays::Ray, world::World};
+
+use super::tuples::new_point;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Camera {
@@ -65,9 +65,8 @@ impl Camera {
         // Using the camera matrix, transform the canvas point and the origin,
         // and then compute the ray's direction vector.
         // (remember that the canvas is at z=-1)
-        let pixel =
-            self.transform.get_inverted().unwrap() * Tuple::new_point(world_x, world_y, -1.0);
-        let origin = self.transform.get_inverted().unwrap() * Tuple::new_point(0.0, 0.0, 0.0);
+        let pixel = self.transform.get_inverted().unwrap() * new_point(world_x, world_y, -1.0);
+        let origin = self.transform.get_inverted().unwrap() * new_point(0.0, 0.0, 0.0);
         let direction = (pixel - origin).normalize();
 
         Ray::new(origin, direction)

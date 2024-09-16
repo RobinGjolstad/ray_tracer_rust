@@ -78,13 +78,13 @@ impl Ray {
 mod tests {
     use super::*;
     use crate::ray_tracer::{
-        shapes::new_sphere, transformations::Transform, tuples::Tuple, utils::is_float_equal,
+        shapes::new_sphere, transformations::Transform, tuples::{new_point, new_vector}, utils::is_float_equal
     };
 
     #[test]
     fn creating_and_querying_a_ray() {
-        let origin = Tuple::new_point(1.0, 2.0, 3.0);
-        let direction = Tuple::new_vector(4.0, 5.0, 6.0);
+        let origin = new_point(1.0, 2.0, 3.0);
+        let direction = new_vector(4.0, 5.0, 6.0);
 
         let r = Ray::new(origin, direction);
 
@@ -95,21 +95,21 @@ mod tests {
     #[test]
     fn computing_a_point_from_a_distance() {
         let r = Ray::new(
-            Tuple::new_point(2.0, 3.0, 4.0),
-            Tuple::new_vector(1.0, 0.0, 0.0),
+            new_point(2.0, 3.0, 4.0),
+            new_vector(1.0, 0.0, 0.0),
         );
 
-        assert_eq!(r.position(0.0), Tuple::new_point(2.0, 3.0, 4.0));
-        assert_eq!(r.position(1.0), Tuple::new_point(3.0, 3.0, 4.0));
-        assert_eq!(r.position(-1.0), Tuple::new_point(1.0, 3.0, 4.0));
-        assert_eq!(r.position(2.5), Tuple::new_point(4.5, 3.0, 4.0));
+        assert_eq!(r.position(0.0), new_point(2.0, 3.0, 4.0));
+        assert_eq!(r.position(1.0), new_point(3.0, 3.0, 4.0));
+        assert_eq!(r.position(-1.0), new_point(1.0, 3.0, 4.0));
+        assert_eq!(r.position(2.5), new_point(4.5, 3.0, 4.0));
     }
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
+            new_point(0.0, 0.0, -5.0),
+            new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
         let mut xs = Intersections::default();
@@ -121,8 +121,8 @@ mod tests {
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let r = Ray::new(
-            Tuple::new_point(0.0, 1.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
+            new_point(0.0, 1.0, -5.0),
+            new_vector(0.0, 0.0, 1.0),
         );
         let s = new_sphere();
         let mut xs = Intersections::default();
