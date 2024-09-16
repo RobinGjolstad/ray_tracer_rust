@@ -1,5 +1,4 @@
 #![allow(unused)]
-use super::*;
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
@@ -8,6 +7,8 @@ use crate::ray_tracer::{
     tuples::{Point, Tuple, Vector},
 };
 
+use super::{BaseShape, Object, Shapes};
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
     base: BaseShape,
@@ -15,6 +16,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             base: BaseShape::default(),
@@ -59,7 +61,8 @@ impl Shapes for Sphere {
         let b = 2.0 * Tuple::dot(&local_ray.direction, &sphere_to_ray);
         let c = Tuple::dot(&sphere_to_ray, &sphere_to_ray) - 1.0;
 
-        let discriminant = b.powi(2) - 4.0 * a * c;
+        // let discriminant = b.powi(2) - 4.0 * a * c;
+        let discriminant = b.mul_add(b, -(4.0 * a * c));
         let discriminant_sqrt = discriminant.sqrt();
 
         if discriminant < 0.0 {
@@ -123,6 +126,6 @@ mod tests {
             f64::sqrt(3.0) / 3.0,
             f64::sqrt(3.0) / 3.0,
         ));
-        assert_eq!(n, n.normalize())
+        assert_eq!(n, n.normalize());
     }
 }

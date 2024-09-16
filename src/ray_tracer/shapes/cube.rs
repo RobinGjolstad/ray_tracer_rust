@@ -1,5 +1,4 @@
 #![allow(unused)]
-use super::*;
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
@@ -9,6 +8,8 @@ use crate::ray_tracer::{
     utils::is_float_equal,
 };
 
+use super::{BaseShape, Object, Shapes};
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cube {
     base: BaseShape,
@@ -16,6 +17,7 @@ pub struct Cube {
 }
 
 impl Cube {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             base: BaseShape::default(),
@@ -110,6 +112,8 @@ fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
 
 #[cfg(test)]
 mod tests {
+    use crate::ray_tracer::utils::is_float_equal_low_precision;
+
     use super::*;
 
     #[test]
@@ -186,8 +190,14 @@ mod tests {
             let mut xs = Vec::new();
             c.local_intersect(intersection.0, &mut xs);
             assert_eq!(xs.len(), 2);
-            assert_eq!(xs[0].get_time(), intersection.1);
-            assert_eq!(xs[1].get_time(), intersection.2);
+            assert!(is_float_equal_low_precision(
+                &xs[0].get_time(),
+                intersection.1
+            ));
+            assert!(is_float_equal_low_precision(
+                &xs[1].get_time(),
+                intersection.2
+            ));
         }
     }
 

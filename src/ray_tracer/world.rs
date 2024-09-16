@@ -5,12 +5,14 @@ use crate::ray_tracer::{
     intersections::{prepare_computations, schlick, IntersectComp},
     lights::Light,
     rays::Ray,
-    shapes::*,
     transformations::Transform,
     tuples::{Point, Tuple},
     utils::is_float_equal,
 };
 
+use super::shapes::{new_sphere, Object};
+
+#[allow(clippy::module_name_repetitions)]
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct WorldBuilder {
     objects: Vec<Object>,
@@ -18,6 +20,7 @@ pub struct WorldBuilder {
 }
 
 impl WorldBuilder {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -32,6 +35,7 @@ impl WorldBuilder {
         self
     }
 
+    #[must_use]
     pub fn build(self) -> World {
         World {
             objects: self.objects.into(),
@@ -47,10 +51,12 @@ pub struct World {
 }
 
 impl World {
+    #[must_use]
     pub fn builder() -> WorldBuilder {
         WorldBuilder::new()
     }
 
+    #[must_use]
     pub fn into_builder(self) -> WorldBuilder {
         WorldBuilder {
             objects: self.objects.to_vec(),
@@ -58,7 +64,8 @@ impl World {
         }
     }
 
-    pub fn new_default_world() -> World {
+    #[must_use]
+    pub fn new_default_world() -> Self {
         let mut s1 = new_sphere();
         let mut s1_mat = s1.get_material();
         s1_mat.color = Color::new(0.8, 1.0, 0.6);
@@ -69,7 +76,7 @@ impl World {
         let mut s2 = new_sphere();
         s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
 
-        World {
+        Self {
             objects: vec![s1, s2].into(),
             lights: vec![Light::point_light(
                 &Point::new_point(-10.0, 10.0, -10.0),
@@ -105,13 +112,13 @@ impl World {
 
     pub(crate) fn color_at(&self, r: &Ray, remaining: usize) -> Color {
         let int = r.intersect_world(self);
-        match int.hit() {
-            None => Color::new(0.0, 0.0, 0.0),
-            Some(int_hit) => {
+        int.hit().map_or_else(
+            || Color::new(0.0, 0.0, 0.0),
+            |int_hit| {
                 let comp = prepare_computations(&int_hit, r, &int);
                 self.shade_hit(&comp, remaining)
-            }
-        }
+            },
+        )
     }
 
     pub(crate) fn is_shadowed(&self, point: &Point) -> bool {
@@ -154,13 +161,15 @@ impl World {
         // sin(theta_i) / sin(theta_t) == n_2 / n_1
         let n_ratio = comps.n1 / comps.n2;
         let cos_i = Tuple::dot(&comps.eyev, &comps.normalv);
-        let sin2_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
+        // let sin2_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
+        let sin2_t = n_ratio.powi(2) * cos_i.mul_add(-cos_i, 1.0);
         if sin2_t > 1.0 {
             return Color::new(0.0, 0.0, 0.0);
         }
 
         let cos_t = (1.0 - sin2_t).sqrt();
-        let direction = comps.normalv * (n_ratio * cos_i - cos_t) - comps.eyev * n_ratio;
+        // let direction = comps.normalv * (n_ratio * cos_i - cos_t) - comps.eyev * n_ratio;
+        let direction = comps.normalv * n_ratio.mul_add(cos_i, -cos_t) - comps.eyev * n_ratio;
         let refract_ray = Ray::new(comps.under_point, direction);
 
         self.color_at(&refract_ray, remaining - 1) * comps.object.get_material().transparency
@@ -172,6 +181,7 @@ mod tests {
     use crate::ray_tracer::{
         intersections::{Intersection, Intersections},
         patterns::Pattern,
+        shapes::new_plane,
         tuples::Vector,
         utils::is_float_equal,
     };
@@ -368,7 +378,7 @@ mod tests {
         let mut material = shape.get_material();
         material.ambient = 1.0;
         shape.set_material(&material);
-        let _ = std::mem::replace(w.objects.get_mut(1).unwrap(), shape.to_owned());
+        let _ = std::mem::replace(w.objects.get_mut(1).unwrap(), shape.clone());
         let w = w.build();
 
         let r = Ray::new(

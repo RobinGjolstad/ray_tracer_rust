@@ -1,5 +1,5 @@
 #![allow(unused)]
-use super::*;
+use super::{BaseShape, Debug, Object, Shapes};
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
@@ -19,6 +19,7 @@ pub struct Cylinder {
 }
 
 impl Cylinder {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             base: BaseShape::default(),
@@ -29,11 +30,15 @@ impl Cylinder {
         }
     }
 
-    fn check_cap(ray: &Ray, t: &f64) -> bool {
-        let x = ray.origin.x + t * ray.direction.x;
-        let z = ray.origin.z + t * ray.direction.z;
+    fn check_cap(ray: &Ray, t: f64) -> bool {
+        // let x = ray.origin.x + t * ray.direction.x;
+        // let z = ray.origin.z + t * ray.direction.z;
+        // (x.powi(2) + z.powi(2)) <= 1.0
 
-        (x.powi(2) + z.powi(2)) <= 1.0
+        let x = t.mul_add(ray.direction.x, ray.origin.x);
+        let z = t.mul_add(ray.direction.z, ray.origin.z);
+
+        x.mul_add(x, z.powi(2)) <= 1.0
     }
 
     fn intersect_caps(&self, ray: &Ray, xs: &mut Vec<Intersection>) {
@@ -42,12 +47,12 @@ impl Cylinder {
         }
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
-        if Cylinder::check_cap(ray, &t) {
+        if Self::check_cap(ray, t) {
             xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
-        if Cylinder::check_cap(ray, &t) {
+        if Self::check_cap(ray, t) {
             xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
         }
     }
@@ -82,7 +87,8 @@ impl Shapes for Cylinder {
     }
     fn local_normal_at(&self, point: Point) -> Vector {
         // Compute the square of the distance from the y-axis
-        let dist = point.x.powi(2) + point.z.powi(2);
+        // let dist = point.x.powi(2) + point.z.powi(2);
+        let dist = point.x.mul_add(point.x, point.z.powi(2));
 
         if dist < 1.0 && point.y >= (self.maximum - EPSILON) {
             Vector::new_vector(0.0, 1.0, 0.0)
@@ -93,17 +99,35 @@ impl Shapes for Cylinder {
         }
     }
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
-        let a = local_ray.direction.x.powi(2) + local_ray.direction.z.powi(2);
+        // let a = local_ray.direction.x.powi(2) + local_ray.direction.z.powi(2);
+        let a = local_ray
+            .direction
+            .x
+            .mul_add(local_ray.direction.x, local_ray.direction.z.powi(2));
         if is_float_equal(&a, 0.0) {
             self.intersect_caps(&local_ray, intersection_list);
 
             return;
         }
 
-        let b = 2.0 * local_ray.origin.x * local_ray.direction.x
-            + 2.0 * local_ray.origin.z * local_ray.direction.z;
-        let c = local_ray.origin.x.powi(2) + local_ray.origin.z.powi(2) - 1.0;
-        let disc = b.powi(2) - 4.0 * a * c;
+        // let b = 2.0 * local_ray.origin.x * local_ray.direction.x
+        //     + 2.0 * local_ray.origin.z * local_ray.direction.z;
+        let b = (2.0 * local_ray.origin.x).mul_add(
+            local_ray.direction.x,
+            2.0 * local_ray.origin.z * local_ray.direction.z,
+        );
+        // let c = local_ray.origin.x.powi(2) + local_ray.origin.z.powi(2) - 1.0;
+        let c = local_ray
+            .origin
+            .x
+            .mul_add(local_ray.origin.x, local_ray.origin.z.powi(2))
+            - 1.0;
+
+        #[allow(clippy::suboptimal_flops)]
+        // let disc = b.powi(2) - 4.0 * a * c;
+        // let disc = (4.0 * a).mul_add(-c, b.powi(2));
+        let disc = b.mul_add(b, -(4.0 * a * c));
+
         if disc < 0.0 {
             // Ray doesn't intersect the cylinder
             return;
@@ -112,12 +136,14 @@ impl Shapes for Cylinder {
         let t0 = (-b - disc.sqrt()) / (2.0 * a);
         let t1 = (-b + disc.sqrt()) / (2.0 * a);
 
-        let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
+        // let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
+        let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
         if self.minimum < y0 && y0 < self.maximum {
             intersection_list.push(Intersection::new(t0, Object::Cylinder(self.clone())));
         }
 
-        let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
+        // let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
+        let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
         if self.minimum < y1 && y1 < self.maximum {
             intersection_list.push(Intersection::new(t1, Object::Cylinder(self.clone())));
         }

@@ -23,8 +23,8 @@ pub struct TestShape {
     parent: Option<BaseShape>,
 }
 impl TestShape {
-    pub(super) fn new() -> TestShape {
-        TestShape {
+    pub(super) fn new() -> Self {
+        Self {
             base: BaseShape::default(),
             parent: None,
         }

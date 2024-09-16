@@ -1,8 +1,9 @@
 use crate::ray_tracer::{matrices::Matrix, tuples::Tuple};
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Transform;
 impl Transform {
+    #[must_use]
     pub fn translate(x: f64, y: f64, z: f64) -> Matrix {
         Matrix::new(vec![
             vec![1.0, 0.0, 0.0, x],
@@ -12,6 +13,7 @@ impl Transform {
         ])
         .unwrap()
     }
+    #[must_use]
     pub fn scaling(x: f64, y: f64, z: f64) -> Matrix {
         Matrix::new(vec![
             vec![x, 0.0, 0.0, 0.0],
@@ -21,6 +23,7 @@ impl Transform {
         ])
         .unwrap()
     }
+    #[must_use]
     pub fn rotation_x(angle: f64) -> Matrix {
         Matrix::new(vec![
             vec![1.0, 0.0, 0.0, 0.0],
@@ -30,6 +33,7 @@ impl Transform {
         ])
         .unwrap()
     }
+    #[must_use]
     pub fn rotation_y(angle: f64) -> Matrix {
         Matrix::new(vec![
             vec![f64::cos(angle), 0.0, f64::sin(angle), 0.0],
@@ -39,6 +43,7 @@ impl Transform {
         ])
         .unwrap()
     }
+    #[must_use]
     pub fn rotation_z(angle: f64) -> Matrix {
         Matrix::new(vec![
             vec![f64::cos(angle), -f64::sin(angle), 0.0, 0.0],
@@ -48,6 +53,7 @@ impl Transform {
         ])
         .unwrap()
     }
+    #[must_use]
     pub fn shearing(x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Matrix {
         Matrix::new(vec![
             vec![1.0, x_y, x_z, 0.0],
@@ -58,6 +64,7 @@ impl Transform {
         .unwrap()
     }
 
+    #[must_use]
     pub fn view_transform(from: &Tuple, to: &Tuple, up: &Tuple) -> Matrix {
         let forward = (*to - *from).normalize();
         let up_norm = up.normalize();
@@ -71,10 +78,12 @@ impl Transform {
         ])
         .unwrap();
 
-        orientation * Transform::translate(-from.x, -from.y, -from.z)
+        orientation * Self::translate(-from.x, -from.y, -from.z)
     }
 }
 
+// Tests should be allowed to contain single-char variables.
+#[allow(clippy::many_single_char_names)]
 #[cfg(test)]
 mod tests {
     use std::f64::consts::PI;

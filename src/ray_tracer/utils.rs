@@ -5,9 +5,11 @@ pub const EPSILON: f64 = 5e-6;
 pub const EPSILON_LOW: f64 = 5e-4;
 
 /// Compares two f64 and asserts whether they are within a difference defined by `utils::EPSILON`
+#[must_use]
 pub fn is_float_equal(actual: &f64, comparison: f64) -> bool {
     (actual - comparison).abs() < EPSILON
 }
+#[must_use]
 pub fn is_float_equal_low_precision(actual: &f64, comparison: f64) -> bool {
     (actual - comparison).abs() < EPSILON_LOW
 }
@@ -22,6 +24,7 @@ pub fn is_float_equal_low_precision(actual: &f64, comparison: f64) -> bool {
 ///
 /// Usage of this tree module requires any used type to implement the Display trait.
 pub mod tree {
+    /*
 
     use core::fmt::Debug;
     use std::{
@@ -171,4 +174,5 @@ pub mod tree {
                 .finish()
         }
     }
+    */
 }

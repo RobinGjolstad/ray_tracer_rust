@@ -377,11 +377,11 @@ mod tests {
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let g2 = GroupBuilder::new()
             .add(s)
-            .set_transform(Transform::scaling(2.0, 2.0, 2.0))
+            .set_transform(&mut Transform::scaling(2.0, 2.0, 2.0))
             .build();
         let g1 = GroupBuilder::new()
             .add(g2)
-            .set_transform(Transform::rotation_y(PI / 2.0))
+            .set_transform(&mut Transform::rotation_y(PI / 2.0))
             .build();
 
         // Get the sphere from the groups
@@ -402,11 +402,11 @@ mod tests {
         let mut s = new_sphere();
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let g2 = GroupBuilder::new()
-            .set_transform(Transform::scaling(1.0, 2.0, 3.0))
+            .set_transform(&mut Transform::scaling(1.0, 2.0, 3.0))
             .add(s)
             .build();
         let g1 = GroupBuilder::new()
-            .set_transform(Transform::rotation_y(PI / 2.0))
+            .set_transform(&mut Transform::rotation_y(PI / 2.0))
             .add(g2)
             .build();
 
@@ -432,11 +432,11 @@ mod tests {
         let mut s = new_sphere();
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let g2 = GroupBuilder::new()
-            .set_transform(Transform::scaling(1.0, 2.0, 3.0))
+            .set_transform(&mut Transform::scaling(1.0, 2.0, 3.0))
             .add(s)
             .build();
         let g1 = GroupBuilder::new()
-            .set_transform(Transform::rotation_y(PI / 2.0))
+            .set_transform(&mut Transform::rotation_y(PI / 2.0))
             .add(g2)
             .build();
 

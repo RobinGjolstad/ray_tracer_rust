@@ -1,5 +1,4 @@
 #![allow(unused)]
-use super::*;
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
@@ -9,6 +8,8 @@ use crate::ray_tracer::{
     utils::EPSILON,
 };
 
+use super::{BaseShape, Object, Shapes};
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
     base: BaseShape,
@@ -16,6 +17,7 @@ pub struct Plane {
 }
 
 impl Plane {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             base: BaseShape::default(),
@@ -67,6 +69,8 @@ impl Shapes for Plane {
 
 #[cfg(test)]
 mod tests {
+    use crate::ray_tracer::utils::is_float_equal_low_precision;
+
     use super::*;
 
     #[test]
@@ -113,7 +117,10 @@ mod tests {
         let mut xs = Vec::new();
         p.local_intersect(r, &mut xs);
         assert_eq!(xs.len(), 1);
-        assert_eq!(xs.first().unwrap().get_time(), 1.0);
+        assert!(is_float_equal_low_precision(
+            &xs.first().unwrap().get_time(),
+            1.0
+        ));
         assert_eq!(*xs.first().unwrap().get_object(), p_o);
     }
 
@@ -128,7 +135,10 @@ mod tests {
         let mut xs = Vec::new();
         p.local_intersect(r, &mut xs);
         assert_eq!(xs.len(), 1);
-        assert_eq!(xs.first().unwrap().get_time(), 1.0);
+        assert!(is_float_equal_low_precision(
+            &xs.first().unwrap().get_time(),
+            1.0
+        ));
         assert_eq!(*xs.first().unwrap().get_object(), p_o);
     }
 }

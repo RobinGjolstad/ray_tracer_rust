@@ -1,11 +1,12 @@
 #![allow(unused)]
+use std::{ops::Deref, sync::Arc};
+
 use super::{BaseShape, Object, Shapes};
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    shapes::*,
     tuples::{Point, Vector},
 };
 
@@ -19,7 +20,7 @@ pub struct Group {
 
 impl Group {
     pub fn new() -> Self {
-        Group {
+        Self {
             position: Point::new_point(0.0, 0.0, 0.0),
             transform: Matrix::new_identity()
                 .calculate_inverse()
@@ -76,9 +77,7 @@ impl Shapes for Group {
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         // All children have their transformations already prepared for conversion to world space.
         // So, we can just intersect the ray with each child.
-        let children = if let Some(c) = self.get_children() {
-            c
-        } else {
+        let Some(children) = self.get_children() else {
             return;
         };
 
@@ -101,15 +100,16 @@ impl Shapes for Group {
     }
 }
 
-pub(crate) struct GroupBuilder {
+#[allow(clippy::module_name_repetitions)]
+pub struct GroupBuilder {
     children: Vec<Object>,
     transform: Matrix,
     material: Option<Material>,
 }
 
 impl GroupBuilder {
-    pub fn new() -> GroupBuilder {
-        GroupBuilder {
+    pub fn new() -> Self {
+        Self {
             children: Vec::new(),
             transform: Matrix::new_identity()
                 .calculate_inverse()
@@ -117,23 +117,22 @@ impl GroupBuilder {
             material: None,
         }
     }
-    pub(crate) fn add(mut self, child: Object) -> GroupBuilder {
+    pub(crate) fn add(mut self, child: Object) -> Self {
         self.children.push(child);
         self
     }
-    pub(crate) fn add_children(mut self, children: Vec<Object>) -> GroupBuilder {
-        self.children.append(&mut children.clone());
+    pub(crate) fn add_children(mut self, children: &[Object]) -> Self {
+        self.children.append(&mut children.to_owned());
         self
     }
-    pub fn set_transform(mut self, transform: Matrix) -> GroupBuilder {
-        let mut trans = transform;
-        self.transform = trans
+    pub fn set_transform(mut self, transform: &mut Matrix) -> Self {
+        self.transform = transform
             .calculate_inverse()
             .expect("Failed to calculate inverse.");
         self
     }
-    pub const fn set_material(mut self, material: Material) -> GroupBuilder {
-        self.material = Some(material);
+    pub const fn set_material(mut self, material: &Material) -> Self {
+        self.material = Some(*material);
         self
     }
 
@@ -148,19 +147,19 @@ impl GroupBuilder {
         // G1.transform * G2.transform * S1.transform
 
         let mut children = self.children;
-        children.iter_mut().for_each(|child| {
-            let new_transform = self.transform * child.get_transform();
+        for child in &mut children {
+            let mut new_transform = self.transform * child.get_transform();
             if let Object::Group(g) = child {
                 // Re-build the group with the current group's transform.
-                let new_g = GroupBuilder::new()
-                    .add_children(g.get_children().unwrap().to_vec())
-                    .set_transform(new_transform)
+                let new_g = Self::new()
+                    .add_children(&g.get_children().unwrap())
+                    .set_transform(&mut new_transform)
                     .build();
                 *child = new_g;
             } else {
                 child.set_transform(&new_transform);
             }
-        });
+        }
 
         Object::Group(Group {
             position: Point::new_point(0.0, 0.0, 0.0),
@@ -176,7 +175,10 @@ impl GroupBuilder {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::transformations::Transform;
+    use crate::ray_tracer::{
+        shapes::{new_group, new_sphere, new_test_shape},
+        transformations::Transform,
+    };
 
     use super::*;
 
@@ -193,9 +195,7 @@ mod tests {
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let mut g = new_group(vec![s.clone()]);
 
-        let group = if let Object::Group(g) = g {
-            g
-        } else {
+        let Object::Group(group) = g else {
             panic!("Failed to get group from object.");
         };
 
@@ -250,7 +250,7 @@ mod tests {
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let g = GroupBuilder::new()
             .add(s.clone())
-            .set_transform(Transform::scaling(2.0, 2.0, 2.0))
+            .set_transform(&mut Transform::scaling(2.0, 2.0, 2.0))
             .build();
 
         let r = Ray::new(
