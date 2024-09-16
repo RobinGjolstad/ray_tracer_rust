@@ -45,6 +45,7 @@ Performs tests on all tuple methods.
 - [ ] `Shapes` use `get_position()` internally. Replace with direct access to the object.
 - [ ] `Object` "owns" a `Shape` which requires a clone. Change to hold a reference? Eliminates `.clone()`.
 - [ ] Store `transpose` of all matrices on objects.
+- [ ] Replace `Vec<T>` with `Rc<[T]>` for rendering after the scene has been constructed.
 
 ## Changelog
 
