@@ -11,7 +11,7 @@ pub mod rays;
 pub mod shapes;
 pub mod transformations;
 pub mod tuples;
-//pub mod tuples_new;
+pub mod tuples_new;
 //pub mod tuples_old;
 pub mod utils;
 pub mod world;
