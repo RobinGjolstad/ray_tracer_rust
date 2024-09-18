@@ -1,46 +1,31 @@
 // Allow using `.get(0)` on vectors to make the matrix calculations more obvious
 #![allow(clippy::get_first, clippy::missing_errors_doc)]
 
-use std::{
-    fmt::{Display, Formatter},
-    iter::zip,
-    ops::Mul,
-};
-
-use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
-
-use crate::ray_tracer::utils::is_float_equal;
+use std::{iter::zip, ops::Mul};
 
 use super::{
     tuples_new::{new_point, new_vector, Point, Vector},
-    utils::is_float_equal_low_precision,
+    utils::is_float_equal,
 };
-
-/*
-#[derive(Debug, Default, Copy, Clone)]
-pub struct Matrix2 {
-    matrix: [[f64; 2]; 2],
-    inverse: Option<[[f64; 2]; 2]>,
-    inverse_transpose: Option<[[f64; 2]; 2]>,
-}
-
-#[derive(Debug, Default, Copy, Clone)]
-pub struct Matrix3 {
-    matrix: [[f64; 3]; 3],
-    inverse: Option<[[f64; 3]; 3]>,
-    inverse_transpose: Option<[[f64; 3]; 3]>,
-}
-*/
 
 #[derive(Debug, Copy, Clone)]
 pub struct Mat<const S: usize> {
-    pub size: usize,
-    pub mat: [[f64; S]; S],
+    mat: [[f64; S]; S],
+}
+impl<const S: usize> Mat<S> {
+    #[must_use]
+    pub const fn new(mat: [[f64; S]; S]) -> Self {
+        Self { mat }
+    }
+    #[must_use]
+    pub const fn new_empty() -> Self {
+        Self { mat: [[0.0; S]; S] }
+    }
 }
 
 impl<const S: usize> PartialEq<Self> for Mat<S> {
     fn eq(&self, other: &Self) -> bool {
-        zip(self.mat, other.mat)
+        !zip(self.mat, other.mat)
             .any(|(lhs, rhs)| zip(lhs, rhs).any(|(l, r)| !is_float_equal(&l, r)))
     }
 }
@@ -48,9 +33,9 @@ impl<const S: usize> PartialEq<Self> for Mat<S> {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Matrix<const S: usize> {
     pub size: usize,
-    pub matrix: [[f64; S]; S],
-    pub inverse: Option<[[f64; S]; S]>,
-    pub inverse_transpose: Option<[[f64; S]; S]>,
+    pub matrix: Mat<S>,
+    pub inverse: Option<Mat<S>>,
+    pub inverse_transpose: Option<Mat<S>>,
 }
 
 impl<const S: usize> Matrix<S> {
@@ -58,7 +43,7 @@ impl<const S: usize> Matrix<S> {
     pub const fn new(matrix: [[f64; S]; S]) -> Self {
         Self {
             size: S,
-            matrix,
+            matrix: Mat::new(matrix),
             inverse: None,
             inverse_transpose: None,
         }
@@ -67,14 +52,14 @@ impl<const S: usize> Matrix<S> {
     pub const fn new_empty() -> Self {
         Self {
             size: S,
-            matrix: [[0.0; S]; S],
+            matrix: Mat::new_empty(),
             inverse: None,
             inverse_transpose: None,
         }
     }
     #[must_use]
     pub const fn get_element(&self, x: usize, y: usize) -> f64 {
-        self.matrix[x][y]
+        self.matrix.mat[x][y]
     }
     #[must_use]
     pub fn transpose(&self) -> Self {
@@ -82,7 +67,7 @@ impl<const S: usize> Matrix<S> {
 
         (0..S).for_each(|row| {
             for column in 0..S {
-                mat[row][column] = self.matrix[column][row];
+                mat[row][column] = self.matrix.mat[column][row];
             }
         });
 
@@ -94,7 +79,7 @@ impl Matrix<2> {
     pub const fn identity() -> Self {
         Self {
             size: 2,
-            matrix: [[1.0, 0.0], [0.0, 1.0]],
+            matrix: Mat::new([[1.0, 0.0], [0.0, 1.0]]),
             inverse: None,
             inverse_transpose: None,
         }
@@ -104,7 +89,10 @@ impl Matrix<2> {
         // (self.matrix[0][0] * self.matrix[1][1])
         // - (self.matrix[0][1] * self.matrix[1][0])
 
-        self.matrix[0][0].mul_add(self.matrix[1][1], -(self.matrix[0][1] * self.matrix[1][0]))
+        self.matrix.mat[0][0].mul_add(
+            self.matrix.mat[1][1],
+            -(self.matrix.mat[0][1] * self.matrix.mat[1][0]),
+        )
     }
 }
 impl Matrix<3> {
@@ -112,7 +100,7 @@ impl Matrix<3> {
     pub const fn identity() -> Self {
         Self {
             size: 3,
-            matrix: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+            matrix: Mat::new([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
             inverse: None,
             inverse_transpose: None,
         }
@@ -133,7 +121,7 @@ impl Matrix<3> {
                     continue;
                 }
 
-                mat[mat_row][mat_column] = self.matrix[i][j];
+                mat[mat_row][mat_column] = self.matrix.mat[i][j];
                 mat_column += 1;
             }
 
@@ -158,18 +146,15 @@ impl Matrix<3> {
     }
     #[must_use]
     pub fn determinant(&self) -> f64 {
-        // TODO: Figure out if it's possible to make this generic.
-
         (0..3)
-            .into_par_iter()
-            .map(|column| self.matrix[0][column] * self.cofactor(0, column))
+            .map(|column| self.matrix.mat[0][column] * self.cofactor(0, column))
             .sum::<f64>()
     }
     #[must_use]
     pub fn invertible(&self) -> bool {
         !is_float_equal(&self.determinant(), 0.0)
     }
-    pub fn inverse(&mut self) -> &Option<[[f64; 3]; 3]> {
+    pub fn inverse(&mut self) -> &Option<Mat<3>> {
         let determinant = self.determinant();
 
         debug_assert!(
@@ -177,12 +162,12 @@ impl Matrix<3> {
             "Matrix is not invertible."
         );
 
-        let mut m2 = [[0.0; 3]; 3];
+        let mut m2 = Mat::<3>::new_empty();
 
         for row in 0..self.size {
             for column in 0..self.size {
                 let c = self.cofactor(row, column);
-                m2[column][row] = c / determinant;
+                m2.mat[column][row] = c / determinant;
             }
         }
 
@@ -191,17 +176,18 @@ impl Matrix<3> {
         &self.inverse
     }
 }
+
 impl Matrix<4> {
     #[must_use]
     pub const fn identity() -> Self {
         Self {
             size: 4,
-            matrix: [
+            matrix: Mat::new([
                 [1.0, 0.0, 0.0, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
-            ],
+            ]),
             inverse: None,
             inverse_transpose: None,
         }
@@ -222,7 +208,7 @@ impl Matrix<4> {
                     continue;
                 }
 
-                mat[mat_row][mat_column] = self.matrix[i][j];
+                mat[mat_row][mat_column] = self.matrix.mat[i][j];
                 mat_column += 1;
             }
 
@@ -250,13 +236,37 @@ impl Matrix<4> {
         // TODO: Figure out if it's possible to make this generic.
 
         (0..4)
-            .into_par_iter()
-            .map(|column| self.matrix[0][column] * self.cofactor(0, column))
+            .map(|column| self.matrix.mat[0][column] * self.cofactor(0, column))
             .sum::<f64>()
     }
     #[must_use]
     pub fn invertible(&self) -> bool {
         !is_float_equal(&self.determinant(), 0.0)
+    }
+    pub fn inverse(&mut self) -> &Option<Mat<4>> {
+        if self.inverse.is_some() {
+            return &self.inverse;
+        }
+
+        let determinant = self.determinant();
+
+        debug_assert!(
+            !is_float_equal(&determinant, 0.0),
+            "Matrix is not invertible."
+        );
+
+        let mut m2 = Mat::<4>::new_empty();
+
+        for row in 0..self.size {
+            for column in 0..self.size {
+                let c = self.cofactor(row, column);
+                m2.mat[column][row] = c / determinant;
+            }
+        }
+
+        self.inverse = Some(m2);
+
+        &self.inverse
     }
 }
 
@@ -265,6 +275,13 @@ impl<const S: usize> Default for Matrix<S> {
         Self::new_empty()
     }
 }
+// impl<const S: usize> PartialEq for Matrix<S> {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.matrix == other.matrix
+//             && self.inverse == other.inverse
+//             && self.inverse_transpose == other.inverse_transpose
+//     }
+// }
 
 impl Mul for Matrix<2> {
     type Output = Self;
@@ -277,16 +294,16 @@ impl Mul for Matrix<2> {
                 //       (self.matrix[row][0] * rhs.matrix[0][column])
                 //     + (self.matrix[row][1] * rhs.matrix[1][column])
 
-                mat[row][column] = self.matrix[row][0].mul_add(
-                    rhs.matrix[0][column],
-                    self.matrix[row][1] * rhs.matrix[1][column],
+                mat[row][column] = self.matrix.mat[row][0].mul_add(
+                    rhs.matrix.mat[0][column],
+                    self.matrix.mat[row][1] * rhs.matrix.mat[1][column],
                 );
             }
         }
 
         Self {
             size: 2,
-            matrix: mat,
+            matrix: Mat::new(mat),
             inverse: None,
             inverse_transpose: None,
         }
@@ -305,11 +322,11 @@ impl Mul for Matrix<3> {
                 //     + (self.matrix[row][1] * rhs.matrix[1][column])
                 //     + (self.matrix[row][2] * rhs.matrix[2][column])
 
-                mat[row][column] = self.matrix[row][0].mul_add(
-                    rhs.matrix[0][column],
-                    self.matrix[row][1].mul_add(
-                        rhs.matrix[1][column],
-                        self.matrix[row][2] * rhs.matrix[2][column],
+                mat[row][column] = self.matrix.mat[row][0].mul_add(
+                    rhs.matrix.mat[0][column],
+                    self.matrix.mat[row][1].mul_add(
+                        rhs.matrix.mat[1][column],
+                        self.matrix.mat[row][2] * rhs.matrix.mat[2][column],
                     ),
                 );
             }
@@ -317,7 +334,7 @@ impl Mul for Matrix<3> {
 
         Self {
             size: 3,
-            matrix: mat,
+            matrix: Mat::new(mat),
             inverse: None,
             inverse_transpose: None,
         }
@@ -331,7 +348,8 @@ impl Mul for Matrix<4> {
 
         for row in 0..4 {
             for column in 0..4 {
-                // TODO: Generalize this to any size
+                // TODO: Generalize this to any size.
+                // Must find a way to limit the number of indexed "nests".
 
                 // mat[row][column] =
                 //       (self.matrix[row][0] * rhs.matrix[0][column])
@@ -339,13 +357,13 @@ impl Mul for Matrix<4> {
                 //     + (self.matrix[row][2] * rhs.matrix[2][column])
                 //     + (self.matrix[row][3] * rhs.matrix[3][column]);
 
-                mat[row][column] = self.matrix[row][0].mul_add(
-                    rhs.matrix[0][column],
-                    self.matrix[row][1].mul_add(
-                        rhs.matrix[1][column],
-                        self.matrix[row][2].mul_add(
-                            rhs.matrix[2][column],
-                            self.matrix[row][3] * rhs.matrix[3][column],
+                mat[row][column] = self.matrix.mat[row][0].mul_add(
+                    rhs.matrix.mat[0][column],
+                    self.matrix.mat[row][1].mul_add(
+                        rhs.matrix.mat[1][column],
+                        self.matrix.mat[row][2].mul_add(
+                            rhs.matrix.mat[2][column],
+                            self.matrix.mat[row][3] * rhs.matrix.mat[3][column],
                         ),
                     ),
                 );
@@ -354,7 +372,7 @@ impl Mul for Matrix<4> {
 
         Self {
             size: 4,
-            matrix: mat,
+            matrix: Mat::new(mat),
             inverse: None,
             inverse_transpose: None,
         }
@@ -371,9 +389,9 @@ impl Mul<Point> for Matrix<3> {
             //     + self.matrix[row][1] * rhs.y
             //     + self.matrix[row][2] * rhs.z;
 
-            *item = self.matrix[row][0].mul_add(
+            *item = self.matrix.mat[row][0].mul_add(
                 rhs.x,
-                self.matrix[row][1].mul_add(rhs.y, self.matrix[row][2] * rhs.z),
+                self.matrix.mat[row][1].mul_add(rhs.y, self.matrix.mat[row][2] * rhs.z),
             );
         }
 
@@ -391,9 +409,9 @@ impl Mul<Vector> for Matrix<3> {
             //     + self.matrix[row][1] * rhs.y
             //     + self.matrix[row][2] * rhs.z;
 
-            *item = self.matrix[row][0].mul_add(
+            *item = self.matrix.mat[row][0].mul_add(
                 rhs.x,
-                self.matrix[row][1].mul_add(rhs.y, self.matrix[row][2] * rhs.z),
+                self.matrix.mat[row][1].mul_add(rhs.y, self.matrix.mat[row][2] * rhs.z),
             );
         }
 
@@ -665,13 +683,13 @@ mod tests {
     fn calculating_the_inverse_of_a_3x3_matrix() {
         let mut a = Matrix::new([[6.0, 4.0, 4.0], [5.0, 5.0, 7.0], [4.0, -9.0, 3.0]]);
 
-        let b = a.inverse().unwrap();
+        let a_inverse = a.inverse().unwrap();
 
-        let b_comp = [
-            [(3.0 / 10.0), -(12.0 / 64.0), (2.0 / 65.0)],
+        let a_inverse_comp = Mat::new([
+            [(3.0 / 10.0), -(12.0 / 65.0), (2.0 / 65.0)],
             [(1.0 / 20.0), (1.0 / 130.0), -(11.0 / 130.0)],
             [-(1.0 / 4.0), (7.0 / 26.0), (1.0 / 26.0)],
-        ];
+        ]);
 
         assert!(
             is_float_equal(&a.determinant(), 260.0),
@@ -684,9 +702,9 @@ mod tests {
             a.cofactor(1, 2)
         );
         assert!(
-            is_float_equal(&b[2][1], 70.0 / 260.0),
+            is_float_equal(&a_inverse.mat[2][1], 70.0 / 260.0),
             "b[2][1] was {}",
-            b[2][1]
+            a_inverse.mat[2][1]
         );
         assert!(
             is_float_equal(&a.cofactor(2, 1), -22.0),
@@ -694,10 +712,133 @@ mod tests {
             a.cofactor(2, 1)
         ); // Incorrect
         assert!(
-            is_float_equal(&b[1][2], -22.0 / 260.0),
+            is_float_equal(&a_inverse.mat[1][2], -22.0 / 260.0),
             "b[1][2] was {}",
-            b[1][2]
+            a_inverse.mat[1][2]
         );
-        assert_eq!(b, b_comp);
+        assert_eq!(a_inverse, a_inverse_comp);
+    }
+    #[test]
+    fn calculating_the_inverse_of_another_3x3_matrix() {
+        let mut a = Matrix::new([[8.0, -5.0, 9.0], [7.0, 5.0, 6.0], [-6.0, 0.0, 9.0]]);
+        a.inverse();
+
+        let a_inverse_comp = Mat::new([
+            [(1.0 / 25.0), (1.0 / 25.0), -(1.0 / 15.0)],
+            [-(11.0 / 125.0), (14.0 / 125.0), (1.0 / 75.0)],
+            [(2.0 / 75.0), (2.0 / 75.0), (1.0 / 15.0)],
+        ]);
+
+        assert_eq!(a.inverse.unwrap(), a_inverse_comp);
+    }
+    #[test]
+    fn calculating_the_inverse_of_a_third_3x3_matrix() {
+        let mut a = Matrix::new([[9.0, 3.0, 0.0], [-5.0, -2.0, -6.0], [-4.0, 9.0, 6.0]]);
+        a.inverse();
+
+        let a_inverse_comp = Mat::new([
+            [(7.0 / 90.0), -(1.0 / 30.0), -(1.0 / 30.0)],
+            [(1.0 / 10.0), (1.0 / 10.0), (1.0 / 10.0)],
+            [-(53.0 / 540.0), -(31.0 / 180.0), -(1.0 / 180.0)],
+        ]);
+
+        assert_eq!(a.inverse.unwrap(), a_inverse_comp);
+    }
+
+    #[test]
+    fn calculating_the_inverse_of_a_4x4_matrix() {
+        let mut a = Matrix::new([
+            [-5.0, 2.0, 6.0, -8.0],
+            [1.0, -5.0, 1.0, 8.0],
+            [7.0, 7.0, -6.0, -7.0],
+            [1.0, -3.0, 7.0, 4.0],
+        ]);
+
+        let a_inverse = a.inverse().unwrap();
+
+        let a_inverse_comp = Mat::new([
+            [0.21805, 0.45113, 0.24060, -0.04511],
+            [-0.80827, -1.45677, -0.44361, 0.52068],
+            [-0.07895, -0.22368, -0.05263, 0.19737],
+            [-0.52256, -0.81391, -0.30075, 0.30639],
+        ]);
+
+        assert!(is_float_equal(&a.determinant(), 532.0));
+        assert!(is_float_equal(&a.cofactor(2, 3), -160.0));
+        assert!(is_float_equal(&a_inverse.mat[3][2], -160.0 / 532.0));
+        assert!(is_float_equal(&a.cofactor(3, 2), 105.0));
+        assert!(is_float_equal(&a_inverse.mat[2][3], 105.0 / 532.0));
+        assert_eq!(a_inverse, a_inverse_comp);
+    }
+    #[test]
+    fn calculating_the_inverse_of_another_4x4_matrix() {
+        let mut a = Matrix::new([
+            [8.0, -5.0, 9.0, 2.0],
+            [7.0, 5.0, 6.0, 1.0],
+            [-6.0, 0.0, 9.0, 6.0],
+            [-3.0, 0.0, -9.0, -4.0],
+        ]);
+        a.inverse();
+
+        let a_inverse_comp = Mat::new([
+            [-0.15385, -0.15385, -0.28205, -0.53846],
+            [-0.07692, 0.12308, 0.02564, 0.03077],
+            [0.35897, 0.35897, 0.43590, 0.92308],
+            [-0.69231, -0.69231, -0.76923, -1.92308],
+        ]);
+
+        assert_eq!(a.inverse.unwrap(), a_inverse_comp);
+    }
+    #[test]
+    fn calculating_the_inverse_of_a_third_4x4_matrix() {
+        let mut a = Matrix::new([
+            [9.0, 3.0, 0.0, 9.0],
+            [-5.0, -2.0, -6.0, -3.0],
+            [-4.0, 9.0, 6.0, 4.0],
+            [-7.0, 6.0, 6.0, 2.0],
+        ]);
+        a.inverse();
+
+        let a_inverse_comp = Mat::new([
+            [-0.04074, -0.07778, 0.14444, -0.22222],
+            [-0.07778, 0.03333, 0.36667, -0.33333],
+            [-0.02901, -0.14630, -0.10926, 0.12963],
+            [0.17778, 0.06667, -0.26667, 0.33333],
+        ]);
+
+        assert_eq!(a.inverse.unwrap(), a_inverse_comp);
+    }
+
+    #[test]
+    fn multiplying_a_3x3_matrice_product_by_its_inverse() {
+        let a = Matrix::new([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
+        let mut b = Matrix::new([[7.0, 8.0, 9.0], [3.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
+        b.inverse();
+        let c = a * b;
+
+        let b_inv = Matrix::new(b.inverse.unwrap().mat);
+
+        assert_eq!(c * b_inv, a);
+    }
+    #[test]
+    fn multiplying_a_4x4_matrice_product_by_its_inverse() {
+        let a = Matrix::new([
+            [3.0, -9.0, 7.0, 3.0],
+            [3.0, -8.0, 2.0, -9.0],
+            [-4.0, 4.0, 4.0, 1.0],
+            [-6.0, 5.0, -1.0, 1.0],
+        ]);
+        let mut b = Matrix::new([
+            [8.0, 2.0, 2.0, 2.0],
+            [3.0, -1.0, 7.0, 0.0],
+            [7.0, 0.0, 5.0, 4.0],
+            [6.0, -2.0, 0.0, 5.0],
+        ]);
+        b.inverse();
+        let c = a * b;
+
+        let b_inv = Matrix::new(b.inverse.unwrap().mat);
+
+        assert_eq!(c * b_inv, a);
     }
 }
