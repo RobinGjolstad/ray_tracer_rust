@@ -32,6 +32,19 @@ pub struct Matrix3 {
 }
 */
 
+#[derive(Debug, Copy, Clone)]
+pub struct Mat<const S: usize> {
+    pub size: usize,
+    pub mat: [[f64; S]; S],
+}
+
+impl<const S: usize> PartialEq<Self> for Mat<S> {
+    fn eq(&self, other: &Self) -> bool {
+        zip(self.mat, other.mat)
+            .any(|(lhs, rhs)| zip(lhs, rhs).any(|(l, r)| !is_float_equal(&l, r)))
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Matrix<const S: usize> {
     pub size: usize,
@@ -152,6 +165,31 @@ impl Matrix<3> {
             .map(|column| self.matrix[0][column] * self.cofactor(0, column))
             .sum::<f64>()
     }
+    #[must_use]
+    pub fn invertible(&self) -> bool {
+        !is_float_equal(&self.determinant(), 0.0)
+    }
+    pub fn inverse(&mut self) -> &Option<[[f64; 3]; 3]> {
+        let determinant = self.determinant();
+
+        debug_assert!(
+            !is_float_equal(&determinant, 0.0),
+            "Matrix is not invertible."
+        );
+
+        let mut m2 = [[0.0; 3]; 3];
+
+        for row in 0..self.size {
+            for column in 0..self.size {
+                let c = self.cofactor(row, column);
+                m2[column][row] = c / determinant;
+            }
+        }
+
+        self.inverse = Some(m2);
+
+        &self.inverse
+    }
 }
 impl Matrix<4> {
     #[must_use]
@@ -192,6 +230,33 @@ impl Matrix<4> {
         }
 
         Matrix::new(mat)
+    }
+    #[must_use]
+    pub fn minor(&self, row: usize, column: usize) -> f64 {
+        self.submatrix(row, column).determinant()
+    }
+    #[must_use]
+    pub fn cofactor(&self, row: usize, column: usize) -> f64 {
+        let minor = self.minor(row, column);
+
+        if (row + column) % 2 == 0 {
+            minor
+        } else {
+            -minor
+        }
+    }
+    #[must_use]
+    pub fn determinant(&self) -> f64 {
+        // TODO: Figure out if it's possible to make this generic.
+
+        (0..4)
+            .into_par_iter()
+            .map(|column| self.matrix[0][column] * self.cofactor(0, column))
+            .sum::<f64>()
+    }
+    #[must_use]
+    pub fn invertible(&self) -> bool {
+        !is_float_equal(&self.determinant(), 0.0)
     }
 }
 
@@ -559,5 +624,80 @@ mod tests {
         assert!(is_float_equal(&a.cofactor(0, 1), 12.0));
         assert!(is_float_equal(&a.cofactor(0, 2), -46.0));
         assert!(is_float_equal(&a.determinant(), -196.0));
+    }
+    #[test]
+    fn calculating_the_determinant_of_a_4x4_matrix() {
+        let a = Matrix::new([
+            [-2.0, -8.0, 3.0, 5.0],
+            [-3.0, 1.0, 7.0, 3.0],
+            [1.0, 2.0, -9.0, 6.0],
+            [-6.0, 7.0, 7.0, -9.0],
+        ]);
+
+        assert!(is_float_equal(&a.cofactor(0, 0), 690.0));
+        assert!(is_float_equal(&a.cofactor(0, 1), 447.0));
+        assert!(is_float_equal(&a.cofactor(0, 2), 210.0));
+        assert!(is_float_equal(&a.cofactor(0, 3), 51.0));
+        assert!(is_float_equal(&a.determinant(), -4071.0));
+    }
+
+    #[test]
+    fn testing_an_invertible_3x3_matrix_for_invertibility() {
+        let a = Matrix::new([[6.0, 4.0, 4.0], [5.0, 5.0, 7.0], [4.0, -9.0, 3.0]]);
+
+        assert!(is_float_equal(&a.determinant(), 260.0));
+        assert!(a.invertible());
+    }
+    #[test]
+    fn testing_an_invertible_4x4_matrix_for_invertibility() {
+        let a = Matrix::new([
+            [6.0, 4.0, 4.0, 4.0],
+            [5.0, 5.0, 7.0, 6.0],
+            [4.0, -9.0, 3.0, -7.0],
+            [9.0, 1.0, 7.0, -6.0],
+        ]);
+
+        assert!(is_float_equal(&a.determinant(), -2120.0));
+        assert!(a.invertible());
+    }
+
+    #[test]
+    fn calculating_the_inverse_of_a_3x3_matrix() {
+        let mut a = Matrix::new([[6.0, 4.0, 4.0], [5.0, 5.0, 7.0], [4.0, -9.0, 3.0]]);
+
+        let b = a.inverse().unwrap();
+
+        let b_comp = [
+            [(3.0 / 10.0), -(12.0 / 64.0), (2.0 / 65.0)],
+            [(1.0 / 20.0), (1.0 / 130.0), -(11.0 / 130.0)],
+            [-(1.0 / 4.0), (7.0 / 26.0), (1.0 / 26.0)],
+        ];
+
+        assert!(
+            is_float_equal(&a.determinant(), 260.0),
+            "a.determinant() was {}",
+            a.determinant()
+        );
+        assert!(
+            is_float_equal(&a.cofactor(1, 2), 70.0),
+            "a.cofactor(1,2) was {}",
+            a.cofactor(1, 2)
+        );
+        assert!(
+            is_float_equal(&b[2][1], 70.0 / 260.0),
+            "b[2][1] was {}",
+            b[2][1]
+        );
+        assert!(
+            is_float_equal(&a.cofactor(2, 1), -22.0),
+            "a.cofactor(2, 1) was {}",
+            a.cofactor(2, 1)
+        ); // Incorrect
+        assert!(
+            is_float_equal(&b[1][2], -22.0 / 260.0),
+            "b[1][2] was {}",
+            b[1][2]
+        );
+        assert_eq!(b, b_comp);
     }
 }
