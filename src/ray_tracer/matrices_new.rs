@@ -285,13 +285,13 @@ impl Mul for Matrix<2> {
     fn mul(self, rhs: Self) -> Self::Output {
         let mut mat: [[f64; 2]; 2] = [[0.0; 2]; 2];
 
-        for row in 0..2 {
-            for column in 0..2 {
+        for (row, mat) in mat.iter_mut().enumerate() {
+            for (column, slot) in mat.iter_mut().enumerate() {
                 // mat[row][column] =
                 //       (self.matrix[row][0] * rhs.matrix[0][column])
                 //     + (self.matrix[row][1] * rhs.matrix[1][column])
 
-                mat[row][column] = self.matrix.mat[row][0].mul_add(
+                *slot = self.matrix.mat[row][0].mul_add(
                     rhs.matrix.mat[0][column],
                     self.matrix.mat[row][1] * rhs.matrix.mat[1][column],
                 );
@@ -312,14 +312,9 @@ impl Mul for Matrix<3> {
     fn mul(self, rhs: Self) -> Self::Output {
         let mut mat: [[f64; 3]; 3] = [[0.0; 3]; 3];
 
-        for row in 0..3 {
-            for column in 0..3 {
-                // mat[row][column] =
-                //       (self.matrix[row][0] * rhs.matrix[0][column])
-                //     + (self.matrix[row][1] * rhs.matrix[1][column])
-                //     + (self.matrix[row][2] * rhs.matrix[2][column])
-
-                mat[row][column] = self.matrix.mat[row][0].mul_add(
+        for (row, mat) in mat.iter_mut().enumerate() {
+            for (column, slot) in mat.iter_mut().enumerate() {
+                *slot = self.matrix.mat[row][0].mul_add(
                     rhs.matrix.mat[0][column],
                     self.matrix.mat[row][1].mul_add(
                         rhs.matrix.mat[1][column],
@@ -343,18 +338,12 @@ impl Mul for Matrix<4> {
     fn mul(self, rhs: Self) -> Self::Output {
         let mut mat: [[f64; 4]; 4] = [[0.0; 4]; 4];
 
-        for row in 0..4 {
-            for column in 0..4 {
+        for (row, mat) in mat.iter_mut().enumerate() {
+            for (column, slot) in mat.iter_mut().enumerate() {
                 // TODO: Generalize this to any size.
                 // Must find a way to limit the number of indexed "nests".
 
-                // mat[row][column] =
-                //       (self.matrix[row][0] * rhs.matrix[0][column])
-                //     + (self.matrix[row][1] * rhs.matrix[1][column])
-                //     + (self.matrix[row][2] * rhs.matrix[2][column])
-                //     + (self.matrix[row][3] * rhs.matrix[3][column]);
-
-                mat[row][column] = self.matrix.mat[row][0].mul_add(
+                *slot = self.matrix.mat[row][0].mul_add(
                     rhs.matrix.mat[0][column],
                     self.matrix.mat[row][1].mul_add(
                         rhs.matrix.mat[1][column],
