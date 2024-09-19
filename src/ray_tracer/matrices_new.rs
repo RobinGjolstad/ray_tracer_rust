@@ -1,10 +1,7 @@
-// Allow using `.get(0)` on vectors to make the matrix calculations more obvious
-#![allow(clippy::get_first, clippy::missing_errors_doc)]
-
 use std::{iter::zip, ops::Mul};
 
 use super::{
-    tuples_new::{new_point, new_vector, Point, Vector},
+    tuples_new::{new_point, new_vector, Point, Tuple, Vector},
     utils::is_float_equal,
 };
 
@@ -398,7 +395,6 @@ impl Mul<Point> for Matrix<3> {
         new_point(tup[0], tup[1], tup[2])
     }
 }
-
 impl Mul<Vector> for Matrix<3> {
     type Output = Vector;
     fn mul(self, rhs: Vector) -> Self::Output {
@@ -412,6 +408,78 @@ impl Mul<Vector> for Matrix<3> {
             *item = self.matrix.mat[row][0].mul_add(
                 rhs.x,
                 self.matrix.mat[row][1].mul_add(rhs.y, self.matrix.mat[row][2] * rhs.z),
+            );
+        }
+
+        new_vector(tup[0], tup[1], tup[2])
+    }
+}
+
+impl Mul<Tuple> for Matrix<4> {
+    type Output = Tuple;
+    fn mul(self, rhs: Tuple) -> Self::Output {
+        let mut tup: [f64; 4] = [0.0; 4];
+
+        for (row, item) in tup.iter_mut().enumerate().take(4) {
+            // *item = self.matrix[row][0] * rhs.x
+            //     + self.matrix[row][1] * rhs.y
+            //     + self.matrix[row][2] * rhs.z
+            //     + self.matrix[row][3] * rhs.w;
+
+            *item = self.matrix.mat[row][0].mul_add(
+                rhs.x,
+                self.matrix.mat[row][1].mul_add(
+                    rhs.y,
+                    self.matrix.mat[row][2].mul_add(rhs.z, self.matrix.mat[row][3] * rhs.w),
+                ),
+            );
+        }
+
+        Tuple::new(tup[0], tup[1], tup[2], tup[3])
+    }
+}
+impl Mul<Point> for Matrix<4> {
+    type Output = Point;
+    fn mul(self, rhs: Point) -> Self::Output {
+        let tuple: Tuple = rhs.into();
+        let mut tup: [f64; 4] = [0.0; 4];
+
+        for (row, item) in tup.iter_mut().enumerate().take(3) {
+            // *item = self.matrix[row][0] * rhs.x
+            //     + self.matrix[row][1] * rhs.y
+            //     + self.matrix[row][2] * rhs.z
+            //     + self.matrix[row][3] * rhs.w;
+
+            *item = self.matrix.mat[row][0].mul_add(
+                tuple.x,
+                self.matrix.mat[row][1].mul_add(
+                    tuple.y,
+                    self.matrix.mat[row][2].mul_add(tuple.z, self.matrix.mat[row][3] * tuple.w),
+                ),
+            );
+        }
+
+        new_point(tup[0], tup[1], tup[2])
+    }
+}
+impl Mul<Vector> for Matrix<4> {
+    type Output = Vector;
+    fn mul(self, rhs: Vector) -> Self::Output {
+        let tuple: Tuple = rhs.into();
+        let mut tup: [f64; 4] = [0.0; 4];
+
+        for (row, item) in tup.iter_mut().enumerate().take(3) {
+            // *item = self.matrix[row][0] * rhs.x
+            //     + self.matrix[row][1] * rhs.y
+            //     + self.matrix[row][2] * rhs.z
+            //     + self.matrix[row][3] * rhs.w;
+
+            *item = self.matrix.mat[row][0].mul_add(
+                tuple.x,
+                self.matrix.mat[row][1].mul_add(
+                    tuple.y,
+                    self.matrix.mat[row][2].mul_add(tuple.z, self.matrix.mat[row][3] * tuple.w),
+                ),
             );
         }
 
@@ -542,7 +610,7 @@ mod tests {
     }
 
     #[test]
-    fn a_matrix_multiplied_by_a_point() {
+    fn a_3x3_matrix_multiplied_by_a_point() {
         let a = Matrix::new([[1.0, 2.0, 3.0], [2.0, 4.0, 4.0], [8.0, 6.0, 4.0]]);
         let b = new_point(1.0, 2.0, 3.0);
 
@@ -551,7 +619,7 @@ mod tests {
         assert_eq!(a * b, ab);
     }
     #[test]
-    fn a_matrix_multiplied_by_a_vector() {
+    fn a_3x3_matrix_multiplied_by_a_vector() {
         let a = Matrix::new([[1.0, 2.0, 3.0], [2.0, 4.0, 4.0], [8.0, 6.0, 4.0]]);
         let b = new_vector(1.0, 2.0, 3.0);
 
@@ -559,15 +627,57 @@ mod tests {
 
         assert_eq!(a * b, ab);
     }
+    #[test]
+    fn a_4x4_matrix_multiplied_by_a_tuple() {
+        let a = Matrix::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 4.0, 4.0, 2.0],
+            [8.0, 6.0, 4.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+        let b = Tuple::new(1.0, 2.0, 3.0, 1.0);
+
+        let ab = Tuple::new(18.0, 24.0, 33.0, 1.0);
+
+        assert_eq!(a * b, ab);
+    }
+    #[test]
+    fn a_4x4_matrix_multiplied_by_a_point() {
+        let a = Matrix::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 4.0, 4.0, 2.0],
+            [8.0, 6.0, 4.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+        let b = Point::new(1.0, 2.0, 3.0);
+
+        let ab = Point::new(18.0, 24.0, 33.0);
+
+        assert_eq!(a * b, ab);
+    }
+    #[test]
+    fn a_4x4_matrix_multiplied_by_a_vector() {
+        let a = Matrix::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [2.0, 4.0, 4.0, 2.0],
+            [8.0, 6.0, 4.0, 1.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
+        let b = Vector::new(1.0, 2.0, 3.0);
+
+        let ab = Vector::new(14.0, 22.0, 32.0);
+
+        assert_eq!(a * b, ab);
+    }
 
     #[test]
-    fn multiplying_a_point_by_the_identity_matrix() {
+    fn multiplying_a_point_by_the_3x3_identity_matrix() {
         let a = Point::new(1.0, 2.0, 3.0);
         let ia = Matrix::<3>::identity() * a;
         assert_eq!(ia, a);
     }
     #[test]
-    fn multiplying_a_vector_by_the_identity_matrix() {
+    fn multiplying_a_vector_by_the_3x3_identity_matrix() {
         let a = Vector::new(1.0, 2.0, 3.0);
         let ia = Matrix::<3>::identity() * a;
         assert_eq!(ia, a);

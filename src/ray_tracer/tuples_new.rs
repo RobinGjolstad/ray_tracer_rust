@@ -15,6 +15,20 @@ pub const fn new_point(x: f64, y: f64, z: f64) -> Point {
 }
 
 #[derive(Default, Debug, Copy, Clone)]
+pub struct Tuple {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub w: f64,
+}
+impl Tuple {
+    #[must_use]
+    pub const fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
+        Self { x, y, z, w }
+    }
+}
+
+#[derive(Default, Debug, Copy, Clone)]
 pub struct Vector {
     pub x: f64,
     pub y: f64,
@@ -219,6 +233,14 @@ impl Div<f64> for Point {
     }
 }
 
+impl PartialEq for Tuple {
+    fn eq(&self, other: &Self) -> bool {
+        is_float_equal_low_precision(&self.x, other.x)
+            && is_float_equal_low_precision(&self.y, other.y)
+            && is_float_equal_low_precision(&self.z, other.z)
+            && is_float_equal_low_precision(&self.w, other.w)
+    }
+}
 impl PartialEq for Vector {
     fn eq(&self, other: &Self) -> bool {
         is_float_equal_low_precision(&self.x, other.x)
@@ -231,6 +253,27 @@ impl PartialEq for Point {
         is_float_equal_low_precision(&self.x, other.x)
             && is_float_equal_low_precision(&self.y, other.y)
             && is_float_equal_low_precision(&self.z, other.z)
+    }
+}
+
+impl From<Point> for Tuple {
+    fn from(value: Point) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            w: 1.0,
+        }
+    }
+}
+impl From<Vector> for Tuple {
+    fn from(value: Vector) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            w: 0.0,
+        }
     }
 }
 
@@ -478,5 +521,20 @@ mod tests {
         let n = new_vector(f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0, 0.0);
         let r = Vector::reflect(&v, &n);
         assert_eq!(r, new_vector(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn a_tuple_can_be_created_from_a_point() {
+        let p = new_point(1.0, 2.0, 3.0);
+        let t: Tuple = p.into();
+
+        assert!(is_float_equal_low_precision(&t.w, 1.0));
+    }
+    #[test]
+    fn a_tuple_can_be_created_from_a_vector() {
+        let v = new_vector(1.0, 2.0, 3.0);
+        let t: Tuple = v.into();
+
+        assert!(is_float_equal_low_precision(&t.w, 0.0));
     }
 }
