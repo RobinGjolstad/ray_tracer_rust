@@ -4,7 +4,7 @@ use crate::ray_tracer::{
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Tuple, Vector},
+    tuples::{new_vector, Point, Vector},
     utils::is_float_equal,
 };
 
@@ -61,11 +61,11 @@ impl Shapes for Cube {
             .to_owned();
 
         if is_float_equal(&maxc, point.x.abs()) {
-            Vector::new_vector(point.x, 0.0, 0.0)
+            new_vector(point.x, 0.0, 0.0)
         } else if is_float_equal(&maxc, point.y.abs()) {
-            Vector::new_vector(0.0, point.y, 0.0)
+            new_vector(0.0, point.y, 0.0)
         } else if is_float_equal(&maxc, point.z.abs()) {
-            Vector::new_vector(0.0, 0.0, point.z)
+            new_vector(0.0, 0.0, point.z)
         } else {
             panic!("Intersection did not match any axis")
         }
@@ -112,7 +112,7 @@ fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::utils::is_float_equal_low_precision;
+    use crate::ray_tracer::{tuples::new_point, utils::is_float_equal_low_precision};
 
     use super::*;
 
@@ -123,64 +123,43 @@ mod tests {
         let examples = [
             // +x
             (
-                Ray::new(
-                    Point::new_point(5.0, 0.5, 0.0),
-                    Vector::new_vector(-1.0, 0.0, 0.0),
-                ),
+                Ray::new(new_point(5.0, 0.5, 0.0), new_vector(-1.0, 0.0, 0.0)),
                 4.0,
                 6.0,
             ),
             // -x
             (
-                Ray::new(
-                    Point::new_point(-5.0, 0.5, 0.0),
-                    Vector::new_vector(1.0, 0.0, 0.0),
-                ),
+                Ray::new(new_point(-5.0, 0.5, 0.0), new_vector(1.0, 0.0, 0.0)),
                 4.0,
                 6.0,
             ),
             // +y
             (
-                Ray::new(
-                    Point::new_point(0.5, 5.0, 0.0),
-                    Vector::new_vector(0.0, -1.0, 0.0),
-                ),
+                Ray::new(new_point(0.5, 5.0, 0.0), new_vector(0.0, -1.0, 0.0)),
                 4.0,
                 6.0,
             ),
             // -y
             (
-                Ray::new(
-                    Point::new_point(0.5, -5.0, 0.0),
-                    Vector::new_vector(0.0, 1.0, 0.0),
-                ),
+                Ray::new(new_point(0.5, -5.0, 0.0), new_vector(0.0, 1.0, 0.0)),
                 4.0,
                 6.0,
             ),
             // +z
             (
-                Ray::new(
-                    Point::new_point(0.5, 0.0, 5.0),
-                    Vector::new_vector(0.0, 0.0, -1.0),
-                ),
+                Ray::new(new_point(0.5, 0.0, 5.0), new_vector(0.0, 0.0, -1.0)),
                 4.0,
                 6.0,
             ),
             // -z
             (
-                Ray::new(
-                    Point::new_point(0.5, 0.0, -5.0),
-                    Vector::new_vector(0.0, 0.0, 1.0),
-                ),
+                Ray::new(new_point(0.5, 0.0, -5.0), new_vector(0.0, 0.0, 1.0)),
                 4.0,
                 6.0,
             ),
             // inside
             (
-                Ray::new(
-                    Point::new_point(0.0, 0.5, 0.0),
-                    Vector::new_vector(0.0, 0.0, 1.0),
-                ),
+                Ray::new(new_point(0.0, 0.5, 0.0), new_vector(0.0, 0.0, 1.0)),
                 -1.0,
                 1.0,
             ),
@@ -207,29 +186,20 @@ mod tests {
 
         let examples = [
             Ray::new(
-                Point::new_point(-2.0, 0.0, 0.0),
-                Vector::new_vector(0.2673, 0.5345, 0.8018),
+                new_point(-2.0, 0.0, 0.0),
+                new_vector(0.2673, 0.5345, 0.8018),
             ),
             Ray::new(
-                Point::new_point(0.0, -2.0, 0.0),
-                Vector::new_vector(0.8018, 0.2673, 0.5345),
+                new_point(0.0, -2.0, 0.0),
+                new_vector(0.8018, 0.2673, 0.5345),
             ),
             Ray::new(
-                Point::new_point(0.0, 0.0, -2.0),
-                Vector::new_vector(0.5345, 0.8018, 0.2673),
+                new_point(0.0, 0.0, -2.0),
+                new_vector(0.5345, 0.8018, 0.2673),
             ),
-            Ray::new(
-                Point::new_point(2.0, 0.0, 2.0),
-                Vector::new_vector(0.0, 0.0, -1.0),
-            ),
-            Ray::new(
-                Point::new_point(0.0, 2.0, 2.0),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            Ray::new(
-                Point::new_point(2.0, 2.0, 0.0),
-                Vector::new_vector(-1.0, 0.0, 0.0),
-            ),
+            Ray::new(new_point(2.0, 0.0, 2.0), new_vector(0.0, 0.0, -1.0)),
+            Ray::new(new_point(0.0, 2.0, 2.0), new_vector(0.0, -1.0, 0.0)),
+            Ray::new(new_point(2.0, 2.0, 0.0), new_vector(-1.0, 0.0, 0.0)),
         ];
 
         for ray in examples {
@@ -244,38 +214,14 @@ mod tests {
         let c = Cube::new();
 
         let examples = [
-            (
-                Point::new_point(1.0, 0.5, -0.8),
-                Vector::new_vector(1.0, 0.0, 0.0),
-            ),
-            (
-                Point::new_point(-1.0, -0.2, 0.9),
-                Vector::new_vector(-1.0, 0.0, 0.0),
-            ),
-            (
-                Point::new_point(-0.4, 1.0, -0.1),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.3, -1.0, -0.7),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            (
-                Point::new_point(-0.6, 0.3, 1.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-            ),
-            (
-                Point::new_point(0.4, 0.4, -1.0),
-                Vector::new_vector(0.0, 0.0, -1.0),
-            ),
-            (
-                Point::new_point(1.0, 1.0, 1.0),
-                Vector::new_vector(1.0, 0.0, 0.0),
-            ),
-            (
-                Point::new_point(-1.0, -1.0, -1.0),
-                Vector::new_vector(-1.0, 0.0, 0.0),
-            ),
+            (new_point(1.0, 0.5, -0.8), new_vector(1.0, 0.0, 0.0)),
+            (new_point(-1.0, -0.2, 0.9), new_vector(-1.0, 0.0, 0.0)),
+            (new_point(-0.4, 1.0, -0.1), new_vector(0.0, 1.0, 0.0)),
+            (new_point(0.3, -1.0, -0.7), new_vector(0.0, -1.0, 0.0)),
+            (new_point(-0.6, 0.3, 1.0), new_vector(0.0, 0.0, 1.0)),
+            (new_point(0.4, 0.4, -1.0), new_vector(0.0, 0.0, -1.0)),
+            (new_point(1.0, 1.0, 1.0), new_vector(1.0, 0.0, 0.0)),
+            (new_point(-1.0, -1.0, -1.0), new_vector(-1.0, 0.0, 0.0)),
         ];
 
         for ex in examples {

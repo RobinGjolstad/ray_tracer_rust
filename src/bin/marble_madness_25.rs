@@ -5,7 +5,7 @@ use ray_tracer_rust::ray_tracer::{
     lights::Light,
     shapes::*,
     transformations::Transform,
-    tuples::Tuple,
+    tuples::{new_point, new_vector},
     world::World,
 };
 use std::{fs, path::Path, time::Instant};
@@ -89,7 +89,7 @@ fn main() {
     }
 
     world_builder.light(Light::point_light(
-        &Tuple::new_point(
+        &new_point(
             num_spheres as f64 * 2.0,
             num_spheres as f64 * 2.0,
             -(num_spheres as f64),
@@ -101,9 +101,9 @@ fn main() {
 
     let mut camera = Camera::new(args.x_axis, args.y_axis, 60_f64.to_radians());
     camera.set_transform(Transform::view_transform(
-        &Tuple::new_point(40.0, 30.0, -40.0),
-        &Tuple::new_point(0.0, -3.0, 0.0),
-        &Tuple::new_vector(0.0, 1.0, 0.0),
+        &new_point(40.0, 30.0, -40.0),
+        &new_point(0.0, -3.0, 0.0),
+        &new_vector(0.0, 1.0, 0.0),
     ));
 
     let mut elapsed = start.elapsed();

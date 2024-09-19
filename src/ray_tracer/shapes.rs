@@ -10,7 +10,7 @@ use crate::ray_tracer::{
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Vector},
+    tuples::{new_point, Point, Vector},
 };
 use std::{
     fmt::{Debug, Display},
@@ -59,7 +59,7 @@ impl BaseShape {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            position: Point::new_point(0.0, 0.0, 0.0),
+            position: new_point(0.0, 0.0, 0.0),
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
             material: Material::new(),
         }
@@ -287,7 +287,9 @@ mod tests {
     use std::f64::consts::PI;
 
     use super::*;
-    use crate::ray_tracer::{transformations::Transform, tuples::Tuple, utils::is_float_equal};
+    use crate::ray_tracer::{
+        transformations::Transform, tuples::new_vector, utils::is_float_equal,
+    };
 
     #[test]
     fn the_default_transformation() {
@@ -316,50 +318,40 @@ mod tests {
     }
     #[test]
     fn intersecting_a_scaled_shape_with_a_ray() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_test_shape();
         s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
         let mut xs = Vec::new();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
-        assert_eq!(saved_ray.origin, Tuple::new_point(0.0, 0.0, -2.5));
-        assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 0.5));
+        assert_eq!(saved_ray.origin, new_point(0.0, 0.0, -2.5));
+        assert_eq!(saved_ray.direction, new_vector(0.0, 0.0, 0.5));
     }
     #[test]
     fn intersecting_a_translated_shape_with_a_ray() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_test_shape();
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let mut xs = Vec::new();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
-        assert_eq!(saved_ray.origin, Tuple::new_point(-5.0, 0.0, -5.0));
-        assert_eq!(saved_ray.direction, Tuple::new_vector(0.0, 0.0, 1.0));
+        assert_eq!(saved_ray.origin, new_point(-5.0, 0.0, -5.0));
+        assert_eq!(saved_ray.direction, new_vector(0.0, 0.0, 1.0));
     }
     #[test]
     fn computing_the_normal_on_a_translated_shape() {
         let mut s = new_test_shape();
         s.set_transform(&Transform::translate(0.0, 1.0, 0.0));
-        let n = s.normal_at(Tuple::new_point(0.0, 1.70711, -0.70711));
-        assert_eq!(n, Tuple::new_vector(0.0, 0.70711, -0.70711));
+        let n = s.normal_at(new_point(0.0, 1.70711, -0.70711));
+        assert_eq!(n, new_vector(0.0, 0.70711, -0.70711));
     }
     #[test]
     fn computing_the_normal_on_a_transformed_shape() {
         let mut s = new_test_shape();
         let m = Transform::scaling(1.0, 0.5, 1.0) * Transform::rotation_z(PI / 5.0);
         s.set_transform(&m);
-        let n = s.normal_at(Tuple::new_point(
-            0.0,
-            f64::sqrt(2.0) / 2.0,
-            -f64::sqrt(2.0) / 2.0,
-        ));
-        assert_eq!(n, Tuple::new_vector(0.0, 0.97014, -0.24254));
+        let n = s.normal_at(new_point(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0));
+        assert_eq!(n, new_vector(0.0, 0.97014, -0.24254));
     }
     #[test]
     fn a_helper_for_producing_a_sphere_with_a_glassy_material() {
@@ -393,9 +385,9 @@ mod tests {
         };
         let s = g2.get_children().unwrap()[0].clone();
 
-        let p = s.world_to_object(&Tuple::new_point(-2.0, 0.0, -10.0));
+        let p = s.world_to_object(&new_point(-2.0, 0.0, -10.0));
 
-        assert_eq!(p, Tuple::new_point(0.0, 0.0, -1.0));
+        assert_eq!(p, new_point(0.0, 0.0, -1.0));
     }
     #[test]
     fn converting_a_normal_from_object_to_world_space() {
@@ -419,13 +411,13 @@ mod tests {
         };
         let s = g2.get_children().unwrap()[0].clone();
 
-        let n = s.normal_to_world(&Vector::new_vector(
+        let n = s.normal_to_world(&new_vector(
             f64::sqrt(3.0) / 3.0,
             f64::sqrt(3.0) / 3.0,
             f64::sqrt(3.0) / 3.0,
         ));
 
-        assert_eq!(n, Vector::new_vector(0.2857, 0.4286, -0.8571));
+        assert_eq!(n, new_vector(0.2857, 0.4286, -0.8571));
     }
     #[test]
     fn finding_the_normal_on_a_child_object() {
@@ -449,9 +441,9 @@ mod tests {
         };
         let s = g2.get_children().unwrap()[0].clone();
 
-        let p = Point::new_point(1.7321, 1.1547, -5.5774);
+        let p = new_point(1.7321, 1.1547, -5.5774);
         let n = s.normal_at(p);
 
-        assert_eq!(n, Vector::new_vector(0.2857, 0.4286, -0.8571));
+        assert_eq!(n, new_vector(0.2857, 0.4286, -0.8571));
     }
 }

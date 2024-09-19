@@ -105,7 +105,11 @@ impl Default for Material {
 #[cfg(test)]
 mod tests {
 
-    use crate::ray_tracer::{shapes::new_sphere, tuples::Vector, utils::is_float_equal};
+    use crate::ray_tracer::{
+        shapes::new_sphere,
+        tuples::{new_point, new_vector},
+        utils::is_float_equal,
+    };
 
     use super::*;
 
@@ -120,18 +124,15 @@ mod tests {
     }
 
     const fn setup_lighting() -> (Material, Tuple) {
-        (Material::new(), Tuple::new_point(0.0, 0.0, 0.0))
+        (Material::new(), new_point(0.0, 0.0, 0.0))
     }
 
     #[test]
     fn lighting_with_the_eye_between_the_light_and_the_surface() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, 0.0, -1.0);
-        let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
-        let light = Light::point_light(
-            &Tuple::new_point(0.0, 0.0, -10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let eyev = new_vector(0.0, 0.0, -1.0);
+        let normalv = new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
@@ -139,12 +140,9 @@ mod tests {
     #[test]
     fn lighting_with_the_eye_between_light_and_surface_eye_offset_45_degrees() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
-        let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
-        let light = Light::point_light(
-            &Tuple::new_point(0.0, 0.0, -10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let eyev = new_vector(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
+        let normalv = new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
@@ -152,12 +150,9 @@ mod tests {
     #[test]
     fn lighting_with_eye_opposite_surface_light_offset_45_degrees() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, 0.0, -1.0);
-        let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
-        let light = Light::point_light(
-            &Tuple::new_point(0.0, 10.0, -10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let eyev = new_vector(0.0, 0.0, -1.0);
+        let normalv = new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(&new_point(0.0, 10.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.7364, 0.7364, 0.7364));
@@ -165,12 +160,9 @@ mod tests {
     #[test]
     fn lighting_with_eye_in_the_path_of_the_reflection_vector() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, -f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
-        let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
-        let light = Light::point_light(
-            &Tuple::new_point(0.0, 10.0, -10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let eyev = new_vector(0.0, -f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
+        let normalv = new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(&new_point(0.0, 10.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.63639, 1.63639, 1.63639));
@@ -178,12 +170,9 @@ mod tests {
     #[test]
     fn lighting_with_the_light_behind_the_surface() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, 0.0, -1.0);
-        let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
-        let light = Light::point_light(
-            &Tuple::new_point(0.0, 0.0, 10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let eyev = new_vector(0.0, 0.0, -1.0);
+        let normalv = new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(&new_point(0.0, 0.0, 10.0), &Color::new(1.0, 1.0, 1.0));
         let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
@@ -192,12 +181,9 @@ mod tests {
     #[test]
     fn lighting_with_the_surface_in_shadow() {
         let (m, position) = setup_lighting();
-        let eyev = Tuple::new_vector(0.0, 0.0, -1.0);
-        let normalv = Tuple::new_vector(0.0, 0.0, -1.0);
-        let light = Light::point_light(
-            &Tuple::new_point(0.0, 0.0, -10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let eyev = new_vector(0.0, 0.0, -1.0);
+        let normalv = new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let in_shadow = true;
         let obj = new_sphere();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, in_shadow);
@@ -217,17 +203,14 @@ mod tests {
             transparency: 0.0,
             refractive_index: 1.0,
         };
-        let eyev = Vector::new_vector(0.0, 0.0, -1.0);
-        let normalv = Vector::new_vector(0.0, 0.0, -1.0);
-        let light = Light::point_light(
-            &Point::new_point(0.0, 0.0, -10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let eyev = new_vector(0.0, 0.0, -1.0);
+        let normalv = new_vector(0.0, 0.0, -1.0);
+        let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let obj = new_sphere();
         let c1 = m.lighting(
             &obj,
             &light,
-            &Point::new_point(0.9, 0.0, 0.0),
+            &new_point(0.9, 0.0, 0.0),
             &eyev,
             &normalv,
             false,
@@ -235,7 +218,7 @@ mod tests {
         let c2 = m.lighting(
             &obj,
             &light,
-            &Point::new_point(1.1, 0.0, 0.0),
+            &new_point(1.1, 0.0, 0.0),
             &eyev,
             &normalv,
             false,

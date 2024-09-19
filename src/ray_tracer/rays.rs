@@ -78,13 +78,16 @@ impl Ray {
 mod tests {
     use super::*;
     use crate::ray_tracer::{
-        shapes::new_sphere, transformations::Transform, tuples::Tuple, utils::is_float_equal,
+        shapes::new_sphere,
+        transformations::Transform,
+        tuples::{new_point, new_vector},
+        utils::is_float_equal,
     };
 
     #[test]
     fn creating_and_querying_a_ray() {
-        let origin = Tuple::new_point(1.0, 2.0, 3.0);
-        let direction = Tuple::new_vector(4.0, 5.0, 6.0);
+        let origin = new_point(1.0, 2.0, 3.0);
+        let direction = new_vector(4.0, 5.0, 6.0);
 
         let r = Ray::new(origin, direction);
 
@@ -94,23 +97,17 @@ mod tests {
 
     #[test]
     fn computing_a_point_from_a_distance() {
-        let r = Ray::new(
-            Tuple::new_point(2.0, 3.0, 4.0),
-            Tuple::new_vector(1.0, 0.0, 0.0),
-        );
+        let r = Ray::new(new_point(2.0, 3.0, 4.0), new_vector(1.0, 0.0, 0.0));
 
-        assert_eq!(r.position(0.0), Tuple::new_point(2.0, 3.0, 4.0));
-        assert_eq!(r.position(1.0), Tuple::new_point(3.0, 3.0, 4.0));
-        assert_eq!(r.position(-1.0), Tuple::new_point(1.0, 3.0, 4.0));
-        assert_eq!(r.position(2.5), Tuple::new_point(4.5, 3.0, 4.0));
+        assert_eq!(r.position(0.0), new_point(2.0, 3.0, 4.0));
+        assert_eq!(r.position(1.0), new_point(3.0, 3.0, 4.0));
+        assert_eq!(r.position(-1.0), new_point(1.0, 3.0, 4.0));
+        assert_eq!(r.position(2.5), new_point(4.5, 3.0, 4.0));
     }
 
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let s = new_sphere();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
@@ -120,10 +117,7 @@ mod tests {
     }
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 1.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 1.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let s = new_sphere();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
@@ -133,10 +127,7 @@ mod tests {
     }
     #[test]
     fn a_ray_misses_a_square() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 2.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 2.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let s = new_sphere();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
@@ -144,10 +135,7 @@ mod tests {
     }
     #[test]
     fn a_ray_originates_inside_a_sphere() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, 0.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let s = new_sphere();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
@@ -157,10 +145,7 @@ mod tests {
     }
     #[test]
     fn a_sphere_is_behind_a_ray() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, 5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 5.0), new_vector(0.0, 0.0, 1.0));
         let s = new_sphere();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
@@ -171,10 +156,7 @@ mod tests {
 
     #[test]
     fn intersect_sets_the_object_on_the_intersection() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let s = new_sphere();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
@@ -186,32 +168,23 @@ mod tests {
     }
     #[test]
     fn translating_a_ray() {
-        let r = Ray::new(
-            Tuple::new_point(1.0, 2.0, 3.0),
-            Tuple::new_vector(0.0, 1.0, 0.0),
-        );
+        let r = Ray::new(new_point(1.0, 2.0, 3.0), new_vector(0.0, 1.0, 0.0));
         let m = Transform::translate(3.0, 4.0, 5.0);
         let r2 = r.transform(&m);
-        assert_eq!(r2.origin, Tuple::new_point(4.0, 6.0, 8.0));
-        assert_eq!(r2.direction, Tuple::new_vector(0.0, 1.0, 0.0));
+        assert_eq!(r2.origin, new_point(4.0, 6.0, 8.0));
+        assert_eq!(r2.direction, new_vector(0.0, 1.0, 0.0));
     }
     #[test]
     fn scaling_a_ray() {
-        let r = Ray::new(
-            Tuple::new_point(1.0, 2.0, 3.0),
-            Tuple::new_vector(0.0, 1.0, 0.0),
-        );
+        let r = Ray::new(new_point(1.0, 2.0, 3.0), new_vector(0.0, 1.0, 0.0));
         let m = Transform::scaling(2.0, 3.0, 4.0);
         let r2 = r.transform(&m);
-        assert_eq!(r2.origin, Tuple::new_point(2.0, 6.0, 12.0));
-        assert_eq!(r2.direction, Tuple::new_vector(0.0, 3.0, 0.0));
+        assert_eq!(r2.origin, new_point(2.0, 6.0, 12.0));
+        assert_eq!(r2.direction, new_vector(0.0, 3.0, 0.0));
     }
     #[test]
     fn intersecting_a_scaled_sphere_with_a_ray() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_sphere();
         s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
         let mut xs = Intersections::default();
@@ -222,10 +195,7 @@ mod tests {
     }
     #[test]
     fn intersecting_a_translated_sphere_with_a_ray() {
-        let r = Ray::new(
-            Tuple::new_point(0.0, 0.0, -5.0),
-            Tuple::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_sphere();
         s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
         let mut xs = Intersections::default();

@@ -3,8 +3,14 @@ use std::f64::consts::PI;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, materials::Material, shapes::*,
-    transformations::Transform, tuples::Tuple, world::World,
+    camera::Camera,
+    colors::Color,
+    lights::Light,
+    materials::Material,
+    shapes::*,
+    transformations::Transform,
+    tuples::{new_point, new_vector},
+    world::World,
 };
 
 fn build_scene(x: usize, y: usize) -> (World, Camera) {
@@ -37,7 +43,7 @@ fn build_scene(x: usize, y: usize) -> (World, Camera) {
     world_builder.object(cone);
 
     world_builder.light(Light::point_light(
-        &Tuple::new_point(-10.0, 10.0, -10.0),
+        &new_point(-10.0, 10.0, -10.0),
         &Color::new(1.0, 1.0, 1.0),
     ));
 
@@ -45,9 +51,9 @@ fn build_scene(x: usize, y: usize) -> (World, Camera) {
 
     let mut camera = Camera::new(x, y, PI / 3.0);
     camera.set_transform(Transform::view_transform(
-        &Tuple::new_point(0.0, 2.5, -5.0),
-        &Tuple::new_point(0.0, 1.0, 0.0),
-        &Tuple::new_vector(0.0, 2.0, 0.0),
+        &new_point(0.0, 2.5, -5.0),
+        &new_point(0.0, 1.0, 0.0),
+        &new_vector(0.0, 2.0, 0.0),
     ));
 
     (world, camera)

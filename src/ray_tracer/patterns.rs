@@ -169,6 +169,7 @@ mod tests {
     use super::*;
     use crate::ray_tracer::shapes::new_sphere;
     use crate::ray_tracer::transformations::Transform;
+    use crate::ray_tracer::tuples::new_point;
 
     #[test]
     fn a_pattern_with_an_object_transformation() {
@@ -179,7 +180,7 @@ mod tests {
                 .unwrap(),
         );
         let pattern = Pattern::test_pattern_default();
-        let c = Pattern::pattern_at_object(pattern, &object, Point::new_point(2.0, 3.0, 4.0));
+        let c = Pattern::pattern_at_object(pattern, &object, new_point(2.0, 3.0, 4.0));
         assert_eq!(c, Color::new(1.0, 1.5, 2.0));
     }
     #[test]
@@ -191,7 +192,7 @@ mod tests {
                 .calculate_inverse()
                 .unwrap(),
         );
-        let c = Pattern::pattern_at_object(pattern, &object, Point::new_point(2.0, 3.0, 4.0));
+        let c = Pattern::pattern_at_object(pattern, &object, new_point(2.0, 3.0, 4.0));
         assert_eq!(c, Color::new(1.0, 1.5, 2.0));
     }
     #[test]
@@ -208,7 +209,7 @@ mod tests {
                 .calculate_inverse()
                 .unwrap(),
         );
-        let c = Pattern::pattern_at_object(pattern, &object, Point::new_point(2.5, 3.0, 3.5));
+        let c = Pattern::pattern_at_object(pattern, &object, new_point(2.5, 3.0, 3.5));
         assert_eq!(c, Color::new(0.75, 0.5, 0.25));
     }
 

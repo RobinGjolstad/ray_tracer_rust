@@ -5,7 +5,7 @@ use ray_tracer_rust::ray_tracer::{
     rays::Ray,
     shapes::{glass_sphere, new_sphere},
     transformations::Transform,
-    tuples::{Point, Tuple, Vector},
+    tuples::{new_point, new_vector},
 };
 
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -31,10 +31,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     group.bench_function("precomputing the state of an intersection", |b| {
         b.iter(|| {
-            let r = Ray::new(
-                Tuple::new_point(0.0, 0.0, -5.0),
-                Tuple::new_vector(0.0, 0.0, 1.0),
-            );
+            let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
             let shape = new_sphere();
             let i = Intersection::new(4.0, shape);
             let _ = prepare_computations(
@@ -49,10 +46,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     group.bench_function("the hit when an intersection occurs on the outside", |b| {
         b.iter(|| {
-            let r = Ray::new(
-                Tuple::new_point(0.0, 0.0, -5.0),
-                Tuple::new_vector(0.0, 0.0, 1.0),
-            );
+            let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
             let shape = new_sphere();
             let i = Intersection::new(4.0, shape);
             let _ = prepare_computations(
@@ -67,10 +61,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     group.bench_function("the hit when an intersection occurs on the inside", |b| {
         b.iter(|| {
-            let r = Ray::new(
-                Tuple::new_point(0.0, 0.0, 0.0),
-                Tuple::new_vector(0.0, 0.0, 1.0),
-            );
+            let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
             let shape = new_sphere();
             let i = Intersection::new(1.0, shape);
             let _ = prepare_computations(
@@ -106,10 +97,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             mat.refractive_index = 2.5;
             C.set_material(&mat);
 
-            let r = Ray::new(
-                Point::new_point(0.0, 0.0, -4.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-            );
+            let r = Ray::new(new_point(0.0, 0.0, -4.0), new_vector(0.0, 0.0, 1.0));
             let xs = Intersections {
                 list: vec![
                     Intersection::new(2.0, A.clone()),
@@ -141,10 +129,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         |b| {
             b.iter(|| {
                 let shape = glass_sphere();
-                let r = Ray::new(
-                    Point::new_point(0.0, 0.99, -2.0),
-                    Vector::new_vector(0.0, 0.0, 1.0),
-                );
+                let r = Ray::new(new_point(0.0, 0.99, -2.0), new_vector(0.0, 0.0, 1.0));
                 let xs = Intersections::new(&[Intersection::new(1.8589, shape)]);
                 let comps =
                     prepare_computations(black_box(&xs.list[0]), black_box(&r), black_box(&xs));

@@ -1,4 +1,4 @@
-use crate::ray_tracer::{colors::Color, tuples};
+use crate::ray_tracer::{colors::Color, tuples::Point};
 
 use super::Patterns;
 
@@ -24,7 +24,7 @@ impl Default for Ring {
 }
 
 impl Patterns for Ring {
-    fn color_at(&self, point: tuples::Point) -> Color {
+    fn color_at(&self, point: Point) -> Color {
         #[allow(clippy::suboptimal_flops)]
         let inside = point.x.powi(2) + point.z.powi(2);
 
@@ -42,7 +42,7 @@ impl Patterns for Ring {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ray_tracer::{patterns::Pattern, tuples::Tuple};
+    use crate::ray_tracer::{patterns::Pattern, tuples::new_point};
 
     const WHITE: Color = Color {
         red: 1.0,
@@ -58,12 +58,9 @@ mod tests {
     #[test]
     fn a_ring_should_extend_in_both_x_and_z() {
         let pattern = Pattern::ring(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(1.0, 0.0, 0.0)), BLACK);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 1.0)), BLACK);
-        assert_eq!(
-            pattern.pattern_at(Tuple::new_point(0.708, 0.0, 0.708)),
-            BLACK
-        );
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(1.0, 0.0, 0.0)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 1.0)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(0.708, 0.0, 0.708)), BLACK);
     }
 }

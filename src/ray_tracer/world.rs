@@ -10,7 +10,10 @@ use crate::ray_tracer::{
     utils::is_float_equal,
 };
 
-use super::shapes::{new_sphere, Object};
+use super::{
+    shapes::{new_sphere, Object},
+    tuples::new_point,
+};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default, Debug, PartialEq, Clone)]
@@ -79,7 +82,7 @@ impl World {
         Self {
             objects: vec![s1, s2].into(),
             lights: vec![Light::point_light(
-                &Point::new_point(-10.0, 10.0, -10.0),
+                &new_point(-10.0, 10.0, -10.0),
                 &Color::new(1.0, 1.0, 1.0),
             )]
             .into(),
@@ -182,7 +185,7 @@ mod tests {
         intersections::{Intersection, Intersections},
         patterns::Pattern,
         shapes::new_plane,
-        tuples::Vector,
+        tuples::new_vector,
         utils::is_float_equal,
     };
 
@@ -201,10 +204,7 @@ mod tests {
 
     #[test]
     fn the_default_world() {
-        let light = Light::point_light(
-            &Point::new_point(-10.0, 10.0, -10.0),
-            &Color::new(1.0, 1.0, 1.0),
-        );
+        let light = Light::point_light(&new_point(-10.0, 10.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let mut s1 = new_sphere();
         let mut s1_mat = s1.get_material();
         s1_mat.color = Color::new(0.8, 1.0, 0.6);
@@ -225,10 +225,7 @@ mod tests {
     #[test]
     fn intersect_a_world_with_a_ray() {
         let w = default_world();
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = r.intersect_world(&w);
 
         assert_eq!(xs.count(), 4);
@@ -241,10 +238,7 @@ mod tests {
     #[test]
     fn shading_an_intersection() {
         let w = default_world();
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = w.objects.first().unwrap();
         let i = Intersection::new(4.0, shape.clone());
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
@@ -255,14 +249,11 @@ mod tests {
     fn shading_an_intersection_from_the_inside() {
         let mut w = default_world().into_builder();
         w.lights = vec![Light::point_light(
-            &Point::new_point(0.0, 0.25, 0.0),
+            &new_point(0.0, 0.25, 0.0),
             &Color::new(1.0, 1.0, 1.0),
         )];
         let w = w.build();
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, 0.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let shape = w.objects[1].clone();
         let i = Intersection::new(0.5, shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
@@ -273,7 +264,7 @@ mod tests {
     fn shade_hit_is_given_an_intersection_in_shadow() {
         let mut w = WorldBuilder::new();
         w.lights = vec![Light::point_light(
-            &Point::new_point(0.0, 0.0, -10.0),
+            &new_point(0.0, 0.0, -10.0),
             &Color::new(1.0, 1.0, 1.0),
         )];
 
@@ -286,10 +277,7 @@ mod tests {
 
         let w = w.build();
 
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, 5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 5.0), new_vector(0.0, 0.0, 1.0));
         let i = Intersection::new(4.0, s2);
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let c = w.shade_hit(&comps, 1);
@@ -298,20 +286,14 @@ mod tests {
     #[test]
     fn the_color_when_a_ray_misses() {
         let w = default_world();
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 1.0, 0.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 1.0, 0.0));
         let c = w.color_at(&r, 1);
         assert_eq!(c, Color::new(0.0, 0.0, 0.0));
     }
     #[test]
     fn the_color_when_a_ray_hits() {
         let w = default_world();
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let c = w.color_at(&r, 1);
         assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855));
     }
@@ -338,10 +320,7 @@ mod tests {
             lights: default_world().lights,
             objects: vec![outer, inner].into(),
         };
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, 0.75),
-            Vector::new_vector(0.0, 0.0, -1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 0.75), new_vector(0.0, 0.0, -1.0));
         let c = new_world.color_at(&r, 1);
         assert_eq!(c, inner_sphere.get_material().color);
     }
@@ -349,25 +328,25 @@ mod tests {
     #[test]
     fn there_is_no_shadow_when_nothing_is_collinear_with_point_and_light() {
         let w = World::new_default_world();
-        let p = Point::new_point(0.0, 10.0, 0.0);
+        let p = new_point(0.0, 10.0, 0.0);
         assert!(!w.is_shadowed(&p));
     }
     #[test]
     fn the_shadow_when_an_object_is_between_the_point_and_the_light() {
         let w = World::new_default_world();
-        let p = Point::new_point(10.0, -10.0, 10.0);
+        let p = new_point(10.0, -10.0, 10.0);
         assert!(w.is_shadowed(&p));
     }
     #[test]
     fn there_is_no_shadow_when_an_object_is_behind_the_light() {
         let w = World::new_default_world();
-        let p = Point::new_point(-20.0, 20.0, -20.0);
+        let p = new_point(-20.0, 20.0, -20.0);
         assert!(!w.is_shadowed(&p));
     }
     #[test]
     fn there_is_no_shadow_when_an_object_is_behind_the_point() {
         let w = World::new_default_world();
-        let p = Point::new_point(-2.0, 2.0, -2.0);
+        let p = new_point(-2.0, 2.0, -2.0);
         assert!(!w.is_shadowed(&p));
     }
 
@@ -381,10 +360,7 @@ mod tests {
         let _ = std::mem::replace(w.objects.get_mut(1).unwrap(), shape.clone());
         let w = w.build();
 
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, 0.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let i = Intersection::new(1.0, shape.clone());
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
         let color = w.reflected_color(&comps, 1);
@@ -402,8 +378,8 @@ mod tests {
         let w = w.build();
 
         let r = Ray::new(
-            Point::new_point(0.0, 0.0, -3.0),
-            Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+            new_point(0.0, 0.0, -3.0),
+            new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
@@ -422,8 +398,8 @@ mod tests {
         let w = w.build();
 
         let r = Ray::new(
-            Point::new_point(0.0, 0.0, -3.0),
-            Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+            new_point(0.0, 0.0, -3.0),
+            new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
@@ -434,7 +410,7 @@ mod tests {
     fn color_at_with_mutually_reflective_surfaces() {
         let mut w = World::builder();
         w.lights.push(Light::point_light(
-            &Point::new_point(0.0, 0.0, 0.0),
+            &new_point(0.0, 0.0, 0.0),
             &Color::new(1.0, 1.0, 1.0),
         ));
         let mut lower = new_plane();
@@ -446,10 +422,7 @@ mod tests {
         w.objects.push(upper);
         let w = w.build();
 
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, 0.0),
-            Vector::new_vector(0.0, 1.0, 0.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 1.0, 0.0));
 
         // Simply test that the function returns when the ray is locked between two mirrors.
         #[allow(unused_assignments)]
@@ -467,8 +440,8 @@ mod tests {
         let w = w.build();
 
         let r = Ray::new(
-            Point::new_point(0.0, 0.0, -3.0),
-            Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+            new_point(0.0, 0.0, -3.0),
+            new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections::new(&[i]));
@@ -480,10 +453,7 @@ mod tests {
     fn the_refracted_color_with_an_opaque_surface() {
         let w = World::new_default_world();
         let shape = w.objects[0].clone();
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = Intersections::new(&[
             Intersection::new(4.0, shape.clone()),
             Intersection::new(6.0, shape),
@@ -498,10 +468,7 @@ mod tests {
         let shape = w.objects[0].clone();
         shape.get_material().transparency = 1.0;
         shape.get_material().refractive_index = 1.5;
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = Intersections::new(&[
             Intersection::new(4.0, shape.clone()),
             Intersection::new(6.0, shape),
@@ -517,8 +484,8 @@ mod tests {
         shape.get_material().transparency = 1.0;
         shape.get_material().refractive_index = 1.5;
         let r = Ray::new(
-            Point::new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
-            Vector::new_vector(0.0, 1.0, 0.0),
+            new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
+            new_vector(0.0, 1.0, 0.0),
         );
         let xs = Intersections::new(&[
             Intersection::new(-(2.0_f64.sqrt()) / 2.0, shape.clone()),
@@ -547,10 +514,7 @@ mod tests {
 
         let w = w.build();
 
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, 0.1),
-            Vector::new_vector(0.0, 1.0, 0.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 0.1), new_vector(0.0, 1.0, 0.0));
         let xs = Intersections::new(&[
             Intersection::new(-0.9899, A.clone()),
             Intersection::new(-0.4899, B.clone()),
@@ -584,8 +548,8 @@ mod tests {
         let w = w.build();
 
         let r = Ray::new(
-            Point::new_point(0.0, 0.0, -3.0),
-            Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+            new_point(0.0, 0.0, -3.0),
+            new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), floor)]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
@@ -616,8 +580,8 @@ mod tests {
         let w = w.build();
 
         let r = Ray::new(
-            Point::new_point(0.0, 0.0, -3.0),
-            Vector::new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
+            new_point(0.0, 0.0, -3.0),
+            new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), floor)]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
@@ -627,10 +591,7 @@ mod tests {
     #[test]
     fn intersect_a_world_once() {
         let w = default_world();
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = r.intersect_world_first(&w);
 
         assert!(xs.count() > 0);

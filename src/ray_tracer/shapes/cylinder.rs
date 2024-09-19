@@ -5,7 +5,7 @@ use crate::ray_tracer::{
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Tuple, Vector},
+    tuples::{new_vector, Point, Vector},
     utils::{is_float_equal, EPSILON},
 };
 
@@ -91,11 +91,11 @@ impl Shapes for Cylinder {
         let dist = point.x.mul_add(point.x, point.z.powi(2));
 
         if dist < 1.0 && point.y >= (self.maximum - EPSILON) {
-            Vector::new_vector(0.0, 1.0, 0.0)
+            new_vector(0.0, 1.0, 0.0)
         } else if dist < 1.0 && point.y <= (self.minimum + EPSILON) {
-            Vector::new_vector(0.0, -1.0, 0.0)
+            new_vector(0.0, -1.0, 0.0)
         } else {
-            Vector::new_vector(point.x, 0.0, point.z)
+            new_vector(point.x, 0.0, point.z)
         }
     }
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
@@ -154,23 +154,16 @@ impl Shapes for Cylinder {
 
 #[cfg(test)]
 mod tests {
+    use crate::ray_tracer::tuples::new_point;
+
     use super::*;
 
     #[test]
     fn a_ray_misses_a_cylinder() {
         let examples = [
-            (
-                Point::new_point(1.0, 0.0, 0.0),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 0.0, 0.0),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(1.0, 1.0, 1.0),
-            ),
+            (new_point(1.0, 0.0, 0.0), new_vector(0.0, 1.0, 0.0)),
+            (new_point(0.0, 0.0, 0.0), new_vector(0.0, 1.0, 0.0)),
+            (new_point(0.0, 0.0, -5.0), new_vector(1.0, 1.0, 1.0)),
         ];
         let cyl = Cylinder::new();
 
@@ -187,20 +180,20 @@ mod tests {
     fn a_ray_hits_a_cylinder() {
         let examples = [
             (
-                Point::new_point(1.0, 0.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
+                new_point(1.0, 0.0, -5.0),
+                new_vector(0.0, 0.0, 1.0),
                 5.0,
                 5.0,
             ),
             (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
+                new_point(0.0, 0.0, -5.0),
+                new_vector(0.0, 0.0, 1.0),
                 4.0,
                 6.0,
             ),
             (
-                Point::new_point(0.5, 0.0, -5.0),
-                Vector::new_vector(0.1, 1.0, 1.0),
+                new_point(0.5, 0.0, -5.0),
+                new_vector(0.1, 1.0, 1.0),
                 6.80798,
                 7.08872,
             ),
@@ -221,22 +214,10 @@ mod tests {
     #[test]
     fn normal_vector_on_a_cylinder() {
         let examples = [
-            (
-                Point::new_point(1.0, 0.0, 0.0),
-                Vector::new_vector(1.0, 0.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 5.0, -1.0),
-                Vector::new_vector(0.0, 0.0, -1.0),
-            ),
-            (
-                Point::new_point(0.0, -2.0, 1.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-            ),
-            (
-                Point::new_point(-1.0, 1.0, 0.0),
-                Vector::new_vector(-1.0, 0.0, 0.0),
-            ),
+            (new_point(1.0, 0.0, 0.0), new_vector(1.0, 0.0, 0.0)),
+            (new_point(0.0, 5.0, -1.0), new_vector(0.0, 0.0, -1.0)),
+            (new_point(0.0, -2.0, 1.0), new_vector(0.0, 0.0, 1.0)),
+            (new_point(-1.0, 1.0, 0.0), new_vector(-1.0, 0.0, 0.0)),
         ];
         let cyl = Cylinder::new();
 
@@ -257,36 +238,12 @@ mod tests {
     #[test]
     fn intersecting_a_connstrained_cylinder() {
         let examples = [
-            (
-                Point::new_point(0.0, 1.5, 0.0),
-                Vector::new_vector(0.1, 1.0, 0.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 3.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 2.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 1.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 1.5, -2.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                2,
-            ),
+            (new_point(0.0, 1.5, 0.0), new_vector(0.1, 1.0, 0.0), 0),
+            (new_point(0.0, 3.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 2.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 1.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 1.5, -2.0), new_vector(0.0, 0.0, 1.0), 2),
         ];
 
         let mut cyl = Cylinder::new();
@@ -312,31 +269,11 @@ mod tests {
     #[test]
     fn intersecting_the_caps_of_a_closed_cylinder() {
         let examples = [
-            (
-                Point::new_point(0.0, 3.0, 0.0),
-                Vector::new_vector(0.0, -1.0, 0.0),
-                2,
-            ),
-            (
-                Point::new_point(0.0, 3.0, -2.0),
-                Vector::new_vector(0.0, -1.0, 2.0),
-                2,
-            ),
-            (
-                Point::new_point(0.0, 4.0, -2.0),
-                Vector::new_vector(0.0, -1.0, 1.0),
-                2,
-            ),
-            (
-                Point::new_point(0.0, 0.0, -2.0),
-                Vector::new_vector(0.0, 1.0, 2.0),
-                2,
-            ),
-            (
-                Point::new_point(0.0, -1.0, -2.0),
-                Vector::new_vector(0.0, 1.0, 1.0),
-                2,
-            ),
+            (new_point(0.0, 3.0, 0.0), new_vector(0.0, -1.0, 0.0), 2),
+            (new_point(0.0, 3.0, -2.0), new_vector(0.0, -1.0, 2.0), 2),
+            (new_point(0.0, 4.0, -2.0), new_vector(0.0, -1.0, 1.0), 2),
+            (new_point(0.0, 0.0, -2.0), new_vector(0.0, 1.0, 2.0), 2),
+            (new_point(0.0, -1.0, -2.0), new_vector(0.0, 1.0, 1.0), 2),
         ];
 
         let mut cyl = Cylinder::new();
@@ -356,30 +293,12 @@ mod tests {
     #[test]
     fn the_normal_vector_on_a_cylinders_end_caps() {
         let examples = [
-            (
-                Point::new_point(0.0, 1.0, 0.0),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.5, 1.0, 0.0),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 1.0, 0.5),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 2.0, 0.0),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.5, 2.0, 0.0),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 2.0, 0.5),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
+            (new_point(0.0, 1.0, 0.0), new_vector(0.0, -1.0, 0.0)),
+            (new_point(0.5, 1.0, 0.0), new_vector(0.0, -1.0, 0.0)),
+            (new_point(0.0, 1.0, 0.5), new_vector(0.0, -1.0, 0.0)),
+            (new_point(0.0, 2.0, 0.0), new_vector(0.0, 1.0, 0.0)),
+            (new_point(0.5, 2.0, 0.0), new_vector(0.0, 1.0, 0.0)),
+            (new_point(0.0, 2.0, 0.5), new_vector(0.0, 1.0, 0.0)),
         ];
 
         let mut cyl = Cylinder::new();

@@ -1,7 +1,13 @@
 use clap::Parser;
 use ray_tracer_rust::ray_tracer::{
-    camera::Camera, colors::Color, lights::Light, materials::Material, shapes::*,
-    transformations::Transform, tuples::Tuple, world::World,
+    camera::Camera,
+    colors::Color,
+    lights::Light,
+    materials::Material,
+    shapes::*,
+    transformations::Transform,
+    tuples::{new_point, new_vector},
+    world::World,
 };
 use std::{f64::consts::PI, time::Instant};
 
@@ -61,7 +67,7 @@ fn main() {
     world_builder.object(cone);
 
     world_builder.light(Light::point_light(
-        &Tuple::new_point(-10.0, 10.0, -10.0),
+        &new_point(-10.0, 10.0, -10.0),
         &Color::new(1.0, 1.0, 1.0),
     ));
 
@@ -69,9 +75,9 @@ fn main() {
 
     let mut camera = Camera::new(args.x_axis, args.y_axis, PI / 3.0);
     camera.set_transform(Transform::view_transform(
-        &Tuple::new_point(0.0, 2.5, -5.0),
-        &Tuple::new_point(0.0, 1.0, 0.0),
-        &Tuple::new_vector(0.0, 2.0, 0.0),
+        &new_point(0.0, 2.5, -5.0),
+        &new_point(0.0, 1.0, 0.0),
+        &new_vector(0.0, 2.0, 0.0),
     ));
 
     let mut elapsed = start.elapsed();

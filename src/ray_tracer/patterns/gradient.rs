@@ -1,4 +1,4 @@
-use crate::ray_tracer::{colors::Color, tuples};
+use crate::ray_tracer::{colors::Color, tuples::Point};
 
 use super::Patterns;
 
@@ -24,7 +24,7 @@ impl Default for Gradient {
 }
 
 impl Patterns for Gradient {
-    fn color_at(&self, point: tuples::Point) -> Color {
+    fn color_at(&self, point: Point) -> Color {
         let distance = self.color_b - self.color_a;
         let fraction = point.x - f64::floor(point.x);
 
@@ -34,7 +34,8 @@ impl Patterns for Gradient {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::{patterns::Pattern, tuples::Tuple};
+
+    use crate::ray_tracer::{patterns::Pattern, tuples::new_point};
 
     use super::*;
 
@@ -52,17 +53,17 @@ mod tests {
     #[test]
     fn a_gradient_linearly_interpolates_between_colors() {
         let pattern = Pattern::gradient(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
         assert_eq!(
-            pattern.pattern_at(Tuple::new_point(0.25, 0.0, 0.0)),
+            pattern.pattern_at(new_point(0.25, 0.0, 0.0)),
             Color::new(0.75, 0.75, 0.75)
         );
         assert_eq!(
-            pattern.pattern_at(Tuple::new_point(0.5, 0.0, 0.0)),
+            pattern.pattern_at(new_point(0.5, 0.0, 0.0)),
             Color::new(0.5, 0.5, 0.5)
         );
         assert_eq!(
-            pattern.pattern_at(Tuple::new_point(0.75, 0.0, 0.0)),
+            pattern.pattern_at(new_point(0.75, 0.0, 0.0)),
             Color::new(0.25, 0.25, 0.25)
         );
     }

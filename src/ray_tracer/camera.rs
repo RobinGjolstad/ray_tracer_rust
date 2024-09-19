@@ -5,7 +5,7 @@ use std::{
 
 use crate::ray_tracer::{canvas::Canvas, colors::Color, matrices::Matrix, rays::Ray, world::World};
 
-use super::tuples::Tuple;
+use super::tuples::new_point;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Camera {
@@ -65,9 +65,8 @@ impl Camera {
         // Using the camera matrix, transform the canvas point and the origin,
         // and then compute the ray's direction vector.
         // (remember that the canvas is at z=-1)
-        let pixel =
-            self.transform.get_inverted().unwrap() * Tuple::new_point(world_x, world_y, -1.0);
-        let origin = self.transform.get_inverted().unwrap() * Tuple::new_point(0.0, 0.0, 0.0);
+        let pixel = self.transform.get_inverted().unwrap() * new_point(world_x, world_y, -1.0);
+        let origin = self.transform.get_inverted().unwrap() * new_point(0.0, 0.0, 0.0);
         let direction = (pixel - origin).normalize();
 
         Ray::new(origin, direction)
@@ -248,8 +247,8 @@ mod tests {
     use std::f64::consts::PI;
 
     use crate::ray_tracer::{
-        canvas::Canvas, colors::Color, matrices::Matrix, transformations::Transform, tuples::Tuple,
-        utils::is_float_equal, world::World,
+        canvas::Canvas, colors::Color, matrices::Matrix, transformations::Transform,
+        tuples::new_vector, utils::is_float_equal, world::World,
     };
 
     use super::*;
@@ -280,34 +279,34 @@ mod tests {
     fn constructing_a_ray_through_the_center_of_the_canvas() {
         let c = Camera::new(201, 101, PI / 2.0);
         let r = c.ray_for_pixel(100, 50);
-        assert_eq!(r.origin, Tuple::new_point(0.0, 0.0, 0.0));
-        assert_eq!(r.direction, Tuple::new_vector(0.0, 0.0, -1.0));
+        assert_eq!(r.origin, new_point(0.0, 0.0, 0.0));
+        assert_eq!(r.direction, new_vector(0.0, 0.0, -1.0));
     }
     #[test]
     fn constructing_a_ray_through_a_corner_of_the_canvas() {
         let c = Camera::new(201, 101, PI / 2.0);
         let r = c.ray_for_pixel(0, 0);
-        assert_eq!(r.origin, Tuple::new_point(0.0, 0.0, 0.0));
-        assert_eq!(r.direction, Tuple::new_vector(0.66519, 0.33259, -0.66851));
+        assert_eq!(r.origin, new_point(0.0, 0.0, 0.0));
+        assert_eq!(r.direction, new_vector(0.66519, 0.33259, -0.66851));
     }
     #[test]
     fn constructing_a_ray_when_the_camera_is_transformed() {
         let mut c = Camera::new(201, 101, PI / 2.0);
         c.set_transform(Transform::rotation_y(PI / 4.0) * Transform::translate(0.0, -2.0, 5.0));
         let r = c.ray_for_pixel(100, 50);
-        assert_eq!(r.origin, Tuple::new_point(0.0, 2.0, -5.0));
+        assert_eq!(r.origin, new_point(0.0, 2.0, -5.0));
         assert_eq!(
             r.direction,
-            Tuple::new_vector(f64::sqrt(2.0) / 2.0, 0.0, -f64::sqrt(2.0) / 2.0)
+            new_vector(f64::sqrt(2.0) / 2.0, 0.0, -f64::sqrt(2.0) / 2.0)
         );
     }
     #[test]
     fn rendering_a_world_with_a_camera() {
         let w = World::new_default_world();
         let mut c = Camera::new(11, 11, PI / 2.0);
-        let from = Tuple::new_point(0.0, 0.0, -5.0);
-        let to = Tuple::new_point(0.0, 0.0, 0.0);
-        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        let from = new_point(0.0, 0.0, -5.0);
+        let to = new_point(0.0, 0.0, 0.0);
+        let up = new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
         let image: Canvas = c.render(&w, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
@@ -316,9 +315,9 @@ mod tests {
     fn rendering_a_world_with_a_camera_with_one_thread() {
         let w = World::new_default_world();
         let mut c = Camera::new(11, 11, PI / 2.0);
-        let from = Tuple::new_point(0.0, 0.0, -5.0);
-        let to = Tuple::new_point(0.0, 0.0, 0.0);
-        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        let from = new_point(0.0, 0.0, -5.0);
+        let to = new_point(0.0, 0.0, 0.0);
+        let up = new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
         let image: Canvas = c.render_multithreaded(&w, 1, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
@@ -327,9 +326,9 @@ mod tests {
     fn rendering_a_world_with_a_camera_with_two_threads() {
         let w = World::new_default_world();
         let mut c = Camera::new(11, 11, PI / 2.0);
-        let from = Tuple::new_point(0.0, 0.0, -5.0);
-        let to = Tuple::new_point(0.0, 0.0, 0.0);
-        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        let from = new_point(0.0, 0.0, -5.0);
+        let to = new_point(0.0, 0.0, 0.0);
+        let up = new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
         let image: Canvas = c.render_multithreaded(&w, 2, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));
@@ -338,9 +337,9 @@ mod tests {
     fn rendering_a_world_with_a_camera_with_two_threads_improved() {
         let w = World::new_default_world();
         let mut c = Camera::new(11, 11, PI / 2.0);
-        let from = Tuple::new_point(0.0, 0.0, -5.0);
-        let to = Tuple::new_point(0.0, 0.0, 0.0);
-        let up = Tuple::new_vector(0.0, 1.0, 0.0);
+        let from = new_point(0.0, 0.0, -5.0);
+        let to = new_point(0.0, 0.0, 0.0);
+        let up = new_vector(0.0, 1.0, 0.0);
         c.set_transform(Transform::view_transform(&from, &to, &up));
         let image: Canvas = c.render_multithreaded_improved(&w, 2, 1);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855));

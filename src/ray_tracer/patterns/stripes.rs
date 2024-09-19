@@ -43,7 +43,7 @@ impl Patterns for Stripes {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::patterns::Pattern;
+    use crate::ray_tracer::{patterns::Pattern, tuples::new_point};
 
     use super::*;
 
@@ -68,25 +68,25 @@ mod tests {
     #[test]
     fn a_stripe_pattern_is_constant_in_y() {
         let pattern = Pattern::stripe(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.0, 1.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.0, 2.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 1.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 2.0, 0.0)), WHITE);
     }
     #[test]
     fn a_stripe_pattern_is_constant_in_z() {
         let pattern = Pattern::stripe(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.0, 0.0, 1.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.0, 0.0, 2.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 1.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 2.0)), WHITE);
     }
     #[test]
     fn a_stripe_pattern_alternates_in_x() {
         let pattern = Pattern::stripe(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Point::new_point(0.9, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Point::new_point(1.0, 0.0, 0.0)), BLACK);
-        assert_eq!(pattern.pattern_at(Point::new_point(-0.1, 0.0, 0.0)), BLACK);
-        assert_eq!(pattern.pattern_at(Point::new_point(-1.0, 0.0, 0.0)), BLACK);
-        assert_eq!(pattern.pattern_at(Point::new_point(-1.1, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.9, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(1.0, 0.0, 0.0)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(-0.1, 0.0, 0.0)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(-1.0, 0.0, 0.0)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(-1.1, 0.0, 0.0)), WHITE);
     }
 }

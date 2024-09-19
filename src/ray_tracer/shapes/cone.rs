@@ -5,7 +5,7 @@ use crate::ray_tracer::{
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Tuple, Vector},
+    tuples::{new_vector, Point, Vector},
     utils::{is_float_equal, EPSILON},
 };
 
@@ -91,16 +91,16 @@ impl Shapes for Cone {
 
         if dist < 1.0 && point.y >= (self.maximum - EPSILON) {
             // Check top cap
-            Vector::new_vector(0.0, 1.0, 0.0)
+            new_vector(0.0, 1.0, 0.0)
         } else if dist < 1.0 && point.y <= (self.minimum + EPSILON) {
             // Check bottom cap
-            Vector::new_vector(0.0, -1.0, 0.0)
+            new_vector(0.0, -1.0, 0.0)
         } else {
             let mut y = f64::sqrt(dist);
             if point.y > 0.0 {
                 y = -y;
             }
-            Vector::new_vector(point.x, y, point.z)
+            new_vector(point.x, y, point.z)
         }
     }
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
@@ -186,26 +186,28 @@ impl Shapes for Cone {
 
 #[cfg(test)]
 mod tests {
+    use crate::ray_tracer::tuples::new_point;
+
     use super::*;
 
     #[test]
     fn intersecting_a_cone_with_a_ray() {
         let examples = [
             (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
+                new_point(0.0, 0.0, -5.0),
+                new_vector(0.0, 0.0, 1.0),
                 5.0,
                 5.0,
             ),
             (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(1.0, 1.0, 1.0),
+                new_point(0.0, 0.0, -5.0),
+                new_vector(1.0, 1.0, 1.0),
                 8.66025,
                 8.66025,
             ),
             (
-                Point::new_point(1.0, 1.0, -5.0),
-                Vector::new_vector(-0.5, -1.0, 1.0),
+                new_point(1.0, 1.0, -5.0),
+                new_vector(-0.5, -1.0, 1.0),
                 4.55006,
                 49.44994,
             ),
@@ -229,8 +231,8 @@ mod tests {
     #[test]
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
         let shape = Cone::new();
-        let direction = Vector::new_vector(0.0, 1.0, 1.0).normalize();
-        let r = Ray::new(Point::new_point(0.0, 0.0, -1.0), direction);
+        let direction = new_vector(0.0, 1.0, 1.0).normalize();
+        let r = Ray::new(new_point(0.0, 0.0, -1.0), direction);
 
         let mut xs = Vec::new();
         shape.local_intersect(r, &mut xs);
@@ -243,8 +245,8 @@ mod tests {
         let examples = [(
             // At center height of cone, offset to one side,
             // pointing tangentially away from the cone.
-            Point::new_point(0.0, 0.0, 1.0),
-            Vector::new_vector(1.0, 0.0, 0.0),
+            new_point(0.0, 0.0, 1.0),
+            new_vector(1.0, 0.0, 0.0),
         )];
         let cone = Cone::new();
 
@@ -260,18 +262,12 @@ mod tests {
     #[test]
     fn normal_vector_on_a_cone() {
         let examples = [
+            (new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 0.0)),
             (
-                Point::new_point(0.0, 0.0, 0.0),
-                Vector::new_vector(0.0, 0.0, 0.0),
+                new_point(1.0, 1.0, 1.0),
+                new_vector(1.0, -f64::sqrt(2.0), 1.0),
             ),
-            (
-                Point::new_point(1.0, 1.0, 1.0),
-                Vector::new_vector(1.0, -f64::sqrt(2.0), 1.0),
-            ),
-            (
-                Point::new_point(-1.0, -1.0, 0.0),
-                Vector::new_vector(-1.0, 1.0, 0.0),
-            ),
+            (new_point(-1.0, -1.0, 0.0), new_vector(-1.0, 1.0, 0.0)),
         ];
         let cone = Cone::new();
 
@@ -292,36 +288,12 @@ mod tests {
     #[test]
     fn intersecting_a_constrained_cone() {
         let examples = [
-            (
-                Point::new_point(0.0, 1.5, 0.0),
-                Vector::new_vector(0.1, 1.0, 0.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 3.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 2.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 1.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 1.5, -2.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-                2,
-            ),
+            (new_point(0.0, 1.5, 0.0), new_vector(0.1, 1.0, 0.0), 0),
+            (new_point(0.0, 3.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 2.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 1.0, -5.0), new_vector(0.0, 0.0, 1.0), 0),
+            (new_point(0.0, 1.5, -2.0), new_vector(0.0, 0.0, 1.0), 2),
         ];
 
         let mut cone = Cone::new();
@@ -347,21 +319,9 @@ mod tests {
     #[test]
     fn intersecting_a_cones_end_caps() {
         let examples = [
-            (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(0.0, 1.0, 0.0),
-                0,
-            ),
-            (
-                Point::new_point(0.0, 0.0, -0.25),
-                Vector::new_vector(0.0, 1.0, 1.0),
-                2,
-            ),
-            (
-                Point::new_point(0.0, 0.0, -0.25),
-                Vector::new_vector(0.0, 1.0, 0.0),
-                4,
-            ),
+            (new_point(0.0, 0.0, -5.0), new_vector(0.0, 1.0, 0.0), 0),
+            (new_point(0.0, 0.0, -0.25), new_vector(0.0, 1.0, 1.0), 2),
+            (new_point(0.0, 0.0, -0.25), new_vector(0.0, 1.0, 0.0), 4),
         ];
 
         let mut cone = Cone::new();
@@ -381,30 +341,12 @@ mod tests {
     #[test]
     fn the_normal_vector_on_a_cones_end_caps() {
         let examples = [
-            (
-                Point::new_point(0.0, 1.0, 0.0),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.5, 1.0, 0.0),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 1.0, 0.5),
-                Vector::new_vector(0.0, -1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 2.0, 0.0),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.5, 2.0, 0.0),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
-            (
-                Point::new_point(0.0, 2.0, 0.5),
-                Vector::new_vector(0.0, 1.0, 0.0),
-            ),
+            (new_point(0.0, 1.0, 0.0), new_vector(0.0, -1.0, 0.0)),
+            (new_point(0.5, 1.0, 0.0), new_vector(0.0, -1.0, 0.0)),
+            (new_point(0.0, 1.0, 0.5), new_vector(0.0, -1.0, 0.0)),
+            (new_point(0.0, 2.0, 0.0), new_vector(0.0, 1.0, 0.0)),
+            (new_point(0.5, 2.0, 0.0), new_vector(0.0, 1.0, 0.0)),
+            (new_point(0.0, 2.0, 0.5), new_vector(0.0, 1.0, 0.0)),
         ];
 
         let mut cone = Cone::new();
@@ -425,14 +367,8 @@ mod tests {
         cone.maximum = 0.0;
         cone.closed = true;
         let examples = [
-            (
-                Point::new_point(0.0, 0.0, -5.0),
-                Vector::new_vector(0.0, 0.0, 1.0),
-            ),
-            (
-                Point::new_point(-2.0, 1.0, 0.0),
-                Vector::new_vector(1.0, 0.0, 0.0),
-            ),
+            (new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0)),
+            (new_point(-2.0, 1.0, 0.0), new_vector(1.0, 0.0, 0.0)),
         ];
 
         for example in examples {

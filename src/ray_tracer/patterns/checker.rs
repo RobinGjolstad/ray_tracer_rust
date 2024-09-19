@@ -1,4 +1,4 @@
-use crate::ray_tracer::{colors::Color, tuples};
+use crate::ray_tracer::{colors::Color, tuples::Point};
 
 use super::Patterns;
 
@@ -24,7 +24,7 @@ impl Default for Checker {
 }
 
 impl Patterns for Checker {
-    fn color_at(&self, point: tuples::Point) -> Color {
+    fn color_at(&self, point: Point) -> Color {
         #[allow(clippy::cast_possible_truncation)]
         if (point.x.floor() + point.y.floor() + point.z.floor()) as isize % 2 == 0 {
             self.color_a
@@ -36,7 +36,8 @@ impl Patterns for Checker {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::{patterns::Pattern, tuples::Tuple};
+
+    use crate::ray_tracer::{patterns::Pattern, tuples::new_point};
 
     use super::*;
 
@@ -54,22 +55,22 @@ mod tests {
     #[test]
     fn checkers_should_repeat_in_x() {
         let pattern = Pattern::checker(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.99, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(1.01, 0.0, 0.0)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.99, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(1.01, 0.0, 0.0)), BLACK);
     }
     #[test]
     fn checkers_should_repeat_in_y() {
         let pattern = Pattern::checker(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.99, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 1.01, 0.0)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.99, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 1.01, 0.0)), BLACK);
     }
     #[test]
     fn checkers_should_repeat_in_z() {
         let pattern = Pattern::checker(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 0.99)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 1.01)), BLACK);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.99)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 1.01)), BLACK);
     }
 }

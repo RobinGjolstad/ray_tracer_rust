@@ -26,14 +26,14 @@ impl Light {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::tuples::Tuple;
+    use crate::ray_tracer::tuples::new_point;
 
     use super::*;
 
     #[test]
     fn a_point_light_has_a_position_and_intensity() {
         let intensity = Color::new(1.0, 1.0, 1.0);
-        let position = Tuple::new_point(0.0, 0.0, 0.0);
+        let position = new_point(0.0, 0.0, 0.0);
         let light = Light::point_light(&position, &intensity);
         assert_eq!(light.get_position(), position);
         assert_eq!(light.get_intensity(), intensity);

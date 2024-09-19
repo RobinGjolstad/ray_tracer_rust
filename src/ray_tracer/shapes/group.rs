@@ -7,7 +7,7 @@ use crate::ray_tracer::{
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Vector},
+    tuples::{new_point, new_vector, Point, Vector},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -21,7 +21,7 @@ pub struct Group {
 impl Group {
     pub fn new() -> Self {
         Self {
-            position: Point::new_point(0.0, 0.0, 0.0),
+            position: new_point(0.0, 0.0, 0.0),
             transform: Matrix::new_identity()
                 .calculate_inverse()
                 .expect("Failed to calculate inverse of identity matrix."),
@@ -72,7 +72,7 @@ impl Shapes for Group {
         }
     }
     fn local_normal_at(&self, point: Point) -> Vector {
-        Vector::new_vector(point.x, point.y, point.z)
+        new_vector(point.x, point.y, point.z)
     }
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         // All children have their transformations already prepared for conversion to world space.
@@ -162,7 +162,7 @@ impl GroupBuilder {
         }
 
         Object::Group(Group {
-            position: Point::new_point(0.0, 0.0, 0.0),
+            position: new_point(0.0, 0.0, 0.0),
             // Own transform has been applied to all children now.
             // To prevent it from being re-applied, create the group with an identity transform.
             transform: Matrix::new_identity().calculate_inverse().unwrap(),
@@ -210,10 +210,7 @@ mod tests {
     #[test]
     fn intersecting_a_ray_with_an_empty_group() {
         let g = new_group(vec![]);
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, 0.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
 
         let mut xs = Vec::new();
         g.local_intersect(r, &mut xs);
@@ -230,10 +227,7 @@ mod tests {
 
         let mut g = new_group(vec![s1.clone(), s2.clone(), s3.clone()]);
 
-        let r = Ray::new(
-            Point::new_point(0.0, 0.0, -5.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
 
         let mut xs = Vec::new();
         g.local_intersect(r, &mut xs);
@@ -253,10 +247,7 @@ mod tests {
             .set_transform(&mut Transform::scaling(2.0, 2.0, 2.0))
             .build();
 
-        let r = Ray::new(
-            Point::new_point(10.0, 0.0, -10.0),
-            Vector::new_vector(0.0, 0.0, 1.0),
-        );
+        let r = Ray::new(new_point(10.0, 0.0, -10.0), new_vector(0.0, 0.0, 1.0));
 
         let mut xs = Vec::new();
         r.intersect(&g, &mut xs);

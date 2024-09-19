@@ -1,4 +1,4 @@
-use crate::ray_tracer::{colors::Color, tuples};
+use crate::ray_tracer::{colors::Color, tuples::Point};
 
 use super::Patterns;
 
@@ -22,7 +22,7 @@ impl Default for Solid {
 }
 
 impl Patterns for Solid {
-    fn color_at(&self, _point: tuples::Point) -> Color {
+    fn color_at(&self, _point: Point) -> Color {
         self.color
     }
 }
@@ -30,7 +30,7 @@ impl Patterns for Solid {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ray_tracer::{patterns::Pattern, tuples::Tuple};
+    use crate::ray_tracer::{patterns::Pattern, tuples::new_point};
 
     const WHITE: Color = Color {
         red: 1.0,
@@ -41,9 +41,9 @@ mod tests {
     #[test]
     fn a_solid_pattern_is_the_same_color_in_all_directions() {
         let pattern = Pattern::solid(WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(1.0, 0.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(0.0, 1.0, 0.0)), WHITE);
-        assert_eq!(pattern.pattern_at(Tuple::new_point(1.0, 1.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(1.0, 0.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(0.0, 1.0, 0.0)), WHITE);
+        assert_eq!(pattern.pattern_at(new_point(1.0, 1.0, 0.0)), WHITE);
     }
 }

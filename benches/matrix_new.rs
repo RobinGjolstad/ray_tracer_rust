@@ -1,9 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use ray_tracer_rust::ray_tracer::{
-    matrices_new::Matrix,
-    tuples_new::{Point, Vector},
-};
+use ray_tracer_rust::ray_tracer::{matrices_new::Matrix, tuples_new::Vector};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("Identity Matrix");
@@ -34,7 +31,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     group.bench_function("inverse", |b| {
         b.iter(|| {
             let mut mat = Matrix::<3>::identity();
-            let _ = black_box(mat.calculate_inverse());
+            let _ = black_box(mat.inverse());
         })
     });
 
@@ -57,8 +54,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     group.bench_function("inverse get inverted", |b| {
         b.iter(|| {
             let mut mat = Matrix::<3>::identity();
-            let _ = mat.calculate_inverse();
-            let _ = black_box(mat.get_inverted());
+            let _ = black_box(mat.inverse());
         })
     });
 }

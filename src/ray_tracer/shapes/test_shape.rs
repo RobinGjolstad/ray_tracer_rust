@@ -5,7 +5,7 @@ use crate::ray_tracer::{
     materials::Material,
     matrices::Matrix,
     rays::Ray,
-    tuples::{Point, Vector},
+    tuples::{new_vector, Point, Vector},
 };
 
 /// Ugly hack for testing purposes
@@ -61,7 +61,7 @@ impl Shapes for TestShape {
         self.base.material
     }
     fn local_normal_at(&self, point: Point) -> Vector {
-        Vector::new_vector(point.x, point.y, point.z)
+        new_vector(point.x, point.y, point.z)
     }
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
         unsafe {
