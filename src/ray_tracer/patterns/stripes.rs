@@ -1,4 +1,4 @@
-use crate::ray_tracer::{colors::Color, tuples::Point};
+use crate::ray_tracer::{colors::Color, tuples_new::Point};
 
 use super::Patterns;
 
@@ -43,7 +43,7 @@ impl Patterns for Stripes {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::{patterns::Pattern, tuples::new_point};
+    use crate::ray_tracer::{patterns::Pattern, tuples_new::new_point};
 
     use super::*;
 

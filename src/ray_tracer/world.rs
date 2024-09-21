@@ -6,14 +6,11 @@ use crate::ray_tracer::{
     lights::Light,
     rays::Ray,
     transformations::Transform,
-    tuples::{Point, Tuple},
+    tuples_new::{new_point, Point, Vector},
     utils::is_float_equal,
 };
 
-use super::{
-    shapes::{new_sphere, Object},
-    tuples::new_point,
-};
+use super::shapes::{new_sphere, Object};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default, Debug, PartialEq, Clone)]
@@ -77,7 +74,7 @@ impl World {
         s1.set_material(&s1_mat);
 
         let mut s2 = new_sphere();
-        s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
+        s2.set_transform(Transform::scaling(0.5, 0.5, 0.5).inverse());
 
         Self {
             objects: vec![s1, s2].into(),
@@ -163,7 +160,7 @@ impl World {
         // Snell's Law:
         // sin(theta_i) / sin(theta_t) == n_2 / n_1
         let n_ratio = comps.n1 / comps.n2;
-        let cos_i = Tuple::dot(&comps.eyev, &comps.normalv);
+        let cos_i = Vector::dot(&comps.eyev, &comps.normalv);
         // let sin2_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
         let sin2_t = n_ratio.powi(2) * cos_i.mul_add(-cos_i, 1.0);
         if sin2_t > 1.0 {
@@ -185,7 +182,7 @@ mod tests {
         intersections::{Intersection, Intersections},
         patterns::Pattern,
         shapes::new_plane,
-        tuples::new_vector,
+        tuples_new::new_vector,
         utils::is_float_equal,
     };
 
@@ -213,7 +210,7 @@ mod tests {
         s1.set_material(&s1_mat);
 
         let mut s2 = new_sphere();
-        s2.set_transform(&Transform::scaling(0.5, 0.5, 0.5));
+        s2.set_transform(Transform::scaling(0.5, 0.5, 0.5).inverse());
 
         let w = default_world();
 
@@ -272,7 +269,7 @@ mod tests {
         w.objects.push(s1);
 
         let mut s2 = new_sphere();
-        s2.set_transform(&Transform::translate(0.0, 0.0, 10.0));
+        s2.set_transform(Transform::translate(0.0, 0.0, 10.0).inverse());
         w.objects.push(s2.clone());
 
         let w = w.build();
@@ -373,7 +370,7 @@ mod tests {
         let mut mat = shape.get_material();
         mat.reflective = 0.5;
         shape.set_material(&mat);
-        shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
+        shape.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
         w.objects.push(shape.clone());
         let w = w.build();
 
@@ -393,7 +390,7 @@ mod tests {
         let mut mat = shape.get_material();
         mat.reflective = 0.5;
         shape.set_material(&mat);
-        shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
+        shape.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
         w.objects.push(shape.clone());
         let w = w.build();
 
@@ -415,9 +412,9 @@ mod tests {
         ));
         let mut lower = new_plane();
         lower.get_material().reflective = 1.0;
-        lower.set_transform(&Transform::translate(0.0, -1.0, 0.0));
+        lower.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
         let mut upper = lower.clone();
-        upper.set_transform(&Transform::translate(0.0, 1.0, 0.0));
+        upper.set_transform(Transform::translate(0.0, 1.0, 0.0).inverse());
         w.objects.push(lower);
         w.objects.push(upper);
         let w = w.build();
@@ -435,7 +432,7 @@ mod tests {
         let mut w = World::new_default_world().into_builder();
         let mut shape = new_plane();
         shape.get_material().reflective = 0.5;
-        shape.set_transform(&Transform::translate(0.0, -1.0, 0.0));
+        shape.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
         w.objects.push(shape.clone());
         let w = w.build();
 
@@ -530,7 +527,7 @@ mod tests {
         let mut w = default_world().into_builder();
 
         let mut floor = new_plane();
-        floor.set_transform(&Transform::translate(0.0, -1.0, 0.0));
+        floor.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
         let mut mat = floor.get_material();
         mat.transparency = 0.5;
         mat.refractive_index = 1.5;
@@ -538,7 +535,7 @@ mod tests {
         w.objects.push(floor.clone());
 
         let mut ball = new_sphere();
-        ball.set_transform(&Transform::translate(0.0, -3.5, -0.5));
+        ball.set_transform(Transform::translate(0.0, -3.5, -0.5).inverse());
         let mut mat = ball.get_material();
         mat.color = Color::new(1.0, 0.0, 0.0);
         mat.ambient = 0.5;
@@ -561,7 +558,7 @@ mod tests {
         let mut w = default_world().into_builder();
 
         let mut floor = new_plane();
-        floor.set_transform(&Transform::translate(0.0, -1.0, 0.0));
+        floor.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
         let mut mat = floor.get_material();
         mat.reflective = 0.5;
         mat.transparency = 0.5;
@@ -570,7 +567,7 @@ mod tests {
         w.objects.push(floor.clone());
 
         let mut ball = new_sphere();
-        ball.set_transform(&Transform::translate(0.0, -3.5, -0.5));
+        ball.set_transform(Transform::translate(0.0, -3.5, -0.5).inverse());
         mat = ball.get_material();
         mat.color = Color::new(1.0, 0.0, 0.0);
         mat.ambient = 0.5;

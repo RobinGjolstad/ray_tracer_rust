@@ -3,7 +3,7 @@ use crate::ray_tracer::{
     lights::Light,
     patterns::Pattern,
     shapes::Object,
-    tuples::{Point, Tuple},
+    tuples_new::{Point, Vector},
 };
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -39,8 +39,8 @@ impl Material {
         object: &Object,
         light: &Light,
         position: &Point,
-        eyev: &Tuple,
-        normalv: &Tuple,
+        eyev: &Vector,
+        normalv: &Vector,
         in_shadow: bool,
     ) -> Color {
         // Variables to combine and return
@@ -63,7 +63,7 @@ impl Material {
         // light_dot_normal represents the cosine of the angle between the
         // light vector and the normal vector. A negative number means the
         // light is on the other side of the surface.
-        let light_dot_normal = Tuple::dot(&lightv, normalv);
+        let light_dot_normal = Vector::dot(&lightv, normalv);
         if light_dot_normal < 0.0 {
             // diffuse and specular shall be black.
             // They are already initialized to black so we do nothing
@@ -74,8 +74,8 @@ impl Material {
             // reflect_dot_eye represents the cosine of the angle between the
             // reflection vector and the eye vector. A negative number means the
             // light reflects away from the eye.
-            let reflectv = Tuple::reflect(&-lightv, normalv);
-            let reflect_dot_eye = Tuple::dot(&reflectv, eyev);
+            let reflectv = Vector::reflect(&-lightv, normalv);
+            let reflect_dot_eye = Vector::dot(&reflectv, eyev);
             if reflect_dot_eye <= 0.0 {
                 // Light reflects away from the eye, so specular must be black.
                 // Do nothing since it is already initialized to black.
@@ -107,7 +107,7 @@ mod tests {
 
     use crate::ray_tracer::{
         shapes::new_sphere,
-        tuples::{new_point, new_vector},
+        tuples_new::{new_point, new_vector},
         utils::is_float_equal,
     };
 
@@ -123,7 +123,7 @@ mod tests {
         assert!(is_float_equal(&m.shininess, 200.0));
     }
 
-    const fn setup_lighting() -> (Material, Tuple) {
+    const fn setup_lighting() -> (Material, Point) {
         (Material::new(), new_point(0.0, 0.0, 0.0))
     }
 

@@ -1,4 +1,4 @@
-use crate::ray_tracer::{colors::Color, tuples::Point};
+use crate::ray_tracer::{colors::Color, tuples_new::Point};
 
 use super::Patterns;
 

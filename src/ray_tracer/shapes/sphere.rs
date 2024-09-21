@@ -2,9 +2,9 @@
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
-    matrices::Matrix,
+    matrices_new::Matrix,
     rays::Ray,
-    tuples::{new_point, Point, Vector},
+    tuples_new::{new_point, Point, Vector},
 };
 
 use super::{BaseShape, Object, Shapes};
@@ -38,12 +38,14 @@ impl Shapes for Sphere {
     fn get_position(&self) -> Point {
         self.base.position
     }
-    fn set_transform(&mut self, transform: &Matrix) {
-        let mut trans = *transform;
-        trans.calculate_inverse().unwrap();
-        self.base.transform = trans;
+    fn set_transform(&mut self, transform: &Matrix<4>) {
+        debug_assert!(
+            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
+            "Transformation matrices must be inverted before applying it to an object."
+        );
+        self.base.transform = *transform;
     }
-    fn get_transform(&self) -> Matrix {
+    fn get_transform(&self) -> Matrix<4> {
         self.base.transform
     }
     fn set_material(&mut self, material: &Material) {
@@ -81,7 +83,7 @@ impl Shapes for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::tuples::new_vector;
+    use crate::ray_tracer::tuples_new::new_vector;
 
     use super::*;
 

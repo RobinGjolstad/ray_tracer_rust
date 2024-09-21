@@ -1,8 +1,8 @@
 use crate::ray_tracer::{
     intersections::{Intersection, Intersections},
-    matrices::Matrix,
+    matrices_new::Mat,
     shapes::Object,
-    tuples::{Point, Vector},
+    tuples_new::{Point, Vector},
     world::World,
 };
 
@@ -24,7 +24,12 @@ impl Ray {
         self.origin + self.direction * time
     }
     fn global_to_local(&self, object: &Object) -> Self {
-        self.transform(&object.get_transform().get_inverted().unwrap())
+        self.transform(
+            &object
+                .get_transform()
+                .inverse
+                .expect("The objects transformation matrix should be inverted."),
+        )
     }
 
     pub(crate) fn intersect(&self, object: &Object, intersection_list: &mut Vec<Intersection>) {
@@ -66,7 +71,7 @@ impl Ray {
         intersections
     }
 
-    pub(crate) fn transform(&self, transformation: &Matrix) -> Self {
+    pub(crate) fn transform(&self, transformation: &Mat<4>) -> Self {
         Self {
             origin: *transformation * self.origin,
             direction: *transformation * self.direction,
@@ -80,7 +85,7 @@ mod tests {
     use crate::ray_tracer::{
         shapes::new_sphere,
         transformations::Transform,
-        tuples::{new_point, new_vector},
+        tuples_new::{new_point, new_vector},
         utils::is_float_equal,
     };
 
@@ -170,7 +175,7 @@ mod tests {
     fn translating_a_ray() {
         let r = Ray::new(new_point(1.0, 2.0, 3.0), new_vector(0.0, 1.0, 0.0));
         let m = Transform::translate(3.0, 4.0, 5.0);
-        let r2 = r.transform(&m);
+        let r2 = r.transform(&m.matrix);
         assert_eq!(r2.origin, new_point(4.0, 6.0, 8.0));
         assert_eq!(r2.direction, new_vector(0.0, 1.0, 0.0));
     }
@@ -178,7 +183,7 @@ mod tests {
     fn scaling_a_ray() {
         let r = Ray::new(new_point(1.0, 2.0, 3.0), new_vector(0.0, 1.0, 0.0));
         let m = Transform::scaling(2.0, 3.0, 4.0);
-        let r2 = r.transform(&m);
+        let r2 = r.transform(&m.matrix);
         assert_eq!(r2.origin, new_point(2.0, 6.0, 12.0));
         assert_eq!(r2.direction, new_vector(0.0, 3.0, 0.0));
     }
@@ -186,7 +191,7 @@ mod tests {
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_sphere();
-        s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
+        s.set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse());
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
@@ -197,7 +202,7 @@ mod tests {
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_sphere();
-        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 0);

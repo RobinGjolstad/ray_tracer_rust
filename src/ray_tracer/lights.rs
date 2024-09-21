@@ -1,4 +1,4 @@
-use crate::ray_tracer::{colors::Color, tuples::Point};
+use crate::ray_tracer::{colors::Color, tuples_new::Point};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Light {
@@ -26,7 +26,7 @@ impl Light {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::tuples::new_point;
+    use crate::ray_tracer::tuples_new::new_point;
 
     use super::*;
 

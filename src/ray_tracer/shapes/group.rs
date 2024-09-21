@@ -5,15 +5,15 @@ use super::{BaseShape, Object, Shapes};
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
-    matrices::Matrix,
+    matrices_new::Matrix,
     rays::Ray,
-    tuples::{new_point, new_vector, Point, Vector},
+    tuples_new::{new_point, new_vector, Point, Vector},
 };
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Group {
     position: Point,
-    transform: Matrix,
+    transform: Matrix<4>,
     material: Option<Material>,
     children: Option<Arc<[Object]>>,
 }
@@ -22,9 +22,7 @@ impl Group {
     pub fn new() -> Self {
         Self {
             position: new_point(0.0, 0.0, 0.0),
-            transform: Matrix::new_identity()
-                .calculate_inverse()
-                .expect("Failed to calculate inverse of identity matrix."),
+            transform: *Matrix::<4>::identity().inverse(),
             material: None,
             children: None,
         }
@@ -52,13 +50,18 @@ impl Shapes for Group {
     fn get_position(&self) -> Point {
         self.position
     }
-    fn set_transform(&mut self, transform: &Matrix) {
+    fn set_transform(&mut self, transform: &Matrix<4>) {
+        debug_assert!(
+            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
+            "Transformation matrices must be inverted before applying it to an object."
+        );
+
         // Apply transformation to self,
         // then recursively apply to all children.
         // If a child is a group, apply the transformation to it and its children.
         self.transform = self.transform * *transform;
     }
-    fn get_transform(&self) -> Matrix {
+    fn get_transform(&self) -> Matrix<4> {
         self.transform
     }
     fn set_material(&mut self, material: &Material) {
@@ -103,7 +106,7 @@ impl Shapes for Group {
 #[allow(clippy::module_name_repetitions)]
 pub struct GroupBuilder {
     children: Vec<Object>,
-    transform: Matrix,
+    transform: Matrix<4>,
     material: Option<Material>,
 }
 
@@ -111,9 +114,7 @@ impl GroupBuilder {
     pub fn new() -> Self {
         Self {
             children: Vec::new(),
-            transform: Matrix::new_identity()
-                .calculate_inverse()
-                .expect("Failed to calculate inverse of identity matrix."),
+            transform: *Matrix::<4>::identity().inverse(),
             material: None,
         }
     }
@@ -125,10 +126,13 @@ impl GroupBuilder {
         self.children.append(&mut children.to_owned());
         self
     }
-    pub fn set_transform(mut self, transform: &mut Matrix) -> Self {
-        self.transform = transform
-            .calculate_inverse()
-            .expect("Failed to calculate inverse.");
+    pub fn set_transform(mut self, transform: &Matrix<4>) -> Self {
+        debug_assert!(
+            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
+            "Transformation matrices must be inverted before applying it to an object."
+        );
+
+        self.transform = *transform;
         self
     }
     pub const fn set_material(mut self, material: &Material) -> Self {
@@ -153,11 +157,11 @@ impl GroupBuilder {
                 // Re-build the group with the current group's transform.
                 let new_g = Self::new()
                     .add_children(&g.get_children().unwrap())
-                    .set_transform(&mut new_transform)
+                    .set_transform(new_transform.inverse())
                     .build();
                 *child = new_g;
             } else {
-                child.set_transform(&new_transform);
+                child.set_transform(new_transform.inverse());
             }
         }
 
@@ -165,7 +169,7 @@ impl GroupBuilder {
             position: new_point(0.0, 0.0, 0.0),
             // Own transform has been applied to all children now.
             // To prevent it from being re-applied, create the group with an identity transform.
-            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+            transform: *Matrix::<4>::identity().inverse(),
             //transform: self.transform,
             material: self.material,
             children: Some(children.into()),
@@ -186,13 +190,13 @@ mod tests {
     fn creating_a_group() {
         let g = Group::new();
 
-        assert_eq!(g.get_transform(), Matrix::new_identity());
+        assert_eq!(g.get_transform(), *Matrix::<4>::identity().inverse());
         assert!(!g.has_children());
     }
     #[test]
     fn adding_a_child_to_a_group_keeps_the_childs_transformations() {
         let mut s = new_test_shape();
-        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
         let mut g = new_group(vec![s.clone()]);
 
         let Object::Group(group) = g else {
@@ -204,7 +208,7 @@ mod tests {
         assert_eq!(children.len(), 1);
         assert_eq!(
             children.first().unwrap().get_transform(),
-            Transform::translate(5.0, 0.0, 0.0)
+            *Transform::translate(5.0, 0.0, 0.0).inverse()
         );
     }
     #[test]
@@ -222,8 +226,8 @@ mod tests {
         let mut s1 = new_sphere();
         let mut s2 = new_sphere();
         let mut s3 = new_sphere();
-        s2.set_transform(&Transform::translate(0.0, 0.0, -3.0));
-        s3.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        s2.set_transform(Transform::translate(0.0, 0.0, -3.0).inverse());
+        s3.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
 
         let mut g = new_group(vec![s1.clone(), s2.clone(), s3.clone()]);
 
@@ -241,10 +245,10 @@ mod tests {
     #[test]
     fn intersecting_a_transformed_group() {
         let mut s = new_sphere();
-        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
         let g = GroupBuilder::new()
             .add(s.clone())
-            .set_transform(&mut Transform::scaling(2.0, 2.0, 2.0))
+            .set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse())
             .build();
 
         let r = Ray::new(new_point(10.0, 0.0, -10.0), new_vector(0.0, 0.0, 1.0));

@@ -2,21 +2,44 @@ use std::{iter::zip, ops::Mul};
 
 use super::{
     tuples_new::{new_point, new_vector, Point, Tuple, Vector},
-    utils::is_float_equal,
+    utils::{is_float_equal, is_float_equal_low_precision},
 };
 
 #[derive(Debug, Copy, Clone)]
 pub struct Mat<const S: usize> {
     mat: [[f64; S]; S],
+    size: usize,
 }
 impl<const S: usize> Mat<S> {
     #[must_use]
     pub const fn new(mat: [[f64; S]; S]) -> Self {
-        Self { mat }
+        Self { mat, size: S }
     }
     #[must_use]
     pub const fn new_empty() -> Self {
-        Self { mat: [[0.0; S]; S] }
+        Self {
+            mat: [[0.0; S]; S],
+            size: S,
+        }
+    }
+    #[must_use]
+    pub fn identity() -> Self {
+        let mut mat = Self::new_empty();
+        (0..S).for_each(|i| mat.mat[i][i] = 1.0);
+
+        mat
+    }
+    #[must_use]
+    pub fn transpose(&self) -> Self {
+        let mut mat: [[f64; S]; S] = [[0.0; S]; S];
+
+        (0..S).for_each(|row| {
+            for column in 0..S {
+                mat[row][column] = self.mat[column][row];
+            }
+        });
+
+        Self::new(mat)
     }
 }
 
@@ -24,6 +47,183 @@ impl<const S: usize> PartialEq<Self> for Mat<S> {
     fn eq(&self, other: &Self) -> bool {
         !zip(self.mat, other.mat)
             .any(|(lhs, rhs)| zip(lhs, rhs).any(|(l, r)| !is_float_equal(&l, r)))
+    }
+}
+
+/*
+impl Mul for Mat<2> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut mat = [[0.0; 2]; 2];
+
+        for (row, mat) in mat.iter_mut().enumerate() {
+            for (column, slot) in mat.iter_mut().enumerate() {
+                *slot = self.mat[row][0]
+                    .mul_add(rhs.mat[0][column], self.mat[row][1] * rhs.mat[1][column]);
+            }
+        }
+
+        Self { mat, size: 2 }
+    }
+}
+impl Mul for Mat<3> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut mat: [[f64; 3]; 3] = [[0.0; 3]; 3];
+
+        for (row, mat) in mat.iter_mut().enumerate() {
+            for (column, slot) in mat.iter_mut().enumerate() {
+                *slot = self.mat[row][0].mul_add(
+                    rhs.mat[0][column],
+                    self.mat[row][1]
+                        .mul_add(rhs.mat[1][column], self.mat[row][2] * rhs.mat[2][column]),
+                );
+            }
+        }
+
+        Self { mat, size: 3 }
+    }
+}
+impl Mul for Mat<4> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut mat: [[f64; 4]; 4] = [[0.0; 4]; 4];
+
+        for (row, mat) in mat.iter_mut().enumerate() {
+            for (column, slot) in mat.iter_mut().enumerate() {
+                *slot = self.mat[row][0].mul_add(
+                    rhs.mat[0][column],
+                    self.mat[row][1].mul_add(
+                        rhs.mat[1][column],
+                        self.mat[row][2]
+                            .mul_add(rhs.mat[2][column], self.mat[row][3] * rhs.mat[3][column]),
+                    ),
+                );
+            }
+        }
+
+        Self { mat, size: 4 }
+    }
+}
+*/
+impl<const S: usize> Mul for Mat<S> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut mat: [[f64; S]; S] = [[0.0; S]; S];
+
+        for row in 0..S {
+            for column in 0..S {
+                mat[row][column] = (0..S)
+                    .map(|idx| self.mat[row][idx] * rhs.mat[idx][column])
+                    .sum();
+            }
+        }
+
+        Self { mat, size: S }
+    }
+}
+
+impl Mul<Point> for Mat<3> {
+    type Output = Point;
+    fn mul(self, rhs: Point) -> Self::Output {
+        let mut tup: [f64; 3] = [0.0; 3];
+
+        for (row, item) in tup.iter_mut().enumerate().take(3) {
+            *item = self.mat[row][0] * rhs.x + self.mat[row][1] * rhs.y + self.mat[row][2] * rhs.z;
+
+            // *item = self.mat[row][0].mul_add(
+            //     rhs.x,
+            //     self.mat[row][1].mul_add(rhs.y, self.mat[row][2] * rhs.z),
+            // );
+        }
+
+        new_point(tup[0], tup[1], tup[2])
+    }
+}
+impl Mul<Vector> for Mat<3> {
+    type Output = Vector;
+    fn mul(self, rhs: Vector) -> Self::Output {
+        let mut tup: [f64; 3] = [0.0; 3];
+
+        for (row, item) in tup.iter_mut().enumerate().take(3) {
+            *item = self.mat[row][0] * rhs.x + self.mat[row][1] * rhs.y + self.mat[row][2] * rhs.z;
+
+            // *item = self.mat[row][0].mul_add(
+            //     rhs.x,
+            //     self.mat[row][1].mul_add(rhs.y, self.mat[row][2] * rhs.z),
+            // );
+        }
+
+        new_vector(tup[0], tup[1], tup[2])
+    }
+}
+impl Mul<Tuple> for Mat<4> {
+    type Output = Tuple;
+    fn mul(self, rhs: Tuple) -> Self::Output {
+        let mut tup: [f64; 4] = [0.0; 4];
+
+        for (row, item) in tup.iter_mut().enumerate().take(4) {
+            *item = self.mat[row][0] * rhs.x
+                + self.mat[row][1] * rhs.y
+                + self.mat[row][2] * rhs.z
+                + self.mat[row][3] * rhs.w;
+
+            // *item = self.mat[row][0].mul_add(
+            //     rhs.x,
+            //     self.mat[row][1].mul_add(
+            //         rhs.y,
+            //         self.mat[row][2].mul_add(rhs.z, self.mat[row][3] * rhs.w),
+            //     ),
+            // );
+        }
+
+        Tuple::new(tup[0], tup[1], tup[2], tup[3])
+    }
+}
+impl Mul<Point> for Mat<4> {
+    type Output = Point;
+    fn mul(self, rhs: Point) -> Self::Output {
+        let tuple: Tuple = rhs.into();
+
+        // let mut tup: [f64; 4] = [0.0; 4];
+        // for (row, item) in tup.iter_mut().enumerate().take(3) {
+        //     *item = self.mat[row][0].mul_add(
+        //         tuple.x,
+        //         self.mat[row][1].mul_add(
+        //             tuple.y,
+        //             self.mat[row][2].mul_add(tuple.z, self.mat[row][3] * tuple.w),
+        //         ),
+        //     );
+        // }
+        //
+        // new_point(tup[0], tup[1], tup[2])
+
+        let res: Tuple = self * tuple;
+
+        new_point(res.x, res.y, res.z)
+    }
+}
+impl Mul<Vector> for Mat<4> {
+    type Output = Vector;
+    fn mul(self, rhs: Vector) -> Self::Output {
+        let tuple: Tuple = rhs.into();
+
+        // let mut tup: [f64; 4] = [0.0; 4];
+        // for (row, item) in tup.iter_mut().enumerate().take(3) {
+        //     *item = self.mat[row][0].mul_add(
+        //         tuple.x,
+        //         self.mat[row][1].mul_add(
+        //             tuple.y,
+        //             self.mat[row][2].mul_add(tuple.z, self.mat[row][3] * tuple.w),
+        //         ),
+        //     );
+        // }
+        //
+        // new_vector(tup[0], tup[1], tup[2])
+
+        let res: Tuple = self * tuple;
+
+        new_vector(res.x, res.y, res.z)
     }
 }
 
@@ -60,15 +260,12 @@ impl<const S: usize> Matrix<S> {
     }
     #[must_use]
     pub fn transpose(&self) -> Self {
-        let mut mat: [[f64; S]; S] = [[0.0; S]; S];
-
-        (0..S).for_each(|row| {
-            for column in 0..S {
-                mat[row][column] = self.matrix.mat[column][row];
-            }
-        });
-
-        Self::new(mat)
+        Self {
+            size: S,
+            matrix: self.matrix.transpose(),
+            inverse: None,
+            inverse_transpose: None,
+        }
     }
 }
 impl Matrix<2> {
@@ -169,6 +366,7 @@ impl Matrix<3> {
         }
 
         self.inverse = Some(m2);
+        self.inverse_transpose = Some(m2.transpose());
 
         &self.inverse
     }
@@ -240,9 +438,9 @@ impl Matrix<4> {
     pub fn invertible(&self) -> bool {
         !is_float_equal(&self.determinant(), 0.0)
     }
-    pub fn inverse(&mut self) -> &Option<Mat<4>> {
-        if self.inverse.is_some() {
-            return &self.inverse;
+    pub fn inverse(&mut self) -> &mut Self {
+        if self.inverse.is_some() && self.inverse_transpose.is_some() {
+            return self;
         }
 
         let determinant = self.determinant();
@@ -262,8 +460,9 @@ impl Matrix<4> {
         }
 
         self.inverse = Some(m2);
+        self.inverse_transpose = Some(m2.transpose());
 
-        &self.inverse
+        self
     }
 }
 
@@ -280,27 +479,25 @@ impl<const S: usize> Default for Matrix<S> {
 //     }
 // }
 
+impl<const S: usize> Mul for Matrix<S> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            size: S,
+            matrix: self.matrix * rhs.matrix,
+            inverse: None,
+            inverse_transpose: None,
+        }
+    }
+}
+
+/*
 impl Mul for Matrix<2> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut mat: [[f64; 2]; 2] = [[0.0; 2]; 2];
-
-        for (row, mat) in mat.iter_mut().enumerate() {
-            for (column, slot) in mat.iter_mut().enumerate() {
-                // mat[row][column] =
-                //       (self.matrix[row][0] * rhs.matrix[0][column])
-                //     + (self.matrix[row][1] * rhs.matrix[1][column])
-
-                *slot = self.matrix.mat[row][0].mul_add(
-                    rhs.matrix.mat[0][column],
-                    self.matrix.mat[row][1] * rhs.matrix.mat[1][column],
-                );
-            }
-        }
-
         Self {
             size: 2,
-            matrix: Mat::new(mat),
+            matrix: self.matrix * rhs.matrix,
             inverse: None,
             inverse_transpose: None,
         }
@@ -310,23 +507,9 @@ impl Mul for Matrix<2> {
 impl Mul for Matrix<3> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut mat: [[f64; 3]; 3] = [[0.0; 3]; 3];
-
-        for (row, mat) in mat.iter_mut().enumerate() {
-            for (column, slot) in mat.iter_mut().enumerate() {
-                *slot = self.matrix.mat[row][0].mul_add(
-                    rhs.matrix.mat[0][column],
-                    self.matrix.mat[row][1].mul_add(
-                        rhs.matrix.mat[1][column],
-                        self.matrix.mat[row][2] * rhs.matrix.mat[2][column],
-                    ),
-                );
-            }
-        }
-
         Self {
             size: 3,
-            matrix: Mat::new(mat),
+            matrix: self.matrix * rhs.matrix,
             inverse: None,
             inverse_transpose: None,
         }
@@ -336,143 +519,45 @@ impl Mul for Matrix<3> {
 impl Mul for Matrix<4> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut mat: [[f64; 4]; 4] = [[0.0; 4]; 4];
-
-        for (row, mat) in mat.iter_mut().enumerate() {
-            for (column, slot) in mat.iter_mut().enumerate() {
-                // TODO: Generalize this to any size.
-                // Must find a way to limit the number of indexed "nests".
-
-                *slot = self.matrix.mat[row][0].mul_add(
-                    rhs.matrix.mat[0][column],
-                    self.matrix.mat[row][1].mul_add(
-                        rhs.matrix.mat[1][column],
-                        self.matrix.mat[row][2].mul_add(
-                            rhs.matrix.mat[2][column],
-                            self.matrix.mat[row][3] * rhs.matrix.mat[3][column],
-                        ),
-                    ),
-                );
-            }
-        }
-
         Self {
             size: 4,
-            matrix: Mat::new(mat),
+            matrix: self.matrix * rhs.matrix,
             inverse: None,
             inverse_transpose: None,
         }
     }
 }
+*/
 
 impl Mul<Point> for Matrix<3> {
     type Output = Point;
     fn mul(self, rhs: Point) -> Self::Output {
-        let mut tup: [f64; 3] = [0.0; 3];
-
-        for (row, item) in tup.iter_mut().enumerate().take(3) {
-            // *item = self.matrix[row][0] * rhs.x
-            //     + self.matrix[row][1] * rhs.y
-            //     + self.matrix[row][2] * rhs.z;
-
-            *item = self.matrix.mat[row][0].mul_add(
-                rhs.x,
-                self.matrix.mat[row][1].mul_add(rhs.y, self.matrix.mat[row][2] * rhs.z),
-            );
-        }
-
-        new_point(tup[0], tup[1], tup[2])
+        self.matrix * rhs
     }
 }
 impl Mul<Vector> for Matrix<3> {
     type Output = Vector;
     fn mul(self, rhs: Vector) -> Self::Output {
-        let mut tup: [f64; 3] = [0.0; 3];
-
-        for (row, item) in tup.iter_mut().enumerate().take(3) {
-            // *item = self.matrix[row][0] * rhs.x
-            //     + self.matrix[row][1] * rhs.y
-            //     + self.matrix[row][2] * rhs.z;
-
-            *item = self.matrix.mat[row][0].mul_add(
-                rhs.x,
-                self.matrix.mat[row][1].mul_add(rhs.y, self.matrix.mat[row][2] * rhs.z),
-            );
-        }
-
-        new_vector(tup[0], tup[1], tup[2])
+        self.matrix * rhs
     }
 }
 
 impl Mul<Tuple> for Matrix<4> {
     type Output = Tuple;
     fn mul(self, rhs: Tuple) -> Self::Output {
-        let mut tup: [f64; 4] = [0.0; 4];
-
-        for (row, item) in tup.iter_mut().enumerate().take(4) {
-            // *item = self.matrix[row][0] * rhs.x
-            //     + self.matrix[row][1] * rhs.y
-            //     + self.matrix[row][2] * rhs.z
-            //     + self.matrix[row][3] * rhs.w;
-
-            *item = self.matrix.mat[row][0].mul_add(
-                rhs.x,
-                self.matrix.mat[row][1].mul_add(
-                    rhs.y,
-                    self.matrix.mat[row][2].mul_add(rhs.z, self.matrix.mat[row][3] * rhs.w),
-                ),
-            );
-        }
-
-        Tuple::new(tup[0], tup[1], tup[2], tup[3])
+        self.matrix * rhs
     }
 }
 impl Mul<Point> for Matrix<4> {
     type Output = Point;
     fn mul(self, rhs: Point) -> Self::Output {
-        let tuple: Tuple = rhs.into();
-        let mut tup: [f64; 4] = [0.0; 4];
-
-        for (row, item) in tup.iter_mut().enumerate().take(3) {
-            // *item = self.matrix[row][0] * rhs.x
-            //     + self.matrix[row][1] * rhs.y
-            //     + self.matrix[row][2] * rhs.z
-            //     + self.matrix[row][3] * rhs.w;
-
-            *item = self.matrix.mat[row][0].mul_add(
-                tuple.x,
-                self.matrix.mat[row][1].mul_add(
-                    tuple.y,
-                    self.matrix.mat[row][2].mul_add(tuple.z, self.matrix.mat[row][3] * tuple.w),
-                ),
-            );
-        }
-
-        new_point(tup[0], tup[1], tup[2])
+        self.matrix * rhs
     }
 }
 impl Mul<Vector> for Matrix<4> {
     type Output = Vector;
     fn mul(self, rhs: Vector) -> Self::Output {
-        let tuple: Tuple = rhs.into();
-        let mut tup: [f64; 4] = [0.0; 4];
-
-        for (row, item) in tup.iter_mut().enumerate().take(3) {
-            // *item = self.matrix[row][0] * rhs.x
-            //     + self.matrix[row][1] * rhs.y
-            //     + self.matrix[row][2] * rhs.z
-            //     + self.matrix[row][3] * rhs.w;
-
-            *item = self.matrix.mat[row][0].mul_add(
-                tuple.x,
-                self.matrix.mat[row][1].mul_add(
-                    tuple.y,
-                    self.matrix.mat[row][2].mul_add(tuple.z, self.matrix.mat[row][3] * tuple.w),
-                ),
-            );
-        }
-
-        new_vector(tup[0], tup[1], tup[2])
+        self.matrix * rhs
     }
 }
 
@@ -853,7 +938,7 @@ mod tests {
             [1.0, -3.0, 7.0, 4.0],
         ]);
 
-        let a_inverse = a.inverse().unwrap();
+        let a_inverse = a.inverse().inverse.unwrap();
 
         let a_inverse_comp = Mat::new([
             [0.21805, 0.45113, 0.24060, -0.04511],

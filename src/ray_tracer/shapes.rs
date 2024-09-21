@@ -8,9 +8,9 @@
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
-    matrices::Matrix,
+    matrices_new::Matrix,
     rays::Ray,
-    tuples::{new_point, Point, Vector},
+    tuples_new::{new_point, Point, Vector},
 };
 use std::{
     fmt::{Debug, Display},
@@ -41,8 +41,8 @@ use self::group::GroupBuilder;
 pub(super) trait Shapes: Debug + Default + Sync {
     fn set_position(&mut self, pos: &Point);
     fn get_position(&self) -> Point;
-    fn set_transform(&mut self, transform: &Matrix);
-    fn get_transform(&self) -> Matrix;
+    fn set_transform(&mut self, transform: &Matrix<4>);
+    fn get_transform(&self) -> Matrix<4>;
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
     fn local_normal_at(&self, point: Point) -> Vector;
@@ -52,15 +52,17 @@ pub(super) trait Shapes: Debug + Default + Sync {
 #[derive(Debug, Clone, PartialEq)]
 pub struct BaseShape {
     position: Point,
-    transform: Matrix,
+    transform: Matrix<4>,
     material: Material,
 }
 impl BaseShape {
     #[must_use]
     pub fn new() -> Self {
+        let mut mat = Matrix::<4>::identity();
+        mat.inverse();
         Self {
             position: new_point(0.0, 0.0, 0.0),
-            transform: Matrix::new_identity().calculate_inverse().unwrap(),
+            transform: mat,
             material: Material::new(),
         }
     }
@@ -86,15 +88,29 @@ pub enum Object {
 impl Object {
     fn world_point_to_local(&self, point: &Point) -> Point {
         let inverted = match self {
-            Self::Group(g) => g.get_transform().get_inverted().unwrap(),
-            Self::Sphere(s) => s.get_transform().get_inverted().unwrap(),
-            Self::Plane(p) => p.get_transform().get_inverted().unwrap(),
-            Self::Cube(c) => c.get_transform().get_inverted().unwrap(),
-            Self::Cylinder(c) => c.get_transform().get_inverted().unwrap(),
-            Self::Cone(c) => c.get_transform().get_inverted().unwrap(),
+            Self::Group(g) => g.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Sphere(s) => s.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Plane(p) => p.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Cube(c) => c.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Cylinder(c) => c.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Cone(c) => c.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
 
             #[cfg(test)]
-            Self::TestShape(s) => s.get_transform().get_inverted().unwrap(),
+            Self::TestShape(s) => s.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
         };
 
         inverted * *point
@@ -116,24 +132,42 @@ impl Object {
         self.normal_to_world(&local_normal)
     }
     fn local_vector_to_world(&self, local_vector: &Vector) -> Vector {
-        let inverted = match self {
-            Self::Group(g) => g.get_transform().get_inverted().unwrap(),
-            Self::Sphere(s) => s.get_transform().get_inverted().unwrap(),
-            Self::Plane(p) => p.get_transform().get_inverted().unwrap(),
-            Self::Cube(c) => c.get_transform().get_inverted().unwrap(),
-            Self::Cylinder(c) => c.get_transform().get_inverted().unwrap(),
-            Self::Cone(c) => c.get_transform().get_inverted().unwrap(),
+        let inverted_mat = match self {
+            Self::Group(g) => g.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Sphere(s) => s.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Plane(p) => p.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Cube(c) => c.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Cylinder(c) => c.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
+            Self::Cone(c) => c.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
 
             #[cfg(test)]
-            Self::TestShape(s) => s.get_transform().get_inverted().unwrap(),
+            Self::TestShape(s) => s.get_transform().inverse.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ),
         };
 
-        let mut world_vector = inverted.transpose().unwrap() * *local_vector;
-        world_vector.w = 0.0;
+        let mut world_vector = inverted_mat.transpose() * *local_vector;
         world_vector.normalize()
     }
 
-    pub fn set_transform(&mut self, transform: &Matrix) {
+    pub fn set_transform(&mut self, transform: &Matrix<4>) {
+        debug_assert!(
+            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
+            "Transformation matrix should be inverted before assignment."
+        );
+
         match self {
             Self::Group(g) => g.set_transform(transform),
             Self::Sphere(s) => s.set_transform(transform),
@@ -147,7 +181,7 @@ impl Object {
         }
     }
     #[must_use]
-    pub fn get_transform(&self) -> Matrix {
+    pub fn get_transform(&self) -> Matrix<4> {
         match self {
             Self::Group(g) => g.get_transform(),
             Self::Sphere(s) => s.get_transform(),
@@ -208,18 +242,17 @@ impl Object {
     pub(crate) fn world_to_object(&self, world_point: &Point) -> Point {
         // The shape's transform has already combined with its parent's transform
         // if it is part of a group.
-        self.get_transform().get_inverted().unwrap() * *world_point
+        self.get_transform()
+            .inverse
+            .expect("Shape's transformation matrix should be inverted and transposed before use.")
+            * *world_point
     }
 
     fn normal_to_world(&self, local_normal: &Vector) -> Vector {
-        let mut normal = self
-            .get_transform()
-            .get_inverted()
-            .unwrap()
-            .transpose()
-            .unwrap()
-            * *local_normal;
-        normal.w = 0.0;
+        let mut normal =
+            self.get_transform().inverse_transpose.expect(
+                "Shape's transformation matrix should be inverted and transposed before use.",
+            ) * *local_normal;
         normal.normalize()
     }
 }
@@ -288,19 +321,24 @@ mod tests {
 
     use super::*;
     use crate::ray_tracer::{
-        transformations::Transform, tuples::new_vector, utils::is_float_equal,
+        transformations::Transform, tuples_new::new_vector, utils::is_float_equal,
     };
 
     #[test]
     fn the_default_transformation() {
         let s = new_test_shape();
-        assert_eq!(s.get_transform(), Matrix::new_identity());
+        assert_eq!(s.get_transform(), *Matrix::<4>::identity().inverse());
     }
     #[test]
     fn assigning_a_transformation() {
         let mut s = new_test_shape();
-        s.set_transform(&Transform::translate(2.0, 3.0, 4.0));
-        assert_eq!(s.get_transform(), Transform::translate(2.0, 3.0, 4.0));
+        let mut trans = Transform::translate(2.0, 3.0, 4.0);
+        trans.inverse();
+        s.set_transform(&trans);
+        assert_eq!(
+            s.get_transform().matrix,
+            Transform::translate(2.0, 3.0, 4.0).matrix
+        );
     }
     #[test]
     fn the_default_material() {
@@ -320,7 +358,9 @@ mod tests {
     fn intersecting_a_scaled_shape_with_a_ray() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_test_shape();
-        s.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
+        let mut trans = Transform::scaling(2.0, 2.0, 2.0);
+        trans.inverse();
+        s.set_transform(&trans);
         let mut xs = Vec::new();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
@@ -331,7 +371,9 @@ mod tests {
     fn intersecting_a_translated_shape_with_a_ray() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut s = new_test_shape();
-        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        let mut trans = Transform::translate(5.0, 0.0, 0.0);
+        trans.inverse();
+        s.set_transform(&trans);
         let mut xs = Vec::new();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
@@ -341,14 +383,17 @@ mod tests {
     #[test]
     fn computing_the_normal_on_a_translated_shape() {
         let mut s = new_test_shape();
-        s.set_transform(&Transform::translate(0.0, 1.0, 0.0));
+        let mut trans = Transform::translate(0.0, 1.0, 0.0);
+        trans.inverse();
+        s.set_transform(&trans);
         let n = s.normal_at(new_point(0.0, 1.70711, -0.70711));
         assert_eq!(n, new_vector(0.0, 0.70711, -0.70711));
     }
     #[test]
     fn computing_the_normal_on_a_transformed_shape() {
         let mut s = new_test_shape();
-        let m = Transform::scaling(1.0, 0.5, 1.0) * Transform::rotation_z(PI / 5.0);
+        let mut m = Transform::scaling(1.0, 0.5, 1.0) * Transform::rotation_z(PI / 5.0);
+        m.inverse();
         s.set_transform(&m);
         let n = s.normal_at(new_point(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0));
         assert_eq!(n, new_vector(0.0, 0.97014, -0.24254));
@@ -356,24 +401,21 @@ mod tests {
     #[test]
     fn a_helper_for_producing_a_sphere_with_a_glassy_material() {
         let s = glass_sphere();
-        assert_eq!(
-            s.get_transform().get_matrix(),
-            Matrix::new_identity().get_matrix()
-        );
+        assert_eq!(s.get_transform().matrix, Matrix::<4>::identity().matrix);
         assert!(is_float_equal(&s.get_material().transparency, 1.0));
         assert!(is_float_equal(&s.get_material().refractive_index, 1.5));
     }
     #[test]
     fn converting_a_point_from_world_to_object_space() {
         let mut s = new_sphere();
-        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
         let g2 = GroupBuilder::new()
             .add(s)
-            .set_transform(&mut Transform::scaling(2.0, 2.0, 2.0))
+            .set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse())
             .build();
         let g1 = GroupBuilder::new()
             .add(g2)
-            .set_transform(&mut Transform::rotation_y(PI / 2.0))
+            .set_transform(Transform::rotation_y(PI / 2.0).inverse())
             .build();
 
         // Get the sphere from the groups
@@ -392,13 +434,13 @@ mod tests {
     #[test]
     fn converting_a_normal_from_object_to_world_space() {
         let mut s = new_sphere();
-        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
         let g2 = GroupBuilder::new()
-            .set_transform(&mut Transform::scaling(1.0, 2.0, 3.0))
+            .set_transform(Transform::scaling(1.0, 2.0, 3.0).inverse())
             .add(s)
             .build();
         let g1 = GroupBuilder::new()
-            .set_transform(&mut Transform::rotation_y(PI / 2.0))
+            .set_transform(Transform::rotation_y(PI / 2.0).inverse())
             .add(g2)
             .build();
 
@@ -422,13 +464,13 @@ mod tests {
     #[test]
     fn finding_the_normal_on_a_child_object() {
         let mut s = new_sphere();
-        s.set_transform(&Transform::translate(5.0, 0.0, 0.0));
+        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
         let g2 = GroupBuilder::new()
-            .set_transform(&mut Transform::scaling(1.0, 2.0, 3.0))
+            .set_transform(Transform::scaling(1.0, 2.0, 3.0).inverse())
             .add(s)
             .build();
         let g1 = GroupBuilder::new()
-            .set_transform(&mut Transform::rotation_y(PI / 2.0))
+            .set_transform(Transform::rotation_y(PI / 2.0).inverse())
             .add(g2)
             .build();
 

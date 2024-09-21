@@ -2,9 +2,9 @@
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
-    matrices::Matrix,
+    matrices_new::Matrix,
     rays::Ray,
-    tuples::{new_vector, Point, Vector},
+    tuples_new::{new_vector, Point, Vector},
     utils::EPSILON,
 };
 
@@ -39,12 +39,14 @@ impl Shapes for Plane {
     fn get_position(&self) -> Point {
         self.base.position
     }
-    fn set_transform(&mut self, transform: &Matrix) {
-        let mut trans = *transform;
-        trans.calculate_inverse().unwrap();
-        self.base.transform = trans;
+    fn set_transform(&mut self, transform: &Matrix<4>) {
+        debug_assert!(
+            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
+            "Transformation matrices must be inverted before applying it to an object."
+        );
+        self.base.transform = *transform;
     }
-    fn get_transform(&self) -> Matrix {
+    fn get_transform(&self) -> Matrix<4> {
         self.base.transform
     }
     fn set_material(&mut self, material: &Material) {
@@ -69,7 +71,7 @@ impl Shapes for Plane {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::{tuples::new_point, utils::is_float_equal_low_precision};
+    use crate::ray_tracer::{tuples_new::new_point, utils::is_float_equal_low_precision};
 
     use super::*;
 

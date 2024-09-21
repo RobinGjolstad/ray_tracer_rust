@@ -1,13 +1,9 @@
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-
 use crate::ray_tracer::{
     rays::Ray,
     shapes::Object,
-    tuples::{Point, Tuple, Vector},
+    tuples_new::{new_point, new_vector, Point, Vector},
     utils,
 };
-
-use super::tuples::{new_point, new_vector};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Intersection {
@@ -71,7 +67,7 @@ impl Intersections {
 
         // Avoid clone
         self.list
-            .par_iter()
+            .iter()
             .filter(|x| x.t.is_sign_positive())
             .min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap())
             .cloned()
@@ -117,7 +113,7 @@ pub fn prepare_computations(
     let point = ray.position(intersection.t);
     let normalv = intersection.get_object().normal_at(point);
     let eyev = -(ray.get_direction());
-    if Tuple::dot(&normalv, &eyev) < 0.0 {
+    if Vector::dot(&normalv, &eyev) < 0.0 {
         comps.inside = true;
         comps.normalv = -comps.normalv;
     }
@@ -173,7 +169,7 @@ fn get_refractive_index_from_intersections(
 #[must_use]
 pub fn schlick(comps: &IntersectComp) -> f64 {
     // Find the cosine of the angle between the eye and normal vectors
-    let mut cos = Tuple::dot(&comps.eyev, &comps.normalv);
+    let mut cos = Vector::dot(&comps.eyev, &comps.normalv);
 
     // Total internal reflection can only occur if n1 > n2
     if comps.n1 > comps.n2 {
@@ -307,7 +303,9 @@ mod tests {
     fn the_hit_should_offset_the_point() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut shape = new_sphere();
-        shape.set_transform(&Transform::translate(0.0, 0.0, 1.0));
+        let mut trans = Transform::translate(0.0, 0.0, 1.0);
+        trans.inverse();
+        shape.set_transform(&trans);
         let i = Intersection::new(5.0, shape);
         let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
         assert!(comps.over_point.z < -utils::EPSILON / 2.0);
@@ -333,21 +331,27 @@ mod tests {
     fn finding_n1_and_n2_at_various_intersections() {
         #[allow(non_snake_case)]
         let mut A = glass_sphere();
-        A.set_transform(&Transform::scaling(2.0, 2.0, 2.0));
+        let mut trans = Transform::scaling(2.0, 2.0, 2.0);
+        trans.inverse();
+        A.set_transform(&trans);
         let mut mat = A.get_material();
         mat.refractive_index = 1.5;
         A.set_material(&mat);
 
         #[allow(non_snake_case)]
         let mut B = glass_sphere();
-        B.set_transform(&Transform::translate(0.0, 0.0, -0.25));
+        let mut trans = Transform::translate(0.0, 0.0, -0.25);
+        trans.inverse();
+        B.set_transform(&trans);
         mat = B.get_material();
         mat.refractive_index = 2.0;
         B.set_material(&mat);
 
         #[allow(non_snake_case)]
         let mut C = glass_sphere();
-        C.set_transform(&Transform::translate(0.0, 0.0, 0.25));
+        let mut trans = Transform::translate(0.0, 0.0, 0.25);
+        trans.inverse();
+        C.set_transform(&trans);
         mat = C.get_material();
         mat.refractive_index = 2.5;
         C.set_material(&mat);
@@ -384,7 +388,9 @@ mod tests {
     fn the_under_point_is_offset_below_the_surface() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let mut shape = glass_sphere();
-        shape.set_transform(&Transform::translate(0.0, 0.0, 1.0));
+        let mut trans = Transform::translate(0.0, 0.0, 1.0);
+        trans.inverse();
+        shape.set_transform(&trans);
         let i = Intersection::new(5.0, shape);
         let xs = Intersections::new(&[i.clone()]);
         let comps = prepare_computations(&i, &r, &xs);

@@ -5,7 +5,7 @@ use ray_tracer_rust::ray_tracer::{
     lights::Light,
     shapes::*,
     transformations::Transform,
-    tuples::{new_point, new_vector},
+    tuples_new::{new_point, new_vector},
     world::World,
 };
 use std::{fs, path::Path, time::Instant};
@@ -77,12 +77,12 @@ fn main() {
                 );
                 sphere.set_material(&material);
                 let mut s = sphere.clone();
-                let trans = Transform::translate(
+                let mut trans = Transform::translate(
                     -(num_spheres as f64) / 2.0 + x as f64,
                     -(num_spheres as f64) / 2.0 + y as f64,
                     -(num_spheres as f64) / 2.0 + z as f64,
                 ) * Transform::scaling(0.33, 0.33, 0.33);
-                s.set_transform(&trans);
+                s.set_transform(trans.inverse());
                 world_builder.object(s);
             }
         }
@@ -100,11 +100,14 @@ fn main() {
     let world = world_builder.build();
 
     let mut camera = Camera::new(args.x_axis, args.y_axis, 60_f64.to_radians());
-    camera.set_transform(Transform::view_transform(
-        &new_point(40.0, 30.0, -40.0),
-        &new_point(0.0, -3.0, 0.0),
-        &new_vector(0.0, 1.0, 0.0),
-    ));
+    camera.set_transform(
+        *Transform::view_transform(
+            &new_point(40.0, 30.0, -40.0),
+            &new_point(0.0, -3.0, 0.0),
+            &new_vector(0.0, 1.0, 0.0),
+        )
+        .inverse(),
+    );
 
     let mut elapsed = start.elapsed();
     println!("Starting render: {:?}", elapsed);
@@ -114,13 +117,19 @@ fn main() {
 
     elapsed = start.elapsed();
     println!("Saving render: {:?}", elapsed);
+
+    let binding = chrono::Local::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, false);
+    let current_time: Vec<&str> = binding.split('+').collect();
+    let current_time = current_time.first().unwrap().to_owned().replace(":", "-");
+
     img.save(&format!(
-        "{}/marble_madness_25_{}x{}_{}-threads_{}-reflect.ppm",
+        "{}/marble_madness_25_{}x{}_{}-threads_{}-reflect-{}.ppm",
         args.path,
         img.width(),
         img.height(),
         thread_number,
         args.reflect,
+        current_time
     ));
 
     elapsed = start.elapsed();

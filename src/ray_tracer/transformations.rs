@@ -1,82 +1,78 @@
-use crate::ray_tracer::{matrices::Matrix, tuples::Tuple};
+use crate::ray_tracer::{
+    matrices_new::Matrix,
+    tuples_new::{new_point, new_vector, Point, Vector},
+};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Transform;
 impl Transform {
     #[must_use]
-    pub fn translate(x: f64, y: f64, z: f64) -> Matrix {
-        Matrix::new(vec![
-            vec![1.0, 0.0, 0.0, x],
-            vec![0.0, 1.0, 0.0, y],
-            vec![0.0, 0.0, 1.0, z],
-            vec![0.0, 0.0, 0.0, 1.0],
+    pub fn translate(x: f64, y: f64, z: f64) -> Matrix<4> {
+        Matrix::new([
+            [1.0, 0.0, 0.0, x],
+            [0.0, 1.0, 0.0, y],
+            [0.0, 0.0, 1.0, z],
+            [0.0, 0.0, 0.0, 1.0],
         ])
-        .unwrap()
     }
     #[must_use]
-    pub fn scaling(x: f64, y: f64, z: f64) -> Matrix {
-        Matrix::new(vec![
-            vec![x, 0.0, 0.0, 0.0],
-            vec![0.0, y, 0.0, 0.0],
-            vec![0.0, 0.0, z, 0.0],
-            vec![0.0, 0.0, 0.0, 1.0],
+    pub fn scaling(x: f64, y: f64, z: f64) -> Matrix<4> {
+        Matrix::new([
+            [x, 0.0, 0.0, 0.0],
+            [0.0, y, 0.0, 0.0],
+            [0.0, 0.0, z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
         ])
-        .unwrap()
     }
     #[must_use]
-    pub fn rotation_x(angle: f64) -> Matrix {
-        Matrix::new(vec![
-            vec![1.0, 0.0, 0.0, 0.0],
-            vec![0.0, f64::cos(angle), -f64::sin(angle), 0.0],
-            vec![0.0, f64::sin(angle), f64::cos(angle), 0.0],
-            vec![0.0, 0.0, 0.0, 1.0],
+    pub fn rotation_x(angle: f64) -> Matrix<4> {
+        Matrix::new([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, f64::cos(angle), -f64::sin(angle), 0.0],
+            [0.0, f64::sin(angle), f64::cos(angle), 0.0],
+            [0.0, 0.0, 0.0, 1.0],
         ])
-        .unwrap()
     }
     #[must_use]
-    pub fn rotation_y(angle: f64) -> Matrix {
-        Matrix::new(vec![
-            vec![f64::cos(angle), 0.0, f64::sin(angle), 0.0],
-            vec![0.0, 1.0, 0.0, 0.0],
-            vec![-f64::sin(angle), 0.0, f64::cos(angle), 0.0],
-            vec![0.0, 0.0, 0.0, 1.0],
+    pub fn rotation_y(angle: f64) -> Matrix<4> {
+        Matrix::new([
+            [f64::cos(angle), 0.0, f64::sin(angle), 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-f64::sin(angle), 0.0, f64::cos(angle), 0.0],
+            [0.0, 0.0, 0.0, 1.0],
         ])
-        .unwrap()
     }
     #[must_use]
-    pub fn rotation_z(angle: f64) -> Matrix {
-        Matrix::new(vec![
-            vec![f64::cos(angle), -f64::sin(angle), 0.0, 0.0],
-            vec![f64::sin(angle), f64::cos(angle), 0.0, 0.0],
-            vec![0.0, 0.0, 1.0, 0.0],
-            vec![0.0, 0.0, 0.0, 1.0],
+    pub fn rotation_z(angle: f64) -> Matrix<4> {
+        Matrix::new([
+            [f64::cos(angle), -f64::sin(angle), 0.0, 0.0],
+            [f64::sin(angle), f64::cos(angle), 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
         ])
-        .unwrap()
     }
     #[must_use]
-    pub fn shearing(x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Matrix {
-        Matrix::new(vec![
-            vec![1.0, x_y, x_z, 0.0],
-            vec![y_x, 1.0, y_z, 0.0],
-            vec![z_x, z_y, 1.0, 0.0],
-            vec![0.0, 0.0, 0.0, 1.0],
+    pub fn shearing(x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Matrix<4> {
+        Matrix::new([
+            [1.0, x_y, x_z, 0.0],
+            [y_x, 1.0, y_z, 0.0],
+            [z_x, z_y, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
         ])
-        .unwrap()
     }
 
     #[must_use]
-    pub fn view_transform(from: &Tuple, to: &Tuple, up: &Tuple) -> Matrix {
+    pub fn view_transform(from: &Point, to: &Point, up: &Vector) -> Matrix<4> {
         let forward = (*to - *from).normalize();
         let up_norm = up.normalize();
-        let left = Tuple::cross(&forward, &up_norm);
-        let true_up = Tuple::cross(&left, &forward);
-        let orientation = Matrix::new(vec![
-            vec![left.x, left.y, left.z, 0.0],
-            vec![true_up.x, true_up.y, true_up.z, 0.0],
-            vec![-forward.x, -forward.y, -forward.z, 0.0],
-            vec![0.0, 0.0, 0.0, 1.0],
-        ])
-        .unwrap();
+        let left = Vector::cross(&forward, &up_norm);
+        let true_up = Vector::cross(&left, &forward);
+        let orientation = Matrix::new([
+            [left.x, left.y, left.z, 0.0],
+            [true_up.x, true_up.y, true_up.z, 0.0],
+            [-forward.x, -forward.y, -forward.z, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]);
 
         orientation * Self::translate(-from.x, -from.y, -from.z)
     }
@@ -87,8 +83,6 @@ impl Transform {
 #[cfg(test)]
 mod tests {
     use std::f64::consts::PI;
-
-    use crate::ray_tracer::tuples::{new_point, new_vector};
 
     use super::*;
 
@@ -103,11 +97,7 @@ mod tests {
     #[test]
     fn multiplying_by_the_inverse_of_a_translation_matrix() {
         let mut transform = Transform::translate(5.0, -3.0, 2.0);
-        let inv = transform
-            .calculate_inverse()
-            .unwrap()
-            .get_inverted()
-            .unwrap();
+        let inv = transform.inverse().inverse.unwrap();
         let p = new_point(-3.0, 4.0, 5.0);
 
         assert_eq!(inv * p, new_point(-8.0, 7.0, 3.0));
@@ -140,11 +130,7 @@ mod tests {
     #[test]
     fn multiplying_by_the_inverse_of_a_scaling_matrix() {
         let mut transform = Transform::scaling(2.0, 3.0, 4.0);
-        let inv = transform
-            .calculate_inverse()
-            .unwrap()
-            .get_inverted()
-            .unwrap();
+        let inv = transform.inverse().inverse.unwrap();
         let v = new_vector(-4.0, 6.0, 8.0);
 
         assert_eq!(inv * v, new_vector(-2.0, 2.0, 2.0));
@@ -175,11 +161,7 @@ mod tests {
     fn the_inverse_of_an_x_rotation_rotates_in_the_opposite_direction() {
         let p = new_point(0.0, 1.0, 0.0);
         let mut half_quarter = Transform::rotation_x(PI / 4.0);
-        let inv = half_quarter
-            .calculate_inverse()
-            .unwrap()
-            .get_inverted()
-            .unwrap();
+        let inv = half_quarter.inverse().inverse.unwrap();
 
         assert_eq!(
             inv * p,
@@ -282,7 +264,7 @@ mod tests {
         let to = new_point(0.0, 0.0, -1.0);
         let up = new_vector(0.0, 1.0, 0.0);
         let t = Transform::view_transform(&from, &to, &up);
-        assert_eq!(t, Matrix::new_identity());
+        assert_eq!(t, Matrix::<4>::identity());
     }
     #[test]
     fn a_view_transformation_matrix_looking_in_positive_z_direction() {
@@ -308,13 +290,12 @@ mod tests {
         let t = Transform::view_transform(&from, &to, &up);
         assert_eq!(
             t,
-            Matrix::new(vec![
-                vec![-0.50709, 0.50709, 0.67612, -2.36643],
-                vec![0.76772, 0.60609, 0.12122, -2.82843],
-                vec![-0.35857, 0.59761, -0.71714, 0.0],
-                vec![0.0, 0.0, 0.0, 1.0],
+            Matrix::new([
+                [-0.50709, 0.50709, 0.67612, -2.36643],
+                [0.76772, 0.60609, 0.12122, -2.82843],
+                [-0.35857, 0.59761, -0.71714, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
             ])
-            .unwrap()
         );
     }
 }
