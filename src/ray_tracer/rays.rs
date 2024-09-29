@@ -55,22 +55,6 @@ impl Ray {
         intersections
     }
 
-    pub(crate) fn intersect_world_first(&self, world: &World) -> Intersections {
-        let mut intersections = Intersections::default();
-
-        // "Manual" loop to be able to break out early.
-        for object in world.objects.iter() {
-            self.intersect(object, &mut intersections.list);
-            if !intersections.list.is_empty() {
-                // Stop on first intersection.
-                break;
-            }
-        }
-
-        intersections.sort();
-        intersections
-    }
-
     pub(crate) fn transform(&self, transformation: &Mat<4>) -> Self {
         Self {
             origin: *transformation * self.origin,
