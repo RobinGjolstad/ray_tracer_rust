@@ -1,3 +1,6 @@
+# Add custom settings for Rust files
+[attr]rust text eol=lf whitespace=tab-in-indent,trailing-space,tabwidth=4
+
 # Auto detect text files and perform LF normalization
 * text=auto
 
@@ -15,6 +18,7 @@
 *.h     text diff=cpp
 *.h++   text diff=cpp
 *.hh    text diff=cpp
+*.rs    rust diff=rust
 
 # Compiled Object files
 *.slo   binary
