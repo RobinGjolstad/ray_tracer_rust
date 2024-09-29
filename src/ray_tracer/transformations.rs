@@ -1,13 +1,13 @@
 use crate::ray_tracer::{
     matrices_new::Matrix,
-    tuples_new::{new_point, new_vector, Point, Vector},
+    tuples_new::{Point, Vector},
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Transform;
 impl Transform {
     #[must_use]
-    pub fn translate(x: f64, y: f64, z: f64) -> Matrix<4> {
+    pub const fn translate(x: f64, y: f64, z: f64) -> Matrix<4> {
         Matrix::new([
             [1.0, 0.0, 0.0, x],
             [0.0, 1.0, 0.0, y],
@@ -16,7 +16,7 @@ impl Transform {
         ])
     }
     #[must_use]
-    pub fn scaling(x: f64, y: f64, z: f64) -> Matrix<4> {
+    pub const fn scaling(x: f64, y: f64, z: f64) -> Matrix<4> {
         Matrix::new([
             [x, 0.0, 0.0, 0.0],
             [0.0, y, 0.0, 0.0],
@@ -52,7 +52,7 @@ impl Transform {
         ])
     }
     #[must_use]
-    pub fn shearing(x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Matrix<4> {
+    pub const fn shearing(x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Matrix<4> {
         Matrix::new([
             [1.0, x_y, x_z, 0.0],
             [y_x, 1.0, y_z, 0.0],
@@ -83,6 +83,8 @@ impl Transform {
 #[cfg(test)]
 mod tests {
     use std::f64::consts::PI;
+
+    use crate::ray_tracer::tuples_new::{new_point, new_vector};
 
     use super::*;
 
