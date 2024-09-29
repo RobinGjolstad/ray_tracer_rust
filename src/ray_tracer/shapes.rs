@@ -1,8 +1,38 @@
 //! # Shapes
 //!
-//! ## Groups and trees
+//! ## Notes regarding restructuring shapes:
 //!
-//! The tree structure used for grouping is inspired by the `crate::utils::tree` module.
+//! Builder.
+//! Gradually specify the shape.
+//!
+//! ```rust
+//! let mut material = Material::new();
+//! // Do things with material.
+//!
+//! let some_sphere = Shape::new() // or Shape::sphere() ?
+//!     .sphere()
+//!     .translate(x,y,z)
+//!     .scale(x,y,z)
+//!     .rotate(x,y,z)
+//!     .translate(x,y,z)
+//!     .material(&material) // Creates owned version internally.
+//!     .build();
+//! ```
+//!
+//! Options:
+//! - `Shape::new().sphere()`
+//! - `Shape::sphere()`
+//! - `new_sphere()`
+//! - `ShapeBuilder::new().sphere()`
+//! - `ShapeBuilder::sphere()`
+//!
+//! All should chain.
+//! Avoid having to `build`?
+//! All methods take and return `&mut Self`?
+//!
+//! Shape enum contain reference or owned object?
+//! Is it faster with dynamic dispatch or passing through an enum?
+//! Implement two parallell versions?
 
 #![allow(unused, clippy::approx_constant)]
 use crate::ray_tracer::{
@@ -38,7 +68,7 @@ use test_shape::TestShape;
 
 use self::group::GroupBuilder;
 
-pub(super) trait Shapes: Debug + Default + Sync {
+pub trait Shapes: Debug + Default + Sync {
     fn set_transform(&mut self, transform: &Matrix<4>);
     fn get_transform(&self) -> Matrix<4>;
     fn set_material(&mut self, material: &Material);
@@ -66,6 +96,57 @@ impl BaseShape {
 impl Default for BaseShape {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+struct TypeNotSpecified;
+struct TypeSpecified;
+
+pub struct ShapeBuilder<S, T>
+where
+    S: Shapes,
+{
+    base: BaseShape,
+    shape: S,
+    type_specified: T,
+}
+
+impl<S, T> ShapeBuilder<S, T>
+where
+    S: Shapes,
+{
+    #[must_use]
+    pub fn cube() -> ShapeBuilder<Cube, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn cylinder() -> ShapeBuilder<Cylinder, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn cone() -> ShapeBuilder<Cone, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn plane() -> ShapeBuilder<Plane, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn sphere() -> ShapeBuilder<Sphere, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn group() -> GroupBuilder {
+        todo!()
+    }
+}
+
+impl<S, TypeSpecified> ShapeBuilder<S, TypeSpecified>
+where
+    S: Shapes,
+{
+    pub fn build(self) -> Object {
+        todo!()
     }
 }
 
