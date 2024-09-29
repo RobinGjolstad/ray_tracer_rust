@@ -41,12 +41,6 @@ impl Default for TestShape {
 }
 
 impl Shapes for TestShape {
-    fn set_position(&mut self, pos: &Point) {
-        self.base.position = *pos;
-    }
-    fn get_position(&self) -> Point {
-        self.base.position
-    }
     fn set_transform(&mut self, transform: &Matrix<4>) {
         debug_assert!(
             transform.inverse.is_some() && transform.inverse_transpose.is_some(),

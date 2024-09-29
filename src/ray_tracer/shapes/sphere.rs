@@ -32,12 +32,6 @@ impl Default for Sphere {
 }
 
 impl Shapes for Sphere {
-    fn set_position(&mut self, pos: &Point) {
-        self.base.position = *pos;
-    }
-    fn get_position(&self) -> Point {
-        self.base.position
-    }
     fn set_transform(&mut self, transform: &Matrix<4>) {
         debug_assert!(
             transform.inverse.is_some() && transform.inverse_transpose.is_some(),
@@ -58,7 +52,8 @@ impl Shapes for Sphere {
         point - new_point(0.0, 0.0, 0.0)
     }
     fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
-        let sphere_to_ray = local_ray.origin - self.get_position();
+        // Center of sphere is in Point::new(0.0, 0.0, 0.0) == Point::default().
+        let sphere_to_ray = local_ray.origin - Point::default();
         let a = Vector::dot(&local_ray.direction, &local_ray.direction);
         let b = 2.0 * Vector::dot(&local_ray.direction, &sphere_to_ray);
         let c = Vector::dot(&sphere_to_ray, &sphere_to_ray) - 1.0;

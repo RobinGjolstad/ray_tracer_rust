@@ -39,8 +39,6 @@ use test_shape::TestShape;
 use self::group::GroupBuilder;
 
 pub(super) trait Shapes: Debug + Default + Sync {
-    fn set_position(&mut self, pos: &Point);
-    fn get_position(&self) -> Point;
     fn set_transform(&mut self, transform: &Matrix<4>);
     fn get_transform(&self) -> Matrix<4>;
     fn set_material(&mut self, material: &Material);
@@ -51,7 +49,6 @@ pub(super) trait Shapes: Debug + Default + Sync {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BaseShape {
-    position: Point,
     transform: Matrix<4>,
     material: Material,
 }
@@ -61,7 +58,6 @@ impl BaseShape {
         let mut mat = Matrix::<4>::identity();
         mat.inverse();
         Self {
-            position: new_point(0.0, 0.0, 0.0),
             transform: mat,
             material: Material::new(),
         }

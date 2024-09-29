@@ -64,12 +64,6 @@ impl Default for Cone {
 }
 
 impl Shapes for Cone {
-    fn set_position(&mut self, pos: &Point) {
-        self.base.position = *pos;
-    }
-    fn get_position(&self) -> Point {
-        self.base.position
-    }
     fn set_transform(&mut self, transform: &Matrix<4>) {
         debug_assert!(
             transform.inverse.is_some() && transform.inverse_transpose.is_some(),
