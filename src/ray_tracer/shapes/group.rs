@@ -12,7 +12,6 @@ use crate::ray_tracer::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Group {
-    position: Point,
     transform: Matrix<4>,
     material: Option<Material>,
     children: Option<Arc<[Object]>>,
@@ -21,7 +20,6 @@ pub struct Group {
 impl Group {
     pub fn new() -> Self {
         Self {
-            position: new_point(0.0, 0.0, 0.0),
             transform: *Matrix::<4>::identity().inverse(),
             material: None,
             children: None,
@@ -160,7 +158,6 @@ impl GroupBuilder {
         }
 
         Object::Group(Group {
-            position: new_point(0.0, 0.0, 0.0),
             // Own transform has been applied to all children now.
             // To prevent it from being re-applied, create the group with an identity transform.
             transform: *Matrix::<4>::identity().inverse(),
