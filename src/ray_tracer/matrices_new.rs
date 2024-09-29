@@ -2,7 +2,7 @@ use std::{iter::zip, ops::Mul};
 
 use super::{
     tuples_new::{new_point, new_vector, Point, Tuple, Vector},
-    utils::{is_float_equal, is_float_equal_low_precision},
+    utils::is_float_equal,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -50,7 +50,6 @@ impl<const S: usize> PartialEq<Self> for Mat<S> {
     }
 }
 
-/*
 impl Mul for Mat<2> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -105,7 +104,7 @@ impl Mul for Mat<4> {
         Self { mat, size: 4 }
     }
 }
-*/
+/*
 impl<const S: usize> Mul for Mat<S> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -122,6 +121,7 @@ impl<const S: usize> Mul for Mat<S> {
         Self { mat, size: S }
     }
 }
+*/
 
 impl Mul<Point> for Mat<3> {
     type Output = Point;
@@ -195,12 +195,12 @@ impl Mul<Point> for Mat<4> {
         //         ),
         //     );
         // }
-        //
+        
         // new_point(tup[0], tup[1], tup[2])
 
-        let res: Tuple = self * tuple;
+        let result: Tuple = self * tuple;
 
-        new_point(res.x, res.y, res.z)
+        new_point(result.x, result.y, result.z)
     }
 }
 impl Mul<Vector> for Mat<4> {
@@ -218,12 +218,12 @@ impl Mul<Vector> for Mat<4> {
         //         ),
         //     );
         // }
-        //
+        
         // new_vector(tup[0], tup[1], tup[2])
 
-        let res: Tuple = self * tuple;
+        let result: Tuple = self * tuple;
 
-        new_vector(res.x, res.y, res.z)
+        new_vector(result.x, result.y, result.z)
     }
 }
 
@@ -479,6 +479,7 @@ impl<const S: usize> Default for Matrix<S> {
 //     }
 // }
 
+/*
 impl<const S: usize> Mul for Matrix<S> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -490,8 +491,8 @@ impl<const S: usize> Mul for Matrix<S> {
         }
     }
 }
+*/
 
-/*
 impl Mul for Matrix<2> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -527,7 +528,6 @@ impl Mul for Matrix<4> {
         }
     }
 }
-*/
 
 impl Mul<Point> for Matrix<3> {
     type Output = Point;
