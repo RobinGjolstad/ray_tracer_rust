@@ -19,8 +19,8 @@ use saved_ray::SAVED_RAY;
 #[cfg(test)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestShape {
-    base: BaseShape,
-    parent: Option<BaseShape>,
+    pub(super) base: BaseShape,
+    pub(super) parent: Option<BaseShape>,
 }
 impl TestShape {
     pub(super) fn new() -> Self {

@@ -5,7 +5,7 @@ use ray_tracer_rust::ray_tracer::{
     rays::Ray,
     shapes::{glass_sphere, new_sphere},
     transformations::Transform,
-    tuples::{new_point, new_vector},
+    tuples_new::{new_point, new_vector},
 };
 
 pub fn criterion_benchmark(c: &mut Criterion) {

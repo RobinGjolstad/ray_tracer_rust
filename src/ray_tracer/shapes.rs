@@ -36,14 +36,17 @@
 
 #![allow(unused, clippy::approx_constant)]
 use crate::ray_tracer::{
+    colors::Color,
     intersections::Intersection,
     materials::Material,
     matrices_new::Matrix,
+    patterns::Pattern,
     rays::Ray,
     tuples_new::{new_point, Point, Vector},
 };
 use std::{
     fmt::{Debug, Display},
+    marker::PhantomData,
     ops::{Deref, DerefMut},
     sync::{Arc, Mutex, RwLock, Weak},
 };
@@ -99,53 +102,144 @@ impl Default for BaseShape {
     }
 }
 
+pub enum RotationAxis {
+    X,
+    Y,
+    Z,
+}
+
+trait Type {}
 struct TypeNotSpecified;
+impl Type for TypeNotSpecified {}
 struct TypeSpecified;
+impl Type for TypeSpecified {}
 
-pub struct ShapeBuilder<S, T>
-where
-    S: Shapes,
-{
+pub struct ShapeBuilder<S, T> {
     base: BaseShape,
-    shape: S,
-    type_specified: T,
+    shape: Option<S>,
+    type_specified: PhantomData<T>,
 }
 
-impl<S, T> ShapeBuilder<S, T>
-where
-    S: Shapes,
-{
-    #[must_use]
-    pub fn cube() -> ShapeBuilder<Cube, TypeSpecified> {
-        todo!()
-    }
-    #[must_use]
-    pub fn cylinder() -> ShapeBuilder<Cylinder, TypeSpecified> {
-        todo!()
-    }
-    #[must_use]
-    pub fn cone() -> ShapeBuilder<Cone, TypeSpecified> {
-        todo!()
-    }
-    #[must_use]
-    pub fn plane() -> ShapeBuilder<Plane, TypeSpecified> {
-        todo!()
-    }
-    #[must_use]
-    pub fn sphere() -> ShapeBuilder<Sphere, TypeSpecified> {
-        todo!()
-    }
-    #[must_use]
-    pub fn group() -> GroupBuilder {
-        todo!()
+impl Default for ShapeBuilder<(), TypeNotSpecified> {
+    fn default() -> Self {
+        Self {
+            base: BaseShape::default(),
+            shape: None,
+            type_specified: PhantomData,
+        }
     }
 }
 
-impl<S, TypeSpecified> ShapeBuilder<S, TypeSpecified>
-where
-    S: Shapes,
-{
-    pub fn build(self) -> Object {
+impl ShapeBuilder<(), TypeNotSpecified> {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            base: BaseShape::default(),
+            shape: None,
+            type_specified: PhantomData,
+        }
+    }
+}
+
+impl<S, T> ShapeBuilder<S, T> {
+    #[must_use]
+    pub fn cube(&mut self) -> ShapeBuilder<Cube, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn cylinder(&mut self) -> ShapeBuilder<Cylinder, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn cone(&mut self) -> ShapeBuilder<Cone, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn plane(&mut self) -> ShapeBuilder<Plane, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn sphere(&mut self) -> ShapeBuilder<Sphere, TypeSpecified> {
+        todo!()
+    }
+    #[must_use]
+    pub fn group(&mut self) -> GroupBuilder {
+        todo!()
+    }
+    #[cfg(test)]
+    pub fn test_shape(&mut self) -> ShapeBuilder<TestShape, TypeSpecified> {
+        ShapeBuilder {
+            base: self.base.clone(),
+            shape: Some(TestShape::new()),
+            type_specified: PhantomData,
+        }
+    }
+}
+
+#[cfg(test)]
+impl ShapeBuilder<TestShape, TypeSpecified> {
+    #[must_use]
+    pub fn build(&self) -> Object {
+        let mut shape = self.shape.clone().unwrap();
+        shape.base = self.base.clone();
+        Object::TestShape(shape)
+    }
+}
+
+impl<S, T> ShapeBuilder<S, T> {
+    pub fn translate(&mut self, x: f64, y: f64, z: f64) -> &mut Self {
+        self.base.transform = self.base.transform
+            * Matrix::new([
+                [1.0, 0.0, 0.0, x],
+                [0.0, 1.0, 0.0, y],
+                [0.0, 0.0, 1.0, z],
+                [0.0, 0.0, 0.0, 1.0],
+            ]);
+
+        self
+    }
+    pub fn scale(&mut self, x: f64, y: f64, z: f64) -> &mut Self {
+        todo!("Apply scaling.")
+    }
+    pub fn shear(
+        &mut self,
+        x_y: f64,
+        x_z: f64,
+        y_x: f64,
+        y_z: f64,
+        z_x: f64,
+        z_y: f64,
+    ) -> &mut Self {
+        todo!()
+    }
+    pub fn rotate(&mut self, axis: &RotationAxis, angle: f64) -> &mut Self {
+        todo!()
+    }
+    pub fn color(&mut self, color: &Color) -> &mut Self {
+        todo!()
+    }
+    pub fn ambient(&mut self, ambient: f64) -> &mut Self {
+        todo!()
+    }
+    pub fn diffuse(&mut self, diffuse: f64) -> &mut Self {
+        todo!()
+    }
+    pub fn specular(&mut self, specular: f64) -> &mut Self {
+        todo!()
+    }
+    pub fn shininess(&mut self, shininess: f64) -> &mut Self {
+        todo!()
+    }
+    pub fn pattern(&mut self, pattern: Pattern) -> &mut Self {
+        todo!()
+    }
+    pub fn reflective(&mut self, reflective: f64) -> &mut Self {
+        todo!()
+    }
+    pub fn transparency(&mut self, transparency: f64) -> &mut Self {
+        todo!()
+    }
+    pub fn refractive_index(&mut self, refractive_index: f64) -> &mut Self {
         todo!()
     }
 }
@@ -564,5 +658,22 @@ mod tests {
         let n = s.normal_at(p);
 
         assert_eq!(n, new_vector(0.2857, 0.4286, -0.8571));
+    }
+    #[test]
+    fn creating_a_shape_with_a_shape_builder() {
+        let s = ShapeBuilder::default().test_shape().build();
+        assert_eq!(s.get_transform(), *Matrix::<4>::identity().inverse());
+    }
+    #[test]
+    fn assigning_a_transformation_with_a_shape_builder() {
+        let mut s = ShapeBuilder::default()
+            .test_shape()
+            .translate(2.0, 3.0, 4.0)
+            .build();
+
+        assert_eq!(
+            s.get_transform().matrix,
+            Transform::translate(2.0, 3.0, 4.0).matrix
+        );
     }
 }

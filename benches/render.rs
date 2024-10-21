@@ -9,7 +9,7 @@ use ray_tracer_rust::ray_tracer::{
     materials::Material,
     shapes::*,
     transformations::Transform,
-    tuples::{new_point, new_vector},
+    tuples_new::{new_point, new_vector},
     world::World,
 };
 
