@@ -26,6 +26,10 @@ name = "matrix"
 harness = false
 
 [[bench]]
+name = "matrix_new"
+harness = false
+
+[[bench]]
 name = "render"
 harness = false
 
@@ -40,4 +44,3 @@ harness = false
 [[bench]]
 name = "intersections"
 harness = false
-

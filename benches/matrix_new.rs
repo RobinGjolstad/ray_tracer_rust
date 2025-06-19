@@ -3,7 +3,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ray_tracer_rust::ray_tracer::{matrices_new::Matrix, tuples_new::Vector};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Identity Matrix");
+    let mut group = c.benchmark_group("New Matrix");
     group.sample_size(500);
 
     group.bench_function("id x id", |b| {

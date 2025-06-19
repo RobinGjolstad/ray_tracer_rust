@@ -13,6 +13,9 @@ cargo bench --bench intersections >> bench_intersections.txt
 $current_time >> bench_matrix.txt
 cargo bench --bench matrix >> bench_matrix.txt
 
+$current_time >> bench_matrix_new.txt
+cargo bench --bench matrix_new >> bench_matrix_new.txt
+
 $current_time >> bench_render.txt
 cargo bench --bench render >> bench_render.txt
 

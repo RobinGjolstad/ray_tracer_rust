@@ -85,6 +85,8 @@ impl Mul for Mat<3> {
 }
 impl Mul for Mat<4> {
     type Output = Self;
+
+    #[allow(clippy::suboptimal_flops)]
     fn mul(self, rhs: Self) -> Self::Output {
         let mut mat: [[f64; 4]; 4] = [[0.0; 4]; 4];
 
@@ -98,6 +100,11 @@ impl Mul for Mat<4> {
                             .mul_add(rhs.mat[2][column], self.mat[row][3] * rhs.mat[3][column]),
                     ),
                 );
+
+                //*slot = (self.mat[row][0] * rhs.mat[0][column])
+                //    + (self.mat[row][1] * rhs.mat[1][column])
+                //    + (self.mat[row][2] * rhs.mat[2][column])
+                //    + (self.mat[row][3] * rhs.mat[3][column]);
             }
         }
 
@@ -183,6 +190,8 @@ impl Mul<Tuple> for Mat<4> {
 impl Mul<Point> for Mat<4> {
     type Output = Point;
     fn mul(self, rhs: Point) -> Self::Output {
+        // TODO: Check if the last column and last row are [0,0,0,1].
+        // If they are, we can perform the calculations using a 3x3 matrix.
         let tuple: Tuple = rhs.into();
 
         // let mut tup: [f64; 4] = [0.0; 4];
@@ -195,7 +204,7 @@ impl Mul<Point> for Mat<4> {
         //         ),
         //     );
         // }
-        
+
         // new_point(tup[0], tup[1], tup[2])
 
         let result: Tuple = self * tuple;
@@ -218,7 +227,7 @@ impl Mul<Vector> for Mat<4> {
         //         ),
         //     );
         // }
-        
+
         // new_vector(tup[0], tup[1], tup[2])
 
         let result: Tuple = self * tuple;
