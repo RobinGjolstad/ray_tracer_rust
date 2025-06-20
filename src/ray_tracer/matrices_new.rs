@@ -1,26 +1,33 @@
-use std::{iter::zip, ops::Mul};
+use std::{
+    iter::zip,
+    ops::{Add, Mul, Sub},
+};
 
 use super::{
     tuples_new::{new_point, new_vector, Point, Tuple, Vector},
     utils::is_float_equal,
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SubmatrixQuadrant {
+    Quadrant11,
+    Quadrant12,
+    Quadrant21,
+    Quadrant22,
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Mat<const S: usize> {
     mat: [[f64; S]; S],
-    size: usize,
 }
 impl<const S: usize> Mat<S> {
     #[must_use]
     pub const fn new(mat: [[f64; S]; S]) -> Self {
-        Self { mat, size: S }
+        Self { mat }
     }
     #[must_use]
     pub const fn new_empty() -> Self {
-        Self {
-            mat: [[0.0; S]; S],
-            size: S,
-        }
+        Self { mat: [[0.0; S]; S] }
     }
     #[must_use]
     pub fn identity() -> Self {
@@ -43,6 +50,99 @@ impl<const S: usize> Mat<S> {
     }
 }
 
+impl<const S: usize> Default for Mat<S> {
+    fn default() -> Self {
+        Self { mat: [[0.0; S]; S] }
+    }
+}
+
+impl Mat<4> {
+    #[must_use]
+    pub const fn submatrix(&self, quadrant: SubmatrixQuadrant) -> Mat<2> {
+        match quadrant {
+            SubmatrixQuadrant::Quadrant11 => Mat::<2>::new([
+                [self.mat[0][0], self.mat[0][1]],
+                [self.mat[1][0], self.mat[1][1]],
+            ]),
+            SubmatrixQuadrant::Quadrant12 => Mat::<2>::new([
+                [self.mat[0][2], self.mat[0][3]],
+                [self.mat[1][2], self.mat[1][3]],
+            ]),
+            SubmatrixQuadrant::Quadrant21 => Mat::<2>::new([
+                [self.mat[2][0], self.mat[2][1]],
+                [self.mat[3][0], self.mat[3][1]],
+            ]),
+            SubmatrixQuadrant::Quadrant22 => Mat::<2>::new([
+                [self.mat[2][2], self.mat[2][3]],
+                [self.mat[3][2], self.mat[3][3]],
+            ]),
+        }
+    }
+}
+
+impl From<[Mat<2>; 4]> for Mat<4> {
+    fn from(value: [Mat<2>; 4]) -> Self {
+        Self {
+            mat: [
+                [
+                    value[0].mat[0][0],
+                    value[0].mat[0][1],
+                    value[1].mat[0][0],
+                    value[1].mat[0][1],
+                ],
+                [
+                    value[0].mat[1][0],
+                    value[0].mat[1][1],
+                    value[1].mat[1][0],
+                    value[1].mat[1][1],
+                ],
+                [
+                    value[2].mat[0][0],
+                    value[2].mat[0][1],
+                    value[3].mat[0][0],
+                    value[3].mat[0][1],
+                ],
+                [
+                    value[2].mat[1][0],
+                    value[2].mat[1][1],
+                    value[3].mat[1][0],
+                    value[3].mat[1][1],
+                ],
+            ],
+        }
+    }
+}
+
+impl<const S: usize> Add<Self> for Mat<S> {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut out = Self::Output::default();
+
+        for i in 0..S {
+            for j in 0..S {
+                out.mat[i][j] = self.mat[i][j] + rhs.mat[i][j];
+            }
+        }
+
+        out
+    }
+}
+
+impl<const S: usize> Sub<Self> for Mat<S> {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut out = Self::Output::default();
+
+        for i in 0..S {
+            for j in 0..S {
+                out.mat[i][j] = self.mat[i][j] - rhs.mat[i][j];
+            }
+        }
+
+        out
+    }
+}
+
 impl<const S: usize> PartialEq<Self> for Mat<S> {
     fn eq(&self, other: &Self) -> bool {
         !zip(self.mat, other.mat)
@@ -62,7 +162,7 @@ impl Mul for Mat<2> {
             }
         }
 
-        Self { mat, size: 2 }
+        Self { mat }
     }
 }
 impl Mul for Mat<3> {
@@ -80,35 +180,37 @@ impl Mul for Mat<3> {
             }
         }
 
-        Self { mat, size: 3 }
+        Self { mat }
     }
 }
 impl Mul for Mat<4> {
     type Output = Self;
 
-    #[allow(clippy::suboptimal_flops)]
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut mat: [[f64; 4]; 4] = [[0.0; 4]; 4];
+        let a11 = self.submatrix(SubmatrixQuadrant::Quadrant11);
+        let a12 = self.submatrix(SubmatrixQuadrant::Quadrant12);
+        let a21 = self.submatrix(SubmatrixQuadrant::Quadrant21);
+        let a22 = self.submatrix(SubmatrixQuadrant::Quadrant22);
 
-        for (row, mat) in mat.iter_mut().enumerate() {
-            for (column, slot) in mat.iter_mut().enumerate() {
-                *slot = self.mat[row][0].mul_add(
-                    rhs.mat[0][column],
-                    self.mat[row][1].mul_add(
-                        rhs.mat[1][column],
-                        self.mat[row][2]
-                            .mul_add(rhs.mat[2][column], self.mat[row][3] * rhs.mat[3][column]),
-                    ),
-                );
+        let b11 = rhs.submatrix(SubmatrixQuadrant::Quadrant11);
+        let b12 = rhs.submatrix(SubmatrixQuadrant::Quadrant12);
+        let b21 = rhs.submatrix(SubmatrixQuadrant::Quadrant21);
+        let b22 = rhs.submatrix(SubmatrixQuadrant::Quadrant22);
 
-                //*slot = (self.mat[row][0] * rhs.mat[0][column])
-                //    + (self.mat[row][1] * rhs.mat[1][column])
-                //    + (self.mat[row][2] * rhs.mat[2][column])
-                //    + (self.mat[row][3] * rhs.mat[3][column]);
-            }
-        }
+        let p1 = (a11 + a22) * (b11 + b22);
+        let p2 = (a21 + a22) * b11;
+        let p3 = a11 * (b12 - b22);
+        let p4 = a22 * (b21 - b11);
+        let p5 = (a11 + a12) * b22;
+        let p6 = (a21 - a11) * (b11 + b12);
+        let p7 = (a12 - a22) * (b21 + b22);
 
-        Self { mat, size: 4 }
+        let c11 = p1 + p4 - p5 + p7;
+        let c12 = p3 + p5;
+        let c21 = p2 + p4;
+        let c22 = p1 - p2 + p3 + p6;
+
+        [c11, c12, c21, c22].into()
     }
 }
 /*
@@ -136,12 +238,12 @@ impl Mul<Point> for Mat<3> {
         let mut tup: [f64; 3] = [0.0; 3];
 
         for (row, item) in tup.iter_mut().enumerate().take(3) {
-            *item = self.mat[row][0] * rhs.x + self.mat[row][1] * rhs.y + self.mat[row][2] * rhs.z;
+            // *item = self.mat[row][0] * rhs.x + self.mat[row][1] * rhs.y + self.mat[row][2] * rhs.z;
 
-            // *item = self.mat[row][0].mul_add(
-            //     rhs.x,
-            //     self.mat[row][1].mul_add(rhs.y, self.mat[row][2] * rhs.z),
-            // );
+            *item = self.mat[row][0].mul_add(
+                rhs.x,
+                self.mat[row][1].mul_add(rhs.y, self.mat[row][2] * rhs.z),
+            );
         }
 
         new_point(tup[0], tup[1], tup[2])
@@ -153,12 +255,12 @@ impl Mul<Vector> for Mat<3> {
         let mut tup: [f64; 3] = [0.0; 3];
 
         for (row, item) in tup.iter_mut().enumerate().take(3) {
-            *item = self.mat[row][0] * rhs.x + self.mat[row][1] * rhs.y + self.mat[row][2] * rhs.z;
+            // *item = self.mat[row][0] * rhs.x + self.mat[row][1] * rhs.y + self.mat[row][2] * rhs.z;
 
-            // *item = self.mat[row][0].mul_add(
-            //     rhs.x,
-            //     self.mat[row][1].mul_add(rhs.y, self.mat[row][2] * rhs.z),
-            // );
+            *item = self.mat[row][0].mul_add(
+                rhs.x,
+                self.mat[row][1].mul_add(rhs.y, self.mat[row][2] * rhs.z),
+            );
         }
 
         new_vector(tup[0], tup[1], tup[2])
@@ -170,18 +272,18 @@ impl Mul<Tuple> for Mat<4> {
         let mut tup: [f64; 4] = [0.0; 4];
 
         for (row, item) in tup.iter_mut().enumerate().take(4) {
-            *item = self.mat[row][0] * rhs.x
-                + self.mat[row][1] * rhs.y
-                + self.mat[row][2] * rhs.z
-                + self.mat[row][3] * rhs.w;
+            // *item = self.mat[row][0] * rhs.x
+            //     + self.mat[row][1] * rhs.y
+            //     + self.mat[row][2] * rhs.z
+            //     + self.mat[row][3] * rhs.w;
 
-            // *item = self.mat[row][0].mul_add(
-            //     rhs.x,
-            //     self.mat[row][1].mul_add(
-            //         rhs.y,
-            //         self.mat[row][2].mul_add(rhs.z, self.mat[row][3] * rhs.w),
-            //     ),
-            // );
+            *item = self.mat[row][0].mul_add(
+                rhs.x,
+                self.mat[row][1].mul_add(
+                    rhs.y,
+                    self.mat[row][2].mul_add(rhs.z, self.mat[row][3] * rhs.w),
+                ),
+            );
         }
 
         Tuple::new(tup[0], tup[1], tup[2], tup[3])
@@ -1033,5 +1135,47 @@ mod tests {
         let b_inv = Matrix::new(b.inverse.unwrap().mat);
 
         assert_eq!(c * b_inv, a);
+    }
+    #[test]
+    fn destructuring_a_4x4_matrix_into_submatrices() {
+        let mat: Mat<4> = Mat::<4>::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 10.0, 11.0, 12.0],
+            [13.0, 14.0, 15.0, 16.0],
+        ]);
+
+        let mat11 = mat.submatrix(SubmatrixQuadrant::Quadrant11);
+        let mat12 = mat.submatrix(SubmatrixQuadrant::Quadrant12);
+        let mat21 = mat.submatrix(SubmatrixQuadrant::Quadrant21);
+        let mat22 = mat.submatrix(SubmatrixQuadrant::Quadrant22);
+
+        let expected_mat11 = Mat::<2>::new([[1.0, 2.0], [5.0, 6.0]]);
+        let expected_mat12 = Mat::<2>::new([[3.0, 4.0], [7.0, 8.0]]);
+        let expected_mat21 = Mat::<2>::new([[9.0, 10.0], [13.0, 14.0]]);
+        let expected_mat22 = Mat::<2>::new([[11.0, 12.0], [15.0, 16.0]]);
+
+        assert_eq!(mat11, expected_mat11);
+        assert_eq!(mat12, expected_mat12);
+        assert_eq!(mat21, expected_mat21);
+        assert_eq!(mat22, expected_mat22);
+    }
+    #[test]
+    fn constructing_a_4x4_matrix_from_submatrices() {
+        let mat11 = Mat::<2>::new([[1.0, 2.0], [5.0, 6.0]]);
+        let mat12 = Mat::<2>::new([[3.0, 4.0], [7.0, 8.0]]);
+        let mat21 = Mat::<2>::new([[9.0, 10.0], [13.0, 14.0]]);
+        let mat22 = Mat::<2>::new([[11.0, 12.0], [15.0, 16.0]]);
+
+        let mat: Mat<4> = [mat11, mat12, mat21, mat22].into();
+
+        let expected_mat: Mat<4> = Mat::<4>::new([
+            [1.0, 2.0, 3.0, 4.0],
+            [5.0, 6.0, 7.0, 8.0],
+            [9.0, 10.0, 11.0, 12.0],
+            [13.0, 14.0, 15.0, 16.0],
+        ]);
+
+        assert_eq!(mat, expected_mat);
     }
 }
