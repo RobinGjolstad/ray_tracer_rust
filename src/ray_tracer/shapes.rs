@@ -109,9 +109,9 @@ pub enum RotationAxis {
 }
 
 trait Type {}
-struct TypeNotSpecified;
+pub struct TypeNotSpecified;
 impl Type for TypeNotSpecified {}
-struct TypeSpecified;
+pub struct TypeSpecified;
 impl Type for TypeSpecified {}
 
 pub struct ShapeBuilder<S, T> {

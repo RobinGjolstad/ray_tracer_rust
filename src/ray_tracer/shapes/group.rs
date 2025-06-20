@@ -96,6 +96,7 @@ impl Shapes for Group {
 }
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct GroupBuilder {
     children: Vec<Object>,
     transform: Matrix<4>,

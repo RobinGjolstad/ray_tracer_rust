@@ -18,6 +18,7 @@ pub enum MatrixError {
     NotInverted,
 }
 
+#[allow(clippy::struct_field_names)]
 #[derive(Debug, Clone, Copy)]
 pub struct Matrix {
     matrix: [[f64; 4]; 4],
@@ -92,7 +93,7 @@ impl Matrix {
         self.matrix[x][y]
     }
 
-    pub fn set_element(&mut self, x: usize, y: usize, val: f64) {
+    pub const fn set_element(&mut self, x: usize, y: usize, val: f64) {
         self.matrix[x][y] = val;
     }
 

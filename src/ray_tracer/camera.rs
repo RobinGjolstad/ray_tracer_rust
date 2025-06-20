@@ -164,9 +164,7 @@ impl Camera {
                         Err(mpsc::TryRecvError::Disconnected) => {
                             break;
                         }
-                        Err(mpsc::TryRecvError::Empty) => {
-                            continue;
-                        }
+                        Err(mpsc::TryRecvError::Empty) => {}
                     }
                 } else {
                     break;
@@ -201,23 +199,27 @@ impl Camera {
                 let pixel_rows = Arc::clone(&pixel_rows_to_render);
                 let handle = s.spawn(move || loop {
                     //let thread_id = thread::current().id();
+
                     // While there are still pixel rows to render, render them.
                     // Otherwise, break out of the loop.
                     let mut pixel_rows_to_render = pixel_rows.lock().unwrap();
-                    if pixel_rows_to_render.len() > 0 {
-                        let row = pixel_rows_to_render.pop().unwrap();
-                        drop(pixel_rows_to_render);
-                        //println!("Thread {:?} - Rendering row: {row}", thread_id);
-                        for x in 0..self.hsize {
-                            let ray = self.ray_for_pixel(x, row);
-                            let color = w.color_at(&ray, num_reflections);
-                            tx_clone.send((x, row, color)).unwrap();
-                        }
-                        //println!("Thread {:?} - Finished rendering row: {row}", thread_id);
-                    } else {
+                    if pixel_rows_to_render.is_empty() {
                         //println!("Thread {:?} terminating.", thread_id);
+
                         break;
                     }
+                    let row = pixel_rows_to_render.pop().unwrap();
+                    drop(pixel_rows_to_render);
+
+                    //println!("Thread {:?} - Rendering row: {row}", thread_id);
+
+                    for x in 0..self.hsize {
+                        let ray = self.ray_for_pixel(x, row);
+                        let color = w.color_at(&ray, num_reflections);
+                        tx_clone.send((x, row, color)).unwrap();
+                    }
+
+                    //println!("Thread {:?} - Finished rendering row: {row}", thread_id);
                 });
                 thread_handles.push(handle);
             }
@@ -235,9 +237,7 @@ impl Camera {
                         Err(mpsc::TryRecvError::Disconnected) => {
                             break;
                         }
-                        Err(mpsc::TryRecvError::Empty) => {
-                            continue;
-                        }
+                        Err(mpsc::TryRecvError::Empty) => {}
                     }
                 } else {
                     break;

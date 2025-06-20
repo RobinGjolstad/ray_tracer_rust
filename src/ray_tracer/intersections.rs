@@ -45,7 +45,7 @@ impl Intersections {
             .sort_unstable_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
     }
     #[cfg(test)]
-    pub(crate) fn count(&self) -> usize {
+    pub(crate) const fn count(&self) -> usize {
         self.list.len()
     }
     #[cfg(test)]

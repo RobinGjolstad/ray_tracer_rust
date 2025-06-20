@@ -250,7 +250,7 @@ impl SomeTrait for Object {
         }
 
         let my_children = self.arc_ref.children.read().unwrap();
-        if my_children.len() > 0 {
+        if !my_children.is_empty() {
             println!("Children:");
             for child in my_children.iter() {
                 child.printme();
