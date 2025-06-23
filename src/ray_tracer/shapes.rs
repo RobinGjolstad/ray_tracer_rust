@@ -42,6 +42,7 @@ use crate::ray_tracer::{
     matrices_new::Matrix,
     patterns::Pattern,
     rays::Ray,
+    transformations::Transform,
     tuples_new::{new_point, Point, Vector},
 };
 use std::{
@@ -72,15 +73,13 @@ use test_shape::TestShape;
 use self::group::GroupBuilder;
 
 pub trait Shapes: Debug + Default + Sync {
-    fn set_transform(&mut self, transform: &Matrix<4>);
     fn get_transform(&self) -> Matrix<4>;
-    fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
     fn local_normal_at(&self, point: Point) -> Vector;
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>);
+    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>);
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BaseShape {
     transform: Matrix<4>,
     material: Material,
@@ -102,6 +101,7 @@ impl Default for BaseShape {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RotationAxis {
     X,
     Y,
@@ -109,11 +109,16 @@ pub enum RotationAxis {
 }
 
 trait Type {}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TypeNotSpecified;
 impl Type for TypeNotSpecified {}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TypeSpecified;
 impl Type for TypeSpecified {}
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ShapeBuilder<S, T> {
     base: BaseShape,
     shape: Option<S>,
@@ -139,40 +144,176 @@ impl ShapeBuilder<(), TypeNotSpecified> {
             type_specified: PhantomData,
         }
     }
+    #[must_use]
+    pub fn from_cube(cube: Cube) -> ShapeBuilder<Cube, TypeSpecified> {
+        ShapeBuilder {
+            base: cube.base.clone(),
+            shape: Some(cube),
+            type_specified: PhantomData,
+        }
+    }
+    #[must_use]
+    pub fn from_cylinder(cylinder: Cylinder) -> ShapeBuilder<Cylinder, TypeSpecified> {
+        ShapeBuilder {
+            base: cylinder.base.clone(),
+            shape: Some(cylinder),
+            type_specified: PhantomData,
+        }
+    }
+    #[must_use]
+    pub fn from_cone(cone: Cone) -> ShapeBuilder<Cone, TypeSpecified> {
+        ShapeBuilder {
+            base: cone.base.clone(),
+            shape: Some(cone),
+            type_specified: PhantomData,
+        }
+    }
+    #[must_use]
+    pub fn from_plane(plane: Plane) -> ShapeBuilder<Plane, TypeSpecified> {
+        ShapeBuilder {
+            base: plane.base.clone(),
+            shape: Some(plane),
+            type_specified: PhantomData,
+        }
+    }
+    #[must_use]
+    pub fn from_sphere(sphere: Sphere) -> ShapeBuilder<Sphere, TypeSpecified> {
+        ShapeBuilder {
+            base: sphere.base.clone(),
+            shape: Some(sphere),
+            type_specified: PhantomData,
+        }
+    }
 }
 
 impl<S, T> ShapeBuilder<S, T> {
     #[must_use]
-    pub fn cube(&mut self) -> ShapeBuilder<Cube, TypeSpecified> {
-        todo!()
+    pub fn cube(self) -> ShapeBuilder<Cube, TypeSpecified> {
+        ShapeBuilder {
+            base: BaseShape::default(),
+            shape: Some(Cube::default()),
+            type_specified: PhantomData,
+        }
     }
     #[must_use]
-    pub fn cylinder(&mut self) -> ShapeBuilder<Cylinder, TypeSpecified> {
-        todo!()
+    pub fn cylinder(self) -> ShapeBuilder<Cylinder, TypeSpecified> {
+        ShapeBuilder {
+            base: BaseShape::default(),
+            shape: Some(Cylinder::default()),
+            type_specified: PhantomData,
+        }
     }
     #[must_use]
-    pub fn cone(&mut self) -> ShapeBuilder<Cone, TypeSpecified> {
-        todo!()
+    pub fn cone(self) -> ShapeBuilder<Cone, TypeSpecified> {
+        ShapeBuilder {
+            base: BaseShape::default(),
+            shape: Some(Cone::default()),
+            type_specified: PhantomData,
+        }
     }
     #[must_use]
-    pub fn plane(&mut self) -> ShapeBuilder<Plane, TypeSpecified> {
-        todo!()
+    pub fn plane(self) -> ShapeBuilder<Plane, TypeSpecified> {
+        ShapeBuilder {
+            base: BaseShape::default(),
+            shape: Some(Plane::default()),
+            type_specified: PhantomData,
+        }
     }
     #[must_use]
-    pub fn sphere(&mut self) -> ShapeBuilder<Sphere, TypeSpecified> {
-        todo!()
+    pub fn sphere(self) -> ShapeBuilder<Sphere, TypeSpecified> {
+        ShapeBuilder {
+            base: BaseShape::default(),
+            shape: Some(Sphere::default()),
+            type_specified: PhantomData,
+        }
     }
     #[must_use]
-    pub fn group(&mut self) -> GroupBuilder {
-        todo!()
+    pub fn group(self) -> GroupBuilder {
+        GroupBuilder::default()
     }
+    pub fn set_transform(mut self, transformation: Matrix<4>) -> Self {
+        self.base.transform = transformation;
+
+        self
+    }
+
     #[cfg(test)]
-    pub fn test_shape(&mut self) -> ShapeBuilder<TestShape, TypeSpecified> {
+    pub fn test_shape(self) -> ShapeBuilder<TestShape, TypeSpecified> {
         ShapeBuilder {
             base: self.base.clone(),
             shape: Some(TestShape::new()),
             type_specified: PhantomData,
         }
+    }
+}
+
+impl ShapeBuilder<Cube, TypeSpecified> {
+    #[must_use]
+    pub fn build(&self) -> Object {
+        let mut shape = self.shape.clone().unwrap();
+        shape.base = self.base.clone();
+        shape.base.transform.inverse();
+        Object::Cube(Arc::new(shape))
+    }
+}
+
+impl ShapeBuilder<Cylinder, TypeSpecified> {
+    #[must_use]
+    pub fn build(&self) -> Object {
+        let mut shape = self.shape.clone().unwrap();
+        shape.base = self.base.clone();
+        shape.base.transform.inverse();
+        Object::Cylinder(Arc::new(shape))
+    }
+
+    pub fn caps(mut self, max: f64, min: f64) -> Self {
+        if let Some(shape) = self.shape.as_mut() {
+            shape.maximum = max;
+            shape.minimum = min;
+            shape.closed = true;
+        }
+
+        self
+    }
+}
+
+impl ShapeBuilder<Cone, TypeSpecified> {
+    #[must_use]
+    pub fn build(&self) -> Object {
+        let mut shape = self.shape.clone().unwrap();
+        shape.base = self.base.clone();
+        shape.base.transform.inverse();
+        Object::Cone(Arc::new(shape))
+    }
+
+    pub fn caps(mut self, max: f64, min: f64) -> Self {
+        if let Some(shape) = self.shape.as_mut() {
+            shape.maximum = max;
+            shape.minimum = min;
+            shape.closed = true;
+        }
+
+        self
+    }
+}
+
+impl ShapeBuilder<Plane, TypeSpecified> {
+    #[must_use]
+    pub fn build(&self) -> Object {
+        let mut shape = self.shape.clone().unwrap();
+        shape.base = self.base.clone();
+        shape.base.transform.inverse();
+        Object::Plane(Arc::new(shape))
+    }
+}
+
+impl ShapeBuilder<Sphere, TypeSpecified> {
+    #[must_use]
+    pub fn build(&self) -> Object {
+        let mut shape = self.shape.clone().unwrap();
+        shape.base = self.base.clone();
+        shape.base.transform.inverse();
+        Object::Sphere(Arc::new(shape))
     }
 }
 
@@ -182,76 +323,150 @@ impl ShapeBuilder<TestShape, TypeSpecified> {
     pub fn build(&self) -> Object {
         let mut shape = self.shape.clone().unwrap();
         shape.base = self.base.clone();
+        shape.base.transform.inverse();
         Object::TestShape(shape)
     }
 }
 
 impl<S, T> ShapeBuilder<S, T> {
-    pub fn translate(&mut self, x: f64, y: f64, z: f64) -> &mut Self {
+    pub fn translate(mut self, x: f64, y: f64, z: f64) -> Self {
         self.base.transform = self.base.transform
-            * Matrix::new([
-                [1.0, 0.0, 0.0, x],
-                [0.0, 1.0, 0.0, y],
-                [0.0, 0.0, 1.0, z],
-                [0.0, 0.0, 0.0, 1.0],
-            ]);
+            * Transform::translate(x, y, z);
 
         self
     }
-    pub fn scale(&mut self, x: f64, y: f64, z: f64) -> &mut Self {
-        todo!("Apply scaling.")
+    pub fn scale(mut self, x: f64, y: f64, z: f64) -> Self {
+        self.base.transform = self.base.transform
+            * Transform::scaling(x, y, z);
+            
+        self
     }
-    pub fn shear(
-        &mut self,
-        x_y: f64,
-        x_z: f64,
-        y_x: f64,
-        y_z: f64,
-        z_x: f64,
-        z_y: f64,
-    ) -> &mut Self {
-        todo!()
+    pub fn shear(mut self, x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Self {
+        self.base.transform = self.base.transform
+            * Transform::shearing(x_y, x_z, y_x, y_z, z_x, z_y);
+
+        self
     }
-    pub fn rotate(&mut self, axis: &RotationAxis, angle: f64) -> &mut Self {
-        todo!()
+    pub fn rotate(mut self, axis: &RotationAxis, angle: f64) -> Self {
+        self.base.transform = match axis {
+            RotationAxis::X => self.base.transform * Transform::rotation_x(angle),
+            RotationAxis::Y => self.base.transform * Transform::rotation_y(angle),
+            RotationAxis::Z => self.base.transform * Transform::rotation_z(angle),
+        };
+
+        self
     }
-    pub fn color(&mut self, color: &Color) -> &mut Self {
-        todo!()
+    pub fn color(mut self, color: &Color) -> Self {
+        self.base.material.color = *color;
+
+        self
     }
-    pub fn ambient(&mut self, ambient: f64) -> &mut Self {
-        todo!()
+    pub fn ambient(mut self, ambient: f64) -> Self {
+        self.base.material.ambient = ambient;
+
+        self
     }
-    pub fn diffuse(&mut self, diffuse: f64) -> &mut Self {
-        todo!()
+    pub fn diffuse(mut self, diffuse: f64) -> Self {
+        self.base.material.diffuse = diffuse;
+
+        self
     }
-    pub fn specular(&mut self, specular: f64) -> &mut Self {
-        todo!()
+    pub fn specular(mut self, specular: f64) -> Self {
+        self.base.material.specular = specular;
+
+        self
     }
-    pub fn shininess(&mut self, shininess: f64) -> &mut Self {
-        todo!()
+    pub fn shininess(mut self, shininess: f64) -> Self {
+        self.base.material.shininess = shininess;
+
+        self
     }
-    pub fn pattern(&mut self, pattern: Pattern) -> &mut Self {
-        todo!()
+    pub fn pattern(mut self, pattern: Pattern) -> Self {
+        self.base.material.pattern = Some(pattern);
+
+        self
     }
-    pub fn reflective(&mut self, reflective: f64) -> &mut Self {
-        todo!()
+    pub fn reflective(mut self, reflective: f64) -> Self {
+        self.base.material.reflective = reflective;
+
+        self
     }
-    pub fn transparency(&mut self, transparency: f64) -> &mut Self {
-        todo!()
+    pub fn transparency(mut self, transparency: f64) -> Self {
+        self.base.material.transparency = transparency;
+
+        self
     }
-    pub fn refractive_index(&mut self, refractive_index: f64) -> &mut Self {
-        todo!()
+    pub fn refractive_index(mut self, refractive_index: f64) -> Self {
+        self.base.material.refractive_index = refractive_index;
+
+        self
+    }
+}
+
+impl TryFrom<Object> for ShapeBuilder<Cube, TypeSpecified> {
+    type Error = String;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        if let Object::Cube(cube) = value {
+            Ok(ShapeBuilder::from_cube((*cube.as_ref()).clone()))
+        } else {
+            Err("Object is not a Cube".to_string())
+        }
+    }
+}
+impl TryFrom<Object> for ShapeBuilder<Cylinder, TypeSpecified> {
+    type Error = String;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        if let Object::Cylinder(cylinder) = value {
+            Ok(ShapeBuilder::from_cylinder((*cylinder.as_ref()).clone()))
+        } else {
+            Err("Object is not a Cylinder".to_string())
+        }
+    }
+}
+impl TryFrom<Object> for ShapeBuilder<Cone, TypeSpecified> {
+    type Error = String;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        if let Object::Cone(cone) = value {
+            Ok(ShapeBuilder::from_cone((*cone.as_ref()).clone()))
+        } else {
+            Err("Object is not a Cone".to_string())
+        }
+    }
+}
+impl TryFrom<Object> for ShapeBuilder<Plane, TypeSpecified> {
+    type Error = String;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        if let Object::Plane(plane) = value {
+            Ok(ShapeBuilder::from_plane((*plane.as_ref()).clone()))
+        } else {
+            Err("Object is not a Plane".to_string())
+        }
+    }
+}
+impl TryFrom<Object> for ShapeBuilder<Sphere, TypeSpecified> {
+    type Error = String;
+
+    fn try_from(value: Object) -> Result<Self, Self::Error> {
+        if let Object::Sphere(sphere) = value {
+            Ok(ShapeBuilder::from_sphere((*sphere.as_ref()).clone()))
+        } else {
+            Err("Object is not a Sphere".to_string())
+        }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
-    Group(Group),
-    Sphere(Sphere),
-    Plane(Plane),
-    Cube(Cube),
-    Cylinder(Cylinder),
-    Cone(Cone),
+    Group(Arc<Group>),
+    Sphere(Arc<Sphere>),
+    Plane(Arc<Plane>),
+    Cube(Arc<Cube>),
+    Cylinder(Arc<Cylinder>),
+    Cone(Arc<Cone>),
 
     #[cfg(test)]
     TestShape(TestShape),
@@ -333,24 +548,6 @@ impl Object {
         world_vector.normalize()
     }
 
-    pub fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrix should be inverted before assignment."
-        );
-
-        match self {
-            Self::Group(g) => g.set_transform(transform),
-            Self::Sphere(s) => s.set_transform(transform),
-            Self::Plane(p) => p.set_transform(transform),
-            Self::Cube(c) => c.set_transform(transform),
-            Self::Cylinder(c) => c.set_transform(transform),
-            Self::Cone(c) => c.set_transform(transform),
-
-            #[cfg(test)]
-            Self::TestShape(s) => s.set_transform(transform),
-        }
-    }
     #[must_use]
     pub fn get_transform(&self) -> Matrix<4> {
         match self {
@@ -363,19 +560,6 @@ impl Object {
 
             #[cfg(test)]
             Self::TestShape(s) => s.get_transform(),
-        }
-    }
-    pub fn set_material(&mut self, material: &Material) {
-        match self {
-            Self::Group(g) => g.set_material(material),
-            Self::Sphere(s) => s.set_material(material),
-            Self::Plane(p) => p.set_material(material),
-            Self::Cube(c) => c.set_material(material),
-            Self::Cylinder(c) => c.set_material(material),
-            Self::Cone(c) => c.set_material(material),
-
-            #[cfg(test)]
-            Self::TestShape(s) => s.set_material(material),
         }
     }
     #[must_use]
@@ -392,21 +576,21 @@ impl Object {
             Self::TestShape(s) => s.get_material(),
         }
     }
-    pub(crate) fn local_intersect(
-        &self,
+    pub(crate) fn local_intersect<'a>(
+        &'a self,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut Vec<Intersection<'a>>,
     ) {
         match self {
-            Self::Group(g) => g.local_intersect(local_ray, intersection_list),
-            Self::Sphere(s) => s.local_intersect(local_ray, intersection_list),
-            Self::Plane(p) => p.local_intersect(local_ray, intersection_list),
-            Self::Cube(c) => c.local_intersect(local_ray, intersection_list),
-            Self::Cylinder(c) => c.local_intersect(local_ray, intersection_list),
-            Self::Cone(c) => c.local_intersect(local_ray, intersection_list),
+            Self::Cone(c) => c.local_intersect(&self, local_ray, intersection_list),
+            Self::Cube(c) => c.local_intersect(&self, local_ray, intersection_list),
+            Self::Cylinder(c) => c.local_intersect(&self, local_ray, intersection_list),
+            Self::Group(g) => g.local_intersect(&self, local_ray, intersection_list),
+            Self::Plane(p) => p.local_intersect(&self, local_ray, intersection_list),
+            Self::Sphere(s) => s.local_intersect(&self, local_ray, intersection_list),
 
             #[cfg(test)]
-            Self::TestShape(s) => s.local_intersect(local_ray, intersection_list),
+            Self::TestShape(s) => s.local_intersect(&self, local_ray, intersection_list),
         }
     }
 
@@ -429,48 +613,41 @@ impl Object {
 }
 
 #[must_use]
-pub fn new_sphere() -> Object {
-    (Object::Sphere(Sphere::default()))
+pub fn new_sphere() -> ShapeBuilder<Sphere, TypeSpecified> {
+    ShapeBuilder::new().sphere()
 }
 #[must_use]
-pub fn glass_sphere() -> Object {
-    let mut s = Sphere::default();
-    let mut material = s.get_material();
-    material.transparency = 1.0;
-    material.refractive_index = 1.5;
-    s.set_material(&material);
-
-    Object::Sphere(s)
+pub fn glass_sphere() -> ShapeBuilder<Sphere, TypeSpecified> {
+    ShapeBuilder::new()
+        .sphere()
+        .transparency(1.0)
+        .refractive_index(1.5)
 }
 #[must_use]
-pub fn new_plane() -> Object {
-    Object::Plane(Plane::default())
+pub fn new_plane() -> ShapeBuilder<Plane, TypeSpecified> {
+    ShapeBuilder::new().plane()
 }
 #[must_use]
-pub fn new_cube() -> Object {
-    Object::Cube(Cube::default())
+pub fn new_cube() -> ShapeBuilder<Cube, TypeSpecified> {
+    ShapeBuilder::new().cube()
 }
 #[must_use]
-pub fn new_cylinder(max_min: Option<(f64, f64)>) -> Object {
-    let mut cyl = Cylinder::default();
-    if let Some(max_min) = max_min {
-        cyl.maximum = max_min.0;
-        cyl.minimum = max_min.1;
-        cyl.closed = true;
+pub fn new_cylinder(max_min: Option<(f64, f64)>) -> ShapeBuilder<Cylinder, TypeSpecified> {
+    let mut shape = ShapeBuilder::new().cylinder();
+    if let Some((max, min)) = max_min {
+        shape = shape.caps(max, min);
     }
 
-    Object::Cylinder(cyl)
+    shape
 }
 #[must_use]
-pub fn new_cone(max_min: Option<(f64, f64)>) -> Object {
-    let mut cone = Cone::default();
-    if let Some(max_min) = max_min {
-        cone.maximum = max_min.0;
-        cone.minimum = max_min.1;
-        cone.closed = true;
+pub fn new_cone(max_min: Option<(f64, f64)>) -> ShapeBuilder<Cone, TypeSpecified> {
+    let mut shape = ShapeBuilder::new().cone();
+    if let Some((max, min)) = max_min {
+        shape = shape.caps(max, min);
     }
 
-    (Object::Cone(cone))
+    shape
 }
 #[must_use]
 pub fn new_group(children: Vec<Object>) -> Object {
@@ -482,8 +659,8 @@ pub fn new_group(children: Vec<Object>) -> Object {
 }
 
 #[cfg(test)]
-fn new_test_shape() -> Object {
-    Object::TestShape(TestShape::default())
+fn new_test_shape() -> ShapeBuilder<TestShape, TypeSpecified> {
+    ShapeBuilder::new().test_shape()
 }
 
 #[cfg(test)]
@@ -497,15 +674,13 @@ mod tests {
 
     #[test]
     fn the_default_transformation() {
-        let s = new_test_shape();
+        let s = new_test_shape().build();
         assert_eq!(s.get_transform(), *Matrix::<4>::identity().inverse());
     }
     #[test]
     fn assigning_a_transformation() {
-        let mut s = new_test_shape();
-        let mut trans = Transform::translate(2.0, 3.0, 4.0);
-        trans.inverse();
-        s.set_transform(&trans);
+        let mut s = new_test_shape().translate(2.0, 3.0, 4.0).build();
+
         assert_eq!(
             s.get_transform().matrix,
             Transform::translate(2.0, 3.0, 4.0).matrix
@@ -513,25 +688,25 @@ mod tests {
     }
     #[test]
     fn the_default_material() {
-        let s = new_test_shape();
+        let s = new_test_shape().build();
         let m = s.get_material();
         assert_eq!(m, Material::new());
     }
     #[test]
     fn assigning_a_material() {
-        let mut s = new_test_shape();
+        let mut s = new_test_shape().ambient(1.0).build();
+
         let mut m = Material::new();
         m.ambient = 1.0;
-        s.set_material(&m);
+
         assert_eq!(s.get_material(), m);
     }
     #[test]
     fn intersecting_a_scaled_shape_with_a_ray() {
+        let mut s = new_test_shape().scale(2.0, 2.0, 2.0).build();
+
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let mut s = new_test_shape();
-        let mut trans = Transform::scaling(2.0, 2.0, 2.0);
-        trans.inverse();
-        s.set_transform(&trans);
+
         let mut xs = Vec::new();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
@@ -540,11 +715,10 @@ mod tests {
     }
     #[test]
     fn intersecting_a_translated_shape_with_a_ray() {
+        let mut s = new_test_shape().translate(5.0, 0.0, 0.0).build();
+
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let mut s = new_test_shape();
-        let mut trans = Transform::translate(5.0, 0.0, 0.0);
-        trans.inverse();
-        s.set_transform(&trans);
+
         let mut xs = Vec::new();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
@@ -553,33 +727,32 @@ mod tests {
     }
     #[test]
     fn computing_the_normal_on_a_translated_shape() {
-        let mut s = new_test_shape();
-        let mut trans = Transform::translate(0.0, 1.0, 0.0);
-        trans.inverse();
-        s.set_transform(&trans);
+        let mut s = new_test_shape().translate(0.0, 1.0, 0.0).build();
+
         let n = s.normal_at(new_point(0.0, 1.70711, -0.70711));
         assert_eq!(n, new_vector(0.0, 0.70711, -0.70711));
     }
     #[test]
     fn computing_the_normal_on_a_transformed_shape() {
-        let mut s = new_test_shape();
-        let mut m = Transform::scaling(1.0, 0.5, 1.0) * Transform::rotation_z(PI / 5.0);
-        m.inverse();
-        s.set_transform(&m);
+        let mut s = new_test_shape()
+            .scale(1.0, 0.5, 1.0)
+            .rotate(&RotationAxis::Z, (PI / 5.0))
+            .build();
+
         let n = s.normal_at(new_point(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0));
         assert_eq!(n, new_vector(0.0, 0.97014, -0.24254));
     }
     #[test]
     fn a_helper_for_producing_a_sphere_with_a_glassy_material() {
-        let s = glass_sphere();
+        let s = glass_sphere().build();
+
         assert_eq!(s.get_transform().matrix, Matrix::<4>::identity().matrix);
         assert!(is_float_equal(&s.get_material().transparency, 1.0));
         assert!(is_float_equal(&s.get_material().refractive_index, 1.5));
     }
     #[test]
     fn converting_a_point_from_world_to_object_space() {
-        let mut s = new_sphere();
-        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
+        let mut s = new_sphere().translate(5.0, 0.0, 0.0).build();
         let g2 = GroupBuilder::new()
             .add(s)
             .set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse())
@@ -604,8 +777,7 @@ mod tests {
     }
     #[test]
     fn converting_a_normal_from_object_to_world_space() {
-        let mut s = new_sphere();
-        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
+        let mut s = new_sphere().translate(5.0, 0.0, 0.0).build();
         let g2 = GroupBuilder::new()
             .set_transform(Transform::scaling(1.0, 2.0, 3.0).inverse())
             .add(s)
@@ -634,8 +806,7 @@ mod tests {
     }
     #[test]
     fn finding_the_normal_on_a_child_object() {
-        let mut s = new_sphere();
-        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
+        let mut s = new_sphere().translate(5.0, 0.0, 0.0).build();
         let g2 = GroupBuilder::new()
             .set_transform(Transform::scaling(1.0, 2.0, 3.0).inverse())
             .add(s)
