@@ -5,14 +5,14 @@ use crate::ray_tracer::{
     utils,
 };
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Intersection {
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct Intersection<'a> {
     t: f64,
-    object: Object,
+    object: &'a Object,
 }
-impl Intersection {
+impl<'a> Intersection<'a> {
     #[must_use]
-    pub const fn new(time: f64, object: Object) -> Self {
+    pub const fn new(time: f64, object: &'a Object) -> Self {
         Self { t: time, object }
     }
     pub(crate) const fn get_time(&self) -> f64 {
@@ -28,12 +28,12 @@ impl Intersection {
 }
 
 #[derive(Debug, Default, PartialEq, Clone)]
-pub struct Intersections {
-    pub list: Vec<Intersection>,
+pub struct Intersections<'a> {
+    pub list: Vec<Intersection<'a>>,
 }
-impl Intersections {
+impl<'a> Intersections<'a> {
     #[must_use]
-    pub fn new(intersect_list: &[Intersection]) -> Self {
+    pub fn new(intersect_list: &[Intersection<'a>]) -> Self {
         let mut i = Self {
             list: intersect_list.to_vec(),
         };
@@ -75,9 +75,9 @@ impl Intersections {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct IntersectComp {
+pub struct IntersectComp<'a> {
     pub(crate) t: f64,
-    pub(crate) object: Object,
+    pub(crate) object: &'a Object,
     pub(crate) point: Point,
     pub(crate) eyev: Vector,
     pub(crate) normalv: Vector,
@@ -89,14 +89,14 @@ pub struct IntersectComp {
     pub(crate) n2: f64,
 }
 #[must_use]
-pub fn prepare_computations(
-    intersection: &Intersection,
+pub fn prepare_computations<'a>(
+    intersection: &'a Intersection,
     ray: &Ray,
-    intersections: &Intersections,
-) -> IntersectComp {
+    intersections: &'a Intersections,
+) -> IntersectComp<'a> {
     let mut comps = IntersectComp {
         t: intersection.t,
-        object: intersection.object.clone(),
+        object: intersection.object,
         point: ray.position(intersection.t),
         eyev: -(ray.get_direction()),
         normalv: intersection
@@ -147,7 +147,7 @@ fn get_refractive_index_from_intersections(
         }
 
         if containers.contains(&i.object) {
-            containers.retain(|item| *item != i.object);
+            containers.retain(|item| item != i.object);
         } else {
             containers.push(i.object.clone());
         }
@@ -208,16 +208,16 @@ mod tests {
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
         let s = new_sphere();
-        let i = Intersection::new(3.5, s.clone());
+        let i = Intersection::new(3.5, &s);
 
         assert!(is_float_equal(&i.t, 3.5));
-        assert_eq!(i.object, s);
+        assert_eq!(*i.object, s);
     }
     #[test]
     fn aggregating_intersections() {
         let s = new_sphere();
-        let i1 = Intersection::new(1.0, s.clone());
-        let i2 = Intersection::new(2.0, s);
+        let i1 = Intersection::new(1.0, &s);
+        let i2 = Intersection::new(2.0, &s);
         let xs = Intersections::new(&[i1, i2]);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, 1.0));
@@ -226,26 +226,26 @@ mod tests {
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
         let s = new_sphere();
-        let i1 = Intersection::new(1.0, s.clone());
-        let i2 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&[i2, i1.clone()]);
+        let i1 = Intersection::new(1.0, &s);
+        let i2 = Intersection::new(2.0, &s);
+        let xs = Intersections::new(&[i2, i1]);
         let i = xs.hit();
         assert_eq!(i, Some(i1));
     }
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
         let s = new_sphere();
-        let i1 = Intersection::new(-1.0, s.clone());
-        let i2 = Intersection::new(1.0, s);
-        let xs = Intersections::new(&[i1, i2.clone()]);
+        let i1 = Intersection::new(-1.0, &s);
+        let i2 = Intersection::new(1.0, &s);
+        let xs = Intersections::new(&[i1, i2]);
         let i = xs.hit();
         assert_eq!(i, Some(i2));
     }
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
         let s = new_sphere();
-        let i1 = Intersection::new(-2.0, s.clone());
-        let i2 = Intersection::new(-1.0, s);
+        let i1 = Intersection::new(-2.0, &s);
+        let i2 = Intersection::new(-1.0, &s);
         let xs = Intersections::new(&[i2, i1]);
         let i = xs.hit();
         assert_eq!(i, None);
@@ -253,11 +253,11 @@ mod tests {
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
         let s = new_sphere();
-        let i1 = Intersection::new(5.0, s.clone());
-        let i2 = Intersection::new(7.0, s.clone());
-        let i3 = Intersection::new(-3.0, s.clone());
-        let i4 = Intersection::new(2.0, s);
-        let xs = Intersections::new(&[i1, i2, i3, i4.clone()]);
+        let i1 = Intersection::new(5.0, &s);
+        let i2 = Intersection::new(7.0, &s);
+        let i3 = Intersection::new(-3.0, &s);
+        let i4 = Intersection::new(2.0, &s);
+        let xs = Intersections::new(&[i1, i2, i3, i4]);
         let i = xs.hit();
         assert_eq!(i, Some(i4));
     }
@@ -265,14 +265,9 @@ mod tests {
     fn precomputing_the_state_of_an_intersection() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = new_sphere();
-        let i = Intersection::new(4.0, shape);
-        let comps = prepare_computations(
-            &i,
-            &r,
-            &Intersections {
-                list: vec![i.clone()],
-            },
-        );
+        let i = Intersection::new(4.0, &shape);
+        let binding = Intersections { list: vec![i] };
+        let comps = prepare_computations(&i, &r, &binding);
         assert!(is_float_equal(&comps.t, i.t));
         assert_eq!(comps.object, i.object);
         assert_eq!(comps.point, new_point(0.0, 0.0, -1.0));
@@ -283,16 +278,18 @@ mod tests {
     fn the_hit_when_an_intersection_occurs_on_the_outside() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = new_sphere();
-        let i = Intersection::new(4.0, shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
+        let i = Intersection::new(4.0, &shape);
+        let binding = Intersections { list: vec![i] };
+        let comps = prepare_computations(&i, &r, &binding);
         assert!(!comps.inside);
     }
     #[test]
     fn the_hit_when_an_intersection_occurs_on_the_inside() {
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let shape = new_sphere();
-        let i = Intersection::new(1.0, shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
+        let i = Intersection::new(1.0, &shape);
+        let binding = Intersections { list: vec![i] };
+        let comps = prepare_computations(&i, &r, &binding);
         assert_eq!(comps.point, new_point(0.0, 0.0, 1.0));
         assert_eq!(comps.eyev, new_vector(0.0, 0.0, -1.0));
         assert_eq!(comps.normalv, new_vector(0.0, 0.0, -1.0));
@@ -306,8 +303,9 @@ mod tests {
         let mut trans = Transform::translate(0.0, 0.0, 1.0);
         trans.inverse();
         shape.set_transform(&trans);
-        let i = Intersection::new(5.0, shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
+        let i = Intersection::new(5.0, &shape);
+        let binding = Intersections { list: vec![i] };
+        let comps = prepare_computations(&i, &r, &binding);
         assert!(comps.over_point.z < -utils::EPSILON / 2.0);
         assert!(comps.point.z > comps.over_point.z);
     }
@@ -319,8 +317,9 @@ mod tests {
             new_point(0.0, 1.0, -1.0),
             new_vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
         );
-        let i = Intersection::new(f64::sqrt(2.0), shape);
-        let comps = prepare_computations(&i.clone(), &r, &Intersections { list: vec![i] });
+        let i = Intersection::new(f64::sqrt(2.0), &shape);
+        let binding = Intersections { list: vec![i] };
+        let comps = prepare_computations(&i, &r, &binding);
         assert_eq!(
             comps.reflectv,
             new_vector(0.0, f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0)
@@ -359,12 +358,12 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, -4.0), new_vector(0.0, 0.0, 1.0));
         let xs = Intersections {
             list: vec![
-                Intersection::new(2.0, A.clone()),
-                Intersection::new(2.75, B.clone()),
-                Intersection::new(3.25, C.clone()),
-                Intersection::new(4.75, B.clone()),
-                Intersection::new(5.25, C.clone()),
-                Intersection::new(6.0, A.clone()),
+                Intersection::new(2.0, &A),
+                Intersection::new(2.75, &B),
+                Intersection::new(3.25, &C),
+                Intersection::new(4.75, &B),
+                Intersection::new(5.25, &C),
+                Intersection::new(6.0, &A),
             ],
         };
 
@@ -391,8 +390,8 @@ mod tests {
         let mut trans = Transform::translate(0.0, 0.0, 1.0);
         trans.inverse();
         shape.set_transform(&trans);
-        let i = Intersection::new(5.0, shape);
-        let xs = Intersections::new(&[i.clone()]);
+        let i = Intersection::new(5.0, &shape);
+        let xs = Intersections::new(&[i]);
         let comps = prepare_computations(&i, &r, &xs);
         assert!(comps.under_point.z > EPSILON / 2.0);
         assert!(comps.point.z < comps.under_point.z);
@@ -404,10 +403,11 @@ mod tests {
             new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
             new_vector(0.0, 1.0, 0.0),
         );
-        let xs = Intersections::new(&[
-            Intersection::new(-(2.0_f64.sqrt()) / 2.0, shape.clone()),
-            Intersection::new(2.0_f64.sqrt() / 2.0, shape),
-        ]);
+        let intersection_bindings = [
+            Intersection::new(-(2.0_f64.sqrt()) / 2.0, &shape),
+            Intersection::new(2.0_f64.sqrt() / 2.0, &shape),
+        ];
+        let xs = Intersections::new(&intersection_bindings);
         let comps = prepare_computations(&xs.list[1], &r, &xs);
         let reflectance = schlick(&comps);
         assert!(is_float_equal(&reflectance, 1.0));
@@ -416,10 +416,11 @@ mod tests {
     fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
         let shape = glass_sphere();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 1.0, 0.0));
-        let xs = Intersections::new(&[
-            Intersection::new(-1.0, shape.clone()),
-            Intersection::new(2.0, shape),
-        ]);
+        let intersection_bindings = [
+            Intersection::new(-1.0, &shape),
+            Intersection::new(2.0, &shape),
+        ];
+        let xs = Intersections::new(&intersection_bindings);
         let comps = prepare_computations(&xs.list[1], &r, &xs);
         let reflectance = schlick(&comps);
         assert!(is_float_equal(&reflectance, 0.04));
@@ -428,7 +429,8 @@ mod tests {
     fn the_schlick_approximation_with_small_angle_and_n2_greater_than_n1() {
         let shape = glass_sphere();
         let r = Ray::new(new_point(0.0, 0.99, -2.0), new_vector(0.0, 0.0, 1.0));
-        let xs = Intersections::new(&[Intersection::new(1.8589, shape)]);
+        let binding = Intersection::new(1.8589, &shape);
+        let xs = Intersections::new(&[binding]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
         let reflectance = schlick(&comps);
         assert!(is_float_equal(&reflectance, 0.48873));
