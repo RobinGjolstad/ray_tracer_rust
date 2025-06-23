@@ -133,7 +133,7 @@ mod tests {
         let eyev = new_vector(0.0, 0.0, -1.0);
         let normalv = new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
-        let obj = new_sphere();
+        let obj = new_sphere().build();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.9, 1.9, 1.9));
     }
@@ -143,7 +143,7 @@ mod tests {
         let eyev = new_vector(0.0, f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
         let normalv = new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
-        let obj = new_sphere();
+        let obj = new_sphere().build();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.0, 1.0, 1.0));
     }
@@ -153,7 +153,7 @@ mod tests {
         let eyev = new_vector(0.0, 0.0, -1.0);
         let normalv = new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(&new_point(0.0, 10.0, -10.0), &Color::new(1.0, 1.0, 1.0));
-        let obj = new_sphere();
+        let obj = new_sphere().build();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.7364, 0.7364, 0.7364));
     }
@@ -163,7 +163,7 @@ mod tests {
         let eyev = new_vector(0.0, -f64::sqrt(2.0) / 2.0, -f64::sqrt(2.0) / 2.0);
         let normalv = new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(&new_point(0.0, 10.0, -10.0), &Color::new(1.0, 1.0, 1.0));
-        let obj = new_sphere();
+        let obj = new_sphere().build();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(1.63639, 1.63639, 1.63639));
     }
@@ -173,7 +173,7 @@ mod tests {
         let eyev = new_vector(0.0, 0.0, -1.0);
         let normalv = new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(&new_point(0.0, 0.0, 10.0), &Color::new(1.0, 1.0, 1.0));
-        let obj = new_sphere();
+        let obj = new_sphere().build();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, false);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
@@ -185,7 +185,7 @@ mod tests {
         let normalv = new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
         let in_shadow = true;
-        let obj = new_sphere();
+        let obj = new_sphere().build();
         let result = m.lighting(&obj, &light, &position, &eyev, &normalv, in_shadow);
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
     }
@@ -206,7 +206,7 @@ mod tests {
         let eyev = new_vector(0.0, 0.0, -1.0);
         let normalv = new_vector(0.0, 0.0, -1.0);
         let light = Light::point_light(&new_point(0.0, 0.0, -10.0), &Color::new(1.0, 1.0, 1.0));
-        let obj = new_sphere();
+        let obj = new_sphere().build();
         let c1 = m.lighting(
             &obj,
             &light,
