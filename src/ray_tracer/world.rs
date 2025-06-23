@@ -63,25 +63,25 @@ impl World {
         }
     }
 
+    #[cfg(test)]
     #[must_use]
     pub fn new_default_world() -> Self {
-        let mut s1 = new_sphere();
-        let mut s1_mat = s1.get_material();
-        s1_mat.color = Color::new(0.8, 1.0, 0.6);
-        s1_mat.diffuse = 0.7;
-        s1_mat.specular = 0.2;
-        s1.set_material(&s1_mat);
+        let s1 = new_sphere()
+            .color(&Color::new(0.8, 1.0, 0.6))
+            .diffuse(0.7)
+            .specular(0.2)
+            .build();
 
-        let mut s2 = new_sphere();
-        s2.set_transform(Transform::scaling(0.5, 0.5, 0.5).inverse());
+        let s2 = new_sphere().scale(0.5, 0.5, 0.5).build();
 
+        let objects = vec![s1, s2];
+        let lights = vec![Light::point_light(
+            &new_point(-10.0, 10.0, -10.0),
+            &Color::new(1.0, 1.0, 1.0),
+        )];
         Self {
-            objects: vec![s1, s2].into(),
-            lights: vec![Light::point_light(
-                &new_point(-10.0, 10.0, -10.0),
-                &Color::new(1.0, 1.0, 1.0),
-            )]
-            .into(),
+            objects: objects.into(),
+            lights: lights.into(),
         }
     }
     pub(crate) fn shade_hit(&self, comps: &IntersectComp, remaining: usize) -> Color {
@@ -181,16 +181,62 @@ impl World {
 mod tests {
     use crate::ray_tracer::{
         intersections::{Intersection, Intersections},
+        lights,
         patterns::Pattern,
-        shapes::new_plane,
+        shapes::{new_plane, ShapeBuilder, Sphere, TypeSpecified},
         tuples_new::new_vector,
         utils::is_float_equal,
     };
 
     use super::*;
 
+    /// Default collection of objects and lights for the default world.
+    ///
+    /// This function should be used when you want the default world, but want to modify one of the components.
+    /// In this case, do something like this:
+    /// ```rust
+    /// // Get the default set of components.
+    /// let (objects, lights) = default_world_components();
+    ///
+    /// // Modify the objects or lights as needed.
+    /// let first_object = objects.first().unwrap().clone();
+    /// let modified_object = first_object.scale(2.0, 2.0, 2.0);
+    ///
+    /// // Create a new world with the modified components.
+    /// let w = WorldBuilder::new()
+    ///    .object(modified_object.build())
+    ///    .lights(lights)
+    ///    .build();
+    ///
+    /// // Use the world as needed.
+    /// ```
+    fn default_world_components() -> (Vec<ShapeBuilder<Sphere, TypeSpecified>>, Vec<Light>) {
+        let s1 = new_sphere()
+            .color(&Color::new(0.8, 1.0, 0.6))
+            .diffuse(0.7)
+            .specular(0.2);
+
+        let s2 = new_sphere().scale(0.5, 0.5, 0.5);
+
+        let objects = vec![s1, s2];
+        let lights = vec![Light::point_light(
+            &new_point(-10.0, 10.0, -10.0),
+            &Color::new(1.0, 1.0, 1.0),
+        )];
+
+        (objects, lights)
+    }
+
+    /// Get an immutable default world with two spheres and a point-light.
+    ///
+    /// If you wish to modify any of the components, use `default_world_components()` instead.
     fn default_world() -> World {
-        World::new_default_world()
+        let (objects, lights) = default_world_components();
+        let objects = objects.into_iter().map(|s| s.build()).collect::<Vec<_>>();
+        World {
+            objects: objects.into(),
+            lights: lights.into(),
+        }
     }
 
     #[test]
@@ -203,21 +249,20 @@ mod tests {
     #[test]
     fn the_default_world() {
         let light = Light::point_light(&new_point(-10.0, 10.0, -10.0), &Color::new(1.0, 1.0, 1.0));
-        let mut s1 = new_sphere();
-        let mut s1_mat = s1.get_material();
-        s1_mat.color = Color::new(0.8, 1.0, 0.6);
-        s1_mat.diffuse = 0.7;
-        s1_mat.specular = 0.2;
-        s1.set_material(&s1_mat);
+        let s1 = new_sphere()
+            .color(&Color::new(0.8, 1.0, 0.6))
+            .diffuse(0.7)
+            .specular(0.2)
+            .build();
 
-        let mut s2 = new_sphere();
-        s2.set_transform(Transform::scaling(0.5, 0.5, 0.5).inverse());
+        let s2 = new_sphere().scale(0.5, 0.5, 0.5).build();
 
-        let w = default_world();
+        let (objects, lights) = default_world_components();
+        let objects = objects.into_iter().map(|s| s.build()).collect::<Vec<_>>();
 
-        assert!(w.lights.contains(&light));
-        assert!(w.objects.contains(&s1));
-        assert!(w.objects.contains(&s2));
+        assert!(lights.contains(&light));
+        assert!(objects.contains(&s1));
+        assert!(objects.contains(&s2));
     }
 
     #[test]
@@ -246,11 +291,14 @@ mod tests {
     }
     #[test]
     fn shading_an_intersection_from_the_inside() {
-        let mut w = default_world().into_builder();
-        w.lights = vec![Light::point_light(
-            &new_point(0.0, 0.25, 0.0),
-            &Color::new(1.0, 1.0, 1.0),
-        )];
+        let (objects, _) = default_world_components();
+        let objects = objects.into_iter().map(|s| s.build()).collect::<Vec<_>>();
+        let light = Light::point_light(&new_point(0.0, 0.25, 0.0), &Color::new(1.0, 1.0, 1.0));
+        let mut w = WorldBuilder::new();
+        objects.iter().for_each(|o| {
+            w.object(o.clone());
+        });
+        w.light(light);
         let w = w.build();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let shape = w.objects[1].clone();
@@ -268,11 +316,10 @@ mod tests {
             &Color::new(1.0, 1.0, 1.0),
         )];
 
-        let s1 = new_sphere();
+        let s1 = new_sphere().build();
         w.objects.push(s1);
 
-        let mut s2 = new_sphere();
-        s2.set_transform(Transform::translate(0.0, 0.0, 10.0).inverse());
+        let s2 = new_sphere().translate(0.0, 0.0, 10.0).build();
         w.objects.push(s2.clone());
 
         let w = w.build();
@@ -300,26 +347,20 @@ mod tests {
     }
     #[test]
     fn the_color_with_an_intersection_behind_the_ray() {
-        let w = default_world();
-        let mut objects = w.objects.iter();
+        let (objects, lights) = default_world_components();
 
-        // Grabs the outer sphere
-        let mut outer = objects.next().unwrap().clone();
+        // Set `ambient` to 1.0 for both objects.
+        let objects: Vec<Object> = objects
+            .into_iter()
+            .map(|o| o.ambient(1.0).build())
+            .collect();
 
-        let mut mat = outer.get_material();
-        mat.ambient = 1.0;
-        outer.set_material(&mat);
-
-        // Grabs the inner sphere
-        let mut inner = objects.next().unwrap().clone();
-        let mut mat = inner.get_material();
-        mat.ambient = 1.0;
-        inner.set_material(&mat);
-        let inner_sphere = inner.clone();
+        // Grab the inner object.
+        let inner_sphere = objects[1].clone();
 
         let new_world = World {
-            lights: default_world().lights,
-            objects: vec![outer, inner].into(),
+            lights: lights.into(),
+            objects: objects.into(),
         };
         let r = Ray::new(new_point(0.0, 0.0, 0.75), new_vector(0.0, 0.0, -1.0));
         let c = new_world.color_at(&r, 1);
@@ -328,36 +369,35 @@ mod tests {
 
     #[test]
     fn there_is_no_shadow_when_nothing_is_collinear_with_point_and_light() {
-        let w = World::new_default_world();
+        let w = default_world();
         let p = new_point(0.0, 10.0, 0.0);
         assert!(!w.is_shadowed(&p));
     }
     #[test]
     fn the_shadow_when_an_object_is_between_the_point_and_the_light() {
-        let w = World::new_default_world();
+        let w = default_world();
         let p = new_point(10.0, -10.0, 10.0);
         assert!(w.is_shadowed(&p));
     }
     #[test]
     fn there_is_no_shadow_when_an_object_is_behind_the_light() {
-        let w = World::new_default_world();
+        let w = default_world();
         let p = new_point(-20.0, 20.0, -20.0);
         assert!(!w.is_shadowed(&p));
     }
     #[test]
     fn there_is_no_shadow_when_an_object_is_behind_the_point() {
-        let w = World::new_default_world();
+        let w = default_world();
         let p = new_point(-2.0, 2.0, -2.0);
         assert!(!w.is_shadowed(&p));
     }
 
     #[test]
     fn the_reflected_color_for_a_nonreflective_material() {
-        let mut w = World::new_default_world().into_builder();
-        let mut shape = w.objects.get(1).unwrap().to_owned();
-        let mut material = shape.get_material();
-        material.ambient = 1.0;
-        shape.set_material(&material);
+        let (objects, _) = default_world_components();
+        let shape = objects[1].clone().ambient(1.0).build();
+
+        let mut w = default_world().into_builder();
         let _ = std::mem::replace(w.objects.get_mut(1).unwrap(), shape.clone());
         let w = w.build();
 
@@ -370,12 +410,11 @@ mod tests {
     }
     #[test]
     fn the_reflected_color_for_a_reflective_material() {
-        let mut w = World::new_default_world().into_builder();
-        let mut shape = new_plane();
-        let mut mat = shape.get_material();
-        mat.reflective = 0.5;
-        shape.set_material(&mat);
-        shape.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
+        let mut w = default_world().into_builder();
+        let shape = new_plane()
+            .reflective(0.5)
+            .translate(0.0, -1.0, 0.0)
+            .build();
         w.objects.push(shape.clone());
         let w = w.build();
 
@@ -391,12 +430,11 @@ mod tests {
     }
     #[test]
     fn shade_hit_with_a_reflective_material() {
-        let mut w = World::new_default_world().into_builder();
-        let mut shape = new_plane();
-        let mut mat = shape.get_material();
-        mat.reflective = 0.5;
-        shape.set_material(&mat);
-        shape.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
+        let mut w = default_world().into_builder();
+        let shape = new_plane()
+            .reflective(0.5)
+            .translate(0.0, -1.0, 0.0)
+            .build();
         w.objects.push(shape.clone());
         let w = w.build();
 
@@ -413,15 +451,15 @@ mod tests {
     #[test]
     fn color_at_with_mutually_reflective_surfaces() {
         let mut w = World::builder();
-        w.lights.push(Light::point_light(
+        w.light(Light::point_light(
             &new_point(0.0, 0.0, 0.0),
             &Color::new(1.0, 1.0, 1.0),
         ));
-        let mut lower = new_plane();
-        lower.get_material().reflective = 1.0;
-        lower.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
-        let mut upper = lower.clone();
-        upper.set_transform(Transform::translate(0.0, 1.0, 0.0).inverse());
+
+        let builder = new_plane().reflective(1.0);
+        let lower = builder.clone().translate(0.0, -1.0, 0.0).build();
+        let upper = builder.translate(0.0, 1.0, 0.0).build();
+
         w.objects.push(lower);
         w.objects.push(upper);
         let w = w.build();
@@ -436,11 +474,13 @@ mod tests {
     }
     #[test]
     fn the_reflected_color_at_the_maximum_recursive_depth() {
-        let mut w = World::new_default_world().into_builder();
-        let mut shape = new_plane();
-        shape.get_material().reflective = 0.5;
-        shape.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
-        w.objects.push(shape.clone());
+        let mut w = default_world().into_builder();
+
+        let shape = new_plane()
+            .reflective(0.5)
+            .translate(0.0, -1.0, 0.0)
+            .build();
+        w.object(shape.clone());
         let w = w.build();
 
         let r = Ray::new(
@@ -456,7 +496,7 @@ mod tests {
 
     #[test]
     fn the_refracted_color_with_an_opaque_surface() {
-        let w = World::new_default_world();
+        let w = default_world();
         let shape = w.objects[0].clone();
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = Intersections::new(&[
@@ -469,7 +509,7 @@ mod tests {
     }
     #[test]
     fn the_refracted_color_at_the_maximum_recursive_depth() {
-        let w = World::new_default_world();
+        let w = default_world();
         let shape = w.objects[0].clone();
         shape.get_material().transparency = 1.0;
         shape.get_material().refractive_index = 1.5;
@@ -484,7 +524,7 @@ mod tests {
     }
     #[test]
     fn the_refracted_color_under_total_internal_reflection() {
-        let w = World::new_default_world();
+        let w = default_world();
         let shape = w.objects[0].clone();
         shape.get_material().transparency = 1.0;
         shape.get_material().refractive_index = 1.5;
@@ -503,21 +543,24 @@ mod tests {
     #[test]
     #[allow(non_snake_case)]
     fn the_refracted_color_with_a_refracted_ray() {
-        let mut w = default_world().into_builder();
+        let (objects, lights) = default_world_components();
+        let first = objects[0]
+            .clone()
+            .ambient(1.0)
+            .pattern(Pattern::test_pattern_default())
+            .build();
+        let second = objects[1]
+            .clone()
+            .transparency(1.0)
+            .refractive_index(1.5)
+            .build();
 
-        let mut mat = w.objects[0].get_material();
-        mat.ambient = 1.0;
-        mat.pattern = Some(Pattern::test_pattern_default());
-        w.objects[0].set_material(&mat);
-        let A = w.objects[0].clone();
+        let A = first.clone();
+        let B = second.clone();
 
-        mat = w.objects[1].get_material();
-        mat.transparency = 1.0;
-        mat.refractive_index = 1.5;
-        w.objects[1].set_material(&mat);
-        let B = w.objects[1].clone();
-
-        let w = w.build();
+        let mut wb = WorldBuilder::new();
+        wb.light(lights[0]).object(first).object(second);
+        let w = wb.build();
 
         let r = Ray::new(new_point(0.0, 0.0, 0.1), new_vector(0.0, 1.0, 0.0));
         let xs = Intersections::new(&[
@@ -532,24 +575,20 @@ mod tests {
     }
     #[test]
     fn shade_hit_with_a_transparent_material() {
+        let floor = new_plane()
+            .translate(0.0, -1.0, 0.0)
+            .transparency(0.5)
+            .refractive_index(1.5)
+            .build();
+
+        let ball = new_sphere()
+            .translate(0.0, -3.5, -0.5)
+            .color(&Color::new(1.0, 0.0, 0.0))
+            .ambient(0.5)
+            .build();
+
         let mut w = default_world().into_builder();
-
-        let mut floor = new_plane();
-        floor.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
-        let mut mat = floor.get_material();
-        mat.transparency = 0.5;
-        mat.refractive_index = 1.5;
-        floor.set_material(&mat);
-        w.objects.push(floor.clone());
-
-        let mut ball = new_sphere();
-        ball.set_transform(Transform::translate(0.0, -3.5, -0.5).inverse());
-        let mut mat = ball.get_material();
-        mat.color = Color::new(1.0, 0.0, 0.0);
-        mat.ambient = 0.5;
-        ball.set_material(&mat);
-        w.objects.push(ball.clone());
-
+        w.object(floor.clone()).object(ball.clone());
         let w = w.build();
 
         let r = Ray::new(
@@ -563,25 +602,21 @@ mod tests {
     }
     #[test]
     fn shade_hit_with_a_reflective_transparent_material() {
+        let floor = new_plane()
+            .translate(0.0, -1.0, 0.0)
+            .reflective(0.5)
+            .transparency(0.5)
+            .refractive_index(1.5)
+            .build();
+
+        let ball = new_sphere()
+            .translate(0.0, -3.5, -0.5)
+            .color(&Color::new(1.0, 0.0, 0.0))
+            .ambient(0.5)
+            .build();
+
         let mut w = default_world().into_builder();
-
-        let mut floor = new_plane();
-        floor.set_transform(Transform::translate(0.0, -1.0, 0.0).inverse());
-        let mut mat = floor.get_material();
-        mat.reflective = 0.5;
-        mat.transparency = 0.5;
-        mat.refractive_index = 1.5;
-        floor.set_material(&mat);
-        w.objects.push(floor.clone());
-
-        let mut ball = new_sphere();
-        ball.set_transform(Transform::translate(0.0, -3.5, -0.5).inverse());
-        mat = ball.get_material();
-        mat.color = Color::new(1.0, 0.0, 0.0);
-        mat.ambient = 0.5;
-        ball.set_material(&mat);
-        w.objects.push(ball.clone());
-
+        w.object(floor.clone()).object(ball);
         let w = w.build();
 
         let r = Ray::new(
