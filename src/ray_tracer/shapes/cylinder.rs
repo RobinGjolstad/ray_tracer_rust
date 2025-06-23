@@ -11,7 +11,7 @@ use crate::ray_tracer::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cylinder {
-    base: BaseShape,
+    pub(super) base: BaseShape,
     parent: Option<BaseShape>,
     pub(super) minimum: f64,
     pub(super) maximum: f64,
@@ -41,19 +41,19 @@ impl Cylinder {
         x.mul_add(x, z.powi(2)) <= 1.0
     }
 
-    fn intersect_caps(&self, ray: &Ray, xs: &mut Vec<Intersection>) {
+    fn intersect_caps<'a>(&self, object: &'a Object, ray: &Ray, xs: &mut Vec<Intersection<'a>>) {
         if !self.closed || is_float_equal(&ray.direction.y, 0.0) {
             return;
         }
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Self::check_cap(ray, t) {
-            xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
+            xs.push(Intersection::new(t, object));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Self::check_cap(ray, t) {
-            xs.push(Intersection::new(t, Object::Cylinder(self.clone())));
+            xs.push(Intersection::new(t, object));
         }
     }
 }
@@ -65,18 +65,8 @@ impl Default for Cylinder {
 }
 
 impl Shapes for Cylinder {
-    fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrices must be inverted before applying it to an object."
-        );
-        self.base.transform = *transform;
-    }
     fn get_transform(&self) -> Matrix<4> {
         self.base.transform
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
         self.base.material
@@ -94,14 +84,14 @@ impl Shapes for Cylinder {
             new_vector(point.x, 0.0, point.z)
         }
     }
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
+    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         // let a = local_ray.direction.x.powi(2) + local_ray.direction.z.powi(2);
         let a = local_ray
             .direction
             .x
             .mul_add(local_ray.direction.x, local_ray.direction.z.powi(2));
         if is_float_equal(&a, 0.0) {
-            self.intersect_caps(&local_ray, intersection_list);
+            self.intersect_caps(object, &local_ray, intersection_list);
 
             return;
         }
@@ -135,22 +125,22 @@ impl Shapes for Cylinder {
         // let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
         let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
         if self.minimum < y0 && y0 < self.maximum {
-            intersection_list.push(Intersection::new(t0, Object::Cylinder(self.clone())));
+            intersection_list.push(Intersection::new(t0, object));
         }
 
         // let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
         let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
         if self.minimum < y1 && y1 < self.maximum {
-            intersection_list.push(Intersection::new(t1, Object::Cylinder(self.clone())));
+            intersection_list.push(Intersection::new(t1, object));
         }
 
-        self.intersect_caps(&local_ray, intersection_list);
+        self.intersect_caps(object, &local_ray, intersection_list);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::tuples_new::new_point;
+    use crate::ray_tracer::{shapes::ShapeBuilder, tuples_new::new_point};
 
     use super::*;
 
@@ -162,12 +152,13 @@ mod tests {
             (new_point(0.0, 0.0, -5.0), new_vector(1.0, 1.0, 1.0)),
         ];
         let cyl = Cylinder::new();
+        let obj_cylinder = ShapeBuilder::from_cylinder(cyl.clone()).build();
 
         for example in examples {
             let direction = example.1;
             let ray = Ray::new(example.0, direction.normalize());
             let mut xs = Vec::new();
-            cyl.local_intersect(ray, &mut xs);
+            cyl.local_intersect(&obj_cylinder, ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }
@@ -195,12 +186,13 @@ mod tests {
             ),
         ];
         let cyl = Cylinder::new();
+        let obj_cylinder = ShapeBuilder::from_cylinder(cyl.clone()).build();
 
         for example in examples {
             let direction = example.1.normalize();
             let ray = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cyl.local_intersect(ray, &mut xs);
+            cyl.local_intersect(&obj_cylinder, ray, &mut xs);
             assert_eq!(2, xs.len());
             assert!(is_float_equal(&example.2, xs[0].get_time()));
             assert!(is_float_equal(&example.3, xs[1].get_time()));
@@ -245,12 +237,13 @@ mod tests {
         let mut cyl = Cylinder::new();
         cyl.minimum = 1.0;
         cyl.maximum = 2.0;
+        let obj_cylinder = ShapeBuilder::from_cylinder(cyl.clone()).build();
 
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cyl.local_intersect(r, &mut xs);
+            cyl.local_intersect(&obj_cylinder, r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -276,12 +269,13 @@ mod tests {
         cyl.minimum = 1.0;
         cyl.maximum = 2.0;
         cyl.closed = true;
+        let obj_cylinder = ShapeBuilder::from_cylinder(cyl.clone()).build();
 
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cyl.local_intersect(r, &mut xs);
+            cyl.local_intersect(&obj_cylinder, r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }

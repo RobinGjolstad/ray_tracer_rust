@@ -12,7 +12,7 @@ use super::{BaseShape, Object, Shapes};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cube {
-    base: BaseShape,
+    pub(super) base: BaseShape,
     parent: Option<BaseShape>,
 }
 
@@ -33,19 +33,8 @@ impl Default for Cube {
 }
 
 impl Shapes for Cube {
-    fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrices must be inverted before applying it to an object."
-        );
-
-        self.base.transform = *transform;
-    }
     fn get_transform(&self) -> Matrix<4> {
         self.base.transform
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
         self.base.material
@@ -67,7 +56,7 @@ impl Shapes for Cube {
             panic!("Intersection did not match any axis")
         }
     }
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
+    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         let (xtmin, xtmax): (f64, f64) = check_axis(local_ray.origin.x, local_ray.direction.x);
         let (ytmin, ytmax): (f64, f64) = check_axis(local_ray.origin.y, local_ray.direction.y);
         let (ztmin, ztmax): (f64, f64) = check_axis(local_ray.origin.z, local_ray.direction.z);
@@ -85,8 +74,8 @@ impl Shapes for Cube {
 
         if tmin > tmax {
         } else {
-            intersection_list.push(Intersection::new(tmin, Object::Cube(self.clone())));
-            intersection_list.push(Intersection::new(tmax, Object::Cube(self.clone())));
+            intersection_list.push(Intersection::new(tmin, object));
+            intersection_list.push(Intersection::new(tmax, object));
         }
     }
 }
@@ -109,13 +98,14 @@ fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::{tuples_new::new_point, utils::is_float_equal_low_precision};
+    use crate::ray_tracer::{shapes::ShapeBuilder, tuples_new::new_point, utils::is_float_equal_low_precision};
 
     use super::*;
 
     #[test]
     fn a_ray_intersects_a_cube() {
         let c = Cube::new();
+        let obj_cube = ShapeBuilder::from_cube(c.clone()).build();
 
         let examples = [
             // +x
@@ -164,7 +154,7 @@ mod tests {
 
         for intersection in examples {
             let mut xs = Vec::new();
-            c.local_intersect(intersection.0, &mut xs);
+            c.local_intersect(&obj_cube, intersection.0, &mut xs);
             assert_eq!(xs.len(), 2);
             assert!(is_float_equal_low_precision(
                 &xs[0].get_time(),
@@ -180,6 +170,7 @@ mod tests {
     #[test]
     fn a_ray_misses_a_cube() {
         let c = Cube::new();
+        let obj_cube = ShapeBuilder::from_cube(c.clone()).build();
 
         let examples = [
             Ray::new(
@@ -201,7 +192,7 @@ mod tests {
 
         for ray in examples {
             let mut xs = Vec::new();
-            c.local_intersect(ray, &mut xs);
+            c.local_intersect(&obj_cube, ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }

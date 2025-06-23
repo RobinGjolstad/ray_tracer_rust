@@ -12,7 +12,7 @@ use crate::ray_tracer::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cone {
-    base: BaseShape,
+    pub(super) base: BaseShape,
     pub(super) minimum: f64,
     pub(super) maximum: f64,
     pub(super) closed: bool,
@@ -40,19 +40,19 @@ impl Cone {
         x.mul_add(x, z.powi(2)) <= y_plane.powi(2)
     }
 
-    fn intersect_caps(&self, ray: &Ray, xs: &mut Vec<Intersection>) {
+    fn intersect_caps<'a>(&self, object: &'a Object, ray: &Ray, xs: &mut Vec<Intersection<'a>>) {
         if !self.closed || is_float_equal(&ray.direction.y, 0.0) {
             return;
         }
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Self::check_cap(self.minimum, ray, t) {
-            xs.push(Intersection::new(t, Object::Cone(self.clone())));
+            xs.push(Intersection::new(t, object));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Self::check_cap(self.maximum, ray, t) {
-            xs.push(Intersection::new(t, Object::Cone(self.clone())));
+            xs.push(Intersection::new(t, object));
         }
     }
 }
@@ -64,18 +64,8 @@ impl Default for Cone {
 }
 
 impl Shapes for Cone {
-    fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrices must be inverted before applying it to an object."
-        );
-        self.base.transform = *transform;
-    }
     fn get_transform(&self) -> Matrix<4> {
         self.base.transform
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
         self.base.material
@@ -100,7 +90,12 @@ impl Shapes for Cone {
             new_vector(point.x, y, point.z)
         }
     }
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
+    fn local_intersect<'a>(
+        &self,
+        object: &'a Object,
+        local_ray: Ray,
+        intersection_list: &mut Vec<Intersection<'a>>,
+    ) {
         // Original version. Trying FMA.
         //
         // let a = local_ray.direction.x.powi(2) - local_ray.direction.y.powi(2)
@@ -147,7 +142,7 @@ impl Shapes for Cone {
             // Parallel to one of the halves.
             // One intersection.
             let t = -c / (2.0 * b);
-            intersection_list.push(Intersection::new(t, Object::Cone(self.clone())));
+            intersection_list.push(Intersection::new(t, object));
         } else {
             // TODO: Figure out which version is faster.
             #[allow(clippy::suboptimal_flops)]
@@ -167,22 +162,23 @@ impl Shapes for Cone {
             // let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
             let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y0 && y0 < self.maximum {
-                intersection_list.push(Intersection::new(t0, Object::Cone(self.clone())));
+                intersection_list.push(Intersection::new(t0, object));
             }
 
             // let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
             let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y1 && y1 < self.maximum {
-                intersection_list.push(Intersection::new(t1, Object::Cone(self.clone())));
+                intersection_list.push(Intersection::new(t1, object));
             }
         }
 
-        self.intersect_caps(&local_ray, intersection_list);
+        self.intersect_caps(object, &local_ray, intersection_list);
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::ray_tracer::shapes::ShapeBuilder;
     use crate::ray_tracer::tuples_new::new_point;
 
     use super::*;
@@ -210,6 +206,7 @@ mod tests {
             ),
         ];
         let shape = Cone::new();
+        let obj_shape = ShapeBuilder::from_cone(shape.clone()).build();
 
         for example in examples {
             let direction = example.1.normalize();
@@ -218,7 +215,7 @@ mod tests {
                 direction,
             };
             let mut xs = Vec::new();
-            shape.local_intersect(r, &mut xs);
+            shape.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(xs.len(), 2);
             assert!(is_float_equal(&xs[0].get_time(), example.2));
             assert!(is_float_equal(&xs[1].get_time(), example.3));
@@ -228,11 +225,12 @@ mod tests {
     #[test]
     fn intersecting_a_cone_with_a_ray_parallel_to_one_of_its_halves() {
         let shape = Cone::new();
+        let obj_shape = ShapeBuilder::from_cone(shape.clone()).build();
         let direction = new_vector(0.0, 1.0, 1.0).normalize();
         let r = Ray::new(new_point(0.0, 0.0, -1.0), direction);
 
         let mut xs = Vec::new();
-        shape.local_intersect(r, &mut xs);
+        shape.local_intersect(&obj_shape, r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal(&xs[0].get_time(), 0.35355));
     }
@@ -246,12 +244,13 @@ mod tests {
             new_vector(1.0, 0.0, 0.0),
         )];
         let cone = Cone::new();
+        let obj_shape = ShapeBuilder::from_cone(cone.clone()).build();
 
         for example in examples {
             let direction = example.1;
             let ray = Ray::new(example.0, direction.normalize());
             let mut xs = Vec::new();
-            cone.local_intersect(ray, &mut xs);
+            cone.local_intersect(&obj_shape, ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }
@@ -296,12 +295,13 @@ mod tests {
         let mut cone = Cone::new();
         cone.minimum = 1.0;
         cone.maximum = 2.0;
+        let obj_shape = ShapeBuilder::from_cone(cone.clone()).build();
 
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cone.local_intersect(r, &mut xs);
+            cone.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -325,12 +325,13 @@ mod tests {
         cone.minimum = -0.5;
         cone.maximum = 0.5;
         cone.closed = true;
+        let obj_shape = ShapeBuilder::from_cone(cone.clone()).build();
 
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cone.local_intersect(r, &mut xs);
+            cone.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -363,6 +364,7 @@ mod tests {
         cone.minimum = -1.0;
         cone.maximum = 0.0;
         cone.closed = true;
+        let obj_shape = ShapeBuilder::from_cone(cone.clone()).build();
         let examples = [
             (new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0)),
             (new_point(-2.0, 1.0, 0.0), new_vector(1.0, 0.0, 0.0)),
@@ -372,7 +374,7 @@ mod tests {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cone.local_intersect(r, &mut xs);
+            cone.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }

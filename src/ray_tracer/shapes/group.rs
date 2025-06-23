@@ -1,5 +1,8 @@
 #![allow(unused)]
-use std::{ops::Deref, sync::Arc};
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 use super::{BaseShape, Object, Shapes};
 use crate::ray_tracer::{
@@ -7,6 +10,7 @@ use crate::ray_tracer::{
     materials::Material,
     matrices_new::Matrix,
     rays::Ray,
+    shapes::ShapeBuilder,
     tuples_new::{new_point, new_vector, Point, Vector},
 };
 
@@ -42,22 +46,8 @@ impl Default for Group {
 }
 
 impl Shapes for Group {
-    fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrices must be inverted before applying it to an object."
-        );
-
-        // Apply transformation to self,
-        // then recursively apply to all children.
-        // If a child is a group, apply the transformation to it and its children.
-        self.transform = self.transform * *transform;
-    }
     fn get_transform(&self) -> Matrix<4> {
         self.transform
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.material = Some(*material);
     }
     fn get_material(&self) -> Material {
         if self.material.is_none() {
@@ -69,7 +59,7 @@ impl Shapes for Group {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
+    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         // All children have their transformations already prepared for conversion to world space.
         // So, we can just intersect the ray with each child.
         let Some(children) = self.get_children() else {
@@ -154,18 +144,56 @@ impl GroupBuilder {
                     .build();
                 *child = new_g;
             } else {
-                child.set_transform(new_transform.inverse());
+                // Unfortunately we need to extract the child object, create a builder for it, and apply the transformation.
+                match child {
+                    Object::Sphere(s) => {
+                        let mut builder = ShapeBuilder::from_sphere(s.as_ref().clone())
+                            .set_transform(new_transform)
+                            .build();
+                        *child = builder;
+                    }
+                    Object::Plane(p) => {
+                        let mut builder = ShapeBuilder::from_plane(p.as_ref().clone())
+                            .set_transform(new_transform)
+                            .build();
+                        *child = builder;
+                    }
+                    Object::Cube(c) => {
+                        let mut builder = ShapeBuilder::from_cube(c.as_ref().clone())
+                            .set_transform(new_transform)
+                            .build();
+                        *child = builder;
+                    }
+                    Object::Cylinder(c) => {
+                        let mut builder = ShapeBuilder::from_cylinder(c.as_ref().clone())
+                            .set_transform(new_transform)
+                            .build();
+                        *child = builder;
+                    }
+                    Object::Cone(c) => {
+                        let mut builder = ShapeBuilder::from_cone(c.as_ref().clone())
+                            .set_transform(new_transform)
+                            .build();
+                        *child = builder;
+                    }
+                    #[cfg(test)]
+                    Object::TestShape(t) => todo!(),
+                    _ => {}
+                }
             }
         }
 
-        Object::Group(Group {
-            // Own transform has been applied to all children now.
-            // To prevent it from being re-applied, create the group with an identity transform.
-            transform: *Matrix::<4>::identity().inverse(),
-            //transform: self.transform,
-            material: self.material,
-            children: Some(children.into()),
-        })
+        Object::Group(
+            Group {
+                // Own transform has been applied to all children now.
+                // To prevent it from being re-applied, create the group with an identity transform.
+                transform: *Matrix::<4>::identity().inverse(),
+                //transform: self.transform,
+                material: self.material,
+                children: Some(children.into()),
+            }
+            .into(),
+        )
     }
 }
 
@@ -187,8 +215,8 @@ mod tests {
     }
     #[test]
     fn adding_a_child_to_a_group_keeps_the_childs_transformations() {
-        let mut s = new_test_shape();
-        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
+        let mut s = new_test_shape().translate(5.0, 0.0, 0.0).build();
+
         let mut g = new_group(vec![s.clone()]);
 
         let Object::Group(group) = g else {
@@ -215,11 +243,9 @@ mod tests {
     }
     #[test]
     fn intersecting_a_ray_with_a_nonempty_group() {
-        let mut s1 = new_sphere();
-        let mut s2 = new_sphere();
-        let mut s3 = new_sphere();
-        s2.set_transform(Transform::translate(0.0, 0.0, -3.0).inverse());
-        s3.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
+        let mut s1 = new_sphere().build();
+        let mut s2 = new_sphere().translate(0.0, 0.0, -3.0).build();
+        let mut s3 = new_sphere().translate(5.0, 0.0, 0.0).build();
 
         let mut g = new_group(vec![s1.clone(), s2.clone(), s3.clone()]);
 
@@ -236,8 +262,8 @@ mod tests {
     }
     #[test]
     fn intersecting_a_transformed_group() {
-        let mut s = new_sphere();
-        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
+        let mut s = new_sphere().translate(5.0, 0.0, 0.0).build();
+
         let g = GroupBuilder::new()
             .add(s.clone())
             .set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse())

@@ -41,18 +41,8 @@ impl Default for TestShape {
 }
 
 impl Shapes for TestShape {
-    fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrices must be inverted before applying it to an object."
-        );
-        self.base.transform = *transform;
-    }
     fn get_transform(&self) -> Matrix<4> {
         self.base.transform
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
         self.base.material
@@ -60,7 +50,7 @@ impl Shapes for TestShape {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
+    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         unsafe {
             SAVED_RAY = Some(local_ray);
         }

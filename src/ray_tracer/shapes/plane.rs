@@ -12,7 +12,7 @@ use super::{BaseShape, Object, Shapes};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
-    base: BaseShape,
+    pub(super) base: BaseShape,
     parent: Option<BaseShape>,
 }
 
@@ -33,18 +33,8 @@ impl Default for Plane {
 }
 
 impl Shapes for Plane {
-    fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrices must be inverted before applying it to an object."
-        );
-        self.base.transform = *transform;
-    }
     fn get_transform(&self) -> Matrix<4> {
         self.base.transform
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
         self.base.material
@@ -53,19 +43,19 @@ impl Shapes for Plane {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(0.0, 1.0, 0.0)
     }
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
+    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         if f64::abs(local_ray.direction.y) < EPSILON {
             return;
         }
 
         let t = -local_ray.origin.y / local_ray.direction.y;
-        intersection_list.push(Intersection::new(t, Object::Plane(self.clone())));
+        intersection_list.push(Intersection::new(t, object));
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::{tuples_new::new_point, utils::is_float_equal_low_precision};
+    use crate::ray_tracer::{shapes::ShapeBuilder, tuples_new::new_point, utils::is_float_equal_low_precision};
 
     use super::*;
 
@@ -83,26 +73,28 @@ mod tests {
     #[test]
     fn intersect_with_a_ray_parallel_to_the_plane() {
         let p = Plane::new();
+        let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 10.0, 1.0), new_vector(0.0, 0.0, 1.0));
         let mut xs = Vec::new();
-        p.local_intersect(r, &mut xs);
+        p.local_intersect(&obj_plane, r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]
     fn intersect_with_a_coplanar_ray() {
         let p = Plane::new();
+        let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let mut xs = Vec::new();
-        p.local_intersect(r, &mut xs);
+        p.local_intersect(&obj_plane, r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]
     fn a_ray_intersecting_a_plane_from_above() {
         let p = Plane::new();
-        let p_o = Object::Plane(p.clone());
+        let p_o = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 1.0, 0.0), new_vector(0.0, -1.0, 0.0));
         let mut xs = Vec::new();
-        p.local_intersect(r, &mut xs);
+        p.local_intersect(&p_o, r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal_low_precision(
             &xs.first().unwrap().get_time(),
@@ -114,10 +106,10 @@ mod tests {
     #[test]
     fn a_ray_intersecting_a_plane_from_below() {
         let p = Plane::new();
-        let p_o = Object::Plane(p.clone());
+        let p_o = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, -1.0, 0.0), new_vector(0.0, 1.0, 0.0));
         let mut xs = Vec::new();
-        p.local_intersect(r, &mut xs);
+        p.local_intersect(&p_o, r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal_low_precision(
             &xs.first().unwrap().get_time(),

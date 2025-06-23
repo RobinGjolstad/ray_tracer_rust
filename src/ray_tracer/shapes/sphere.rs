@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::sync::Arc;
+
 use crate::ray_tracer::{
     intersections::Intersection,
     materials::Material,
@@ -11,7 +13,7 @@ use super::{BaseShape, Object, Shapes};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
-    base: BaseShape,
+    pub(super) base: BaseShape,
     parent: Option<BaseShape>,
 }
 
@@ -32,18 +34,8 @@ impl Default for Sphere {
 }
 
 impl Shapes for Sphere {
-    fn set_transform(&mut self, transform: &Matrix<4>) {
-        debug_assert!(
-            transform.inverse.is_some() && transform.inverse_transpose.is_some(),
-            "Transformation matrices must be inverted before applying it to an object."
-        );
-        self.base.transform = *transform;
-    }
     fn get_transform(&self) -> Matrix<4> {
         self.base.transform
-    }
-    fn set_material(&mut self, material: &Material) {
-        self.base.material = *material;
     }
     fn get_material(&self) -> Material {
         self.base.material
@@ -51,7 +43,7 @@ impl Shapes for Sphere {
     fn local_normal_at(&self, point: Point) -> Vector {
         point - new_point(0.0, 0.0, 0.0)
     }
-    fn local_intersect(&self, local_ray: Ray, intersection_list: &mut Vec<Intersection>) {
+    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         // Center of sphere is in Point::new(0.0, 0.0, 0.0) == Point::default().
         let sphere_to_ray = local_ray.origin - Point::default();
         let a = Vector::dot(&local_ray.direction, &local_ray.direction);
@@ -66,11 +58,11 @@ impl Shapes for Sphere {
         } else {
             intersection_list.push(Intersection::new(
                 (-b - discriminant_sqrt) / (2.0 * a),
-                Object::Sphere(self.clone()),
+                object,
             ));
             intersection_list.push(Intersection::new(
                 (-b + discriminant_sqrt) / (2.0 * a),
-                Object::Sphere(self.clone()),
+                object,
             ));
         }
     }
