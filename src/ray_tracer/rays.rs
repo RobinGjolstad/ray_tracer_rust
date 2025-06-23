@@ -32,7 +32,11 @@ impl Ray {
         )
     }
 
-    pub(crate) fn intersect(&self, object: &Object, intersection_list: &mut Vec<Intersection>) {
+    pub(crate) fn intersect<'a>(
+        &self,
+        object: &'a Object,
+        intersection_list: &mut Vec<Intersection<'a>>,
+    ) {
         let local_ray = if let Object::Group(_) = object {
             // Do not convert ray to local space if object is a group.
             // Conversions are taken care of in the group's intersect method.
@@ -44,7 +48,7 @@ impl Ray {
         object.local_intersect(local_ray, intersection_list);
     }
 
-    pub(crate) fn intersect_world(&self, world: &World) -> Intersections {
+    pub(crate) fn intersect_world<'a>(&self, world: &'a World) -> Intersections<'a> {
         let mut intersections = Intersections::default();
         world
             .objects
@@ -97,7 +101,7 @@ mod tests {
     #[test]
     fn a_ray_intersects_a_sphere_at_two_points() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let s = new_sphere();
+        let s = new_sphere().build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
@@ -107,7 +111,7 @@ mod tests {
     #[test]
     fn a_ray_intersects_a_sphere_at_a_tangent() {
         let r = Ray::new(new_point(0.0, 1.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let s = new_sphere();
+        let s = new_sphere().build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
@@ -117,7 +121,7 @@ mod tests {
     #[test]
     fn a_ray_misses_a_square() {
         let r = Ray::new(new_point(0.0, 2.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let s = new_sphere();
+        let s = new_sphere().build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 0);
@@ -125,7 +129,7 @@ mod tests {
     #[test]
     fn a_ray_originates_inside_a_sphere() {
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
-        let s = new_sphere();
+        let s = new_sphere().build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
@@ -135,7 +139,7 @@ mod tests {
     #[test]
     fn a_sphere_is_behind_a_ray() {
         let r = Ray::new(new_point(0.0, 0.0, 5.0), new_vector(0.0, 0.0, 1.0));
-        let s = new_sphere();
+        let s = new_sphere().build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
@@ -146,7 +150,7 @@ mod tests {
     #[test]
     fn intersect_sets_the_object_on_the_intersection() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let s = new_sphere();
+        let s = new_sphere().build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
@@ -174,8 +178,7 @@ mod tests {
     #[test]
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let mut s = new_sphere();
-        s.set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse());
+        let s = new_sphere().scale(2.0, 2.0, 2.0).build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 2);
@@ -185,8 +188,7 @@ mod tests {
     #[test]
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let mut s = new_sphere();
-        s.set_transform(Transform::translate(5.0, 0.0, 0.0).inverse());
+        let s = new_sphere().translate(5.0, 0.0, 0.0).build();
         let mut xs = Intersections::default();
         r.intersect(&s, &mut xs.list);
         assert_eq!(xs.count(), 0);
