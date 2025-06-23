@@ -195,15 +195,14 @@ mod tests {
 
     #[test]
     fn a_pattern_with_an_object_transformation() {
-        let mut object = new_sphere();
-        object.set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse());
+        let object = new_sphere().scale(2.0, 2.0, 2.0).build();
         let pattern = Pattern::test_pattern_default();
         let c = Pattern::pattern_at_object(pattern, &object, new_point(2.0, 3.0, 4.0));
         assert_eq!(c, Color::new(1.0, 1.5, 2.0));
     }
     #[test]
     fn a_pattern_with_a_pattern_transformation() {
-        let object = new_sphere();
+        let object = new_sphere().build();
         let mut pattern = Pattern::test_pattern_default();
         pattern.set_transform(*Transform::scaling(2.0, 2.0, 2.0).inverse());
         let c = Pattern::pattern_at_object(pattern, &object, new_point(2.0, 3.0, 4.0));
@@ -211,8 +210,7 @@ mod tests {
     }
     #[test]
     fn a_pattern_with_both_and_object_and_a_pattern_transformation() {
-        let mut object = new_sphere();
-        object.set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse());
+        let object = new_sphere().scale(2.0, 2.0, 2.0).build();
         let mut pattern = Pattern::test_pattern_default();
         pattern.set_transform(*Transform::translate(0.5, 1.0, 1.5).inverse());
         let c = Pattern::pattern_at_object(pattern, &object, new_point(2.5, 3.0, 3.5));
