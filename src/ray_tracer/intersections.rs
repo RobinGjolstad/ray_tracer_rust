@@ -207,7 +207,7 @@ mod tests {
 
     #[test]
     fn an_intersection_encapsulates_t_and_object() {
-        let s = new_sphere();
+        let s = new_sphere().build();
         let i = Intersection::new(3.5, &s);
 
         assert!(is_float_equal(&i.t, 3.5));
@@ -215,7 +215,7 @@ mod tests {
     }
     #[test]
     fn aggregating_intersections() {
-        let s = new_sphere();
+        let s = new_sphere().build();
         let i1 = Intersection::new(1.0, &s);
         let i2 = Intersection::new(2.0, &s);
         let xs = Intersections::new(&[i1, i2]);
@@ -225,7 +225,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_all_intersections_have_positive_t() {
-        let s = new_sphere();
+        let s = new_sphere().build();
         let i1 = Intersection::new(1.0, &s);
         let i2 = Intersection::new(2.0, &s);
         let xs = Intersections::new(&[i2, i1]);
@@ -234,7 +234,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_some_intersections_have_negative_t() {
-        let s = new_sphere();
+        let s = new_sphere().build();
         let i1 = Intersection::new(-1.0, &s);
         let i2 = Intersection::new(1.0, &s);
         let xs = Intersections::new(&[i1, i2]);
@@ -243,7 +243,7 @@ mod tests {
     }
     #[test]
     fn the_hit_when_all_intersections_have_negative_t() {
-        let s = new_sphere();
+        let s = new_sphere().build();
         let i1 = Intersection::new(-2.0, &s);
         let i2 = Intersection::new(-1.0, &s);
         let xs = Intersections::new(&[i2, i1]);
@@ -252,7 +252,7 @@ mod tests {
     }
     #[test]
     fn the_hit_is_always_the_lowest_nonnegative_intersection() {
-        let s = new_sphere();
+        let s = new_sphere().build();
         let i1 = Intersection::new(5.0, &s);
         let i2 = Intersection::new(7.0, &s);
         let i3 = Intersection::new(-3.0, &s);
@@ -264,7 +264,7 @@ mod tests {
     #[test]
     fn precomputing_the_state_of_an_intersection() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let shape = new_sphere();
+        let shape = new_sphere().build();
         let i = Intersection::new(4.0, &shape);
         let binding = Intersections { list: vec![i] };
         let comps = prepare_computations(&i, &r, &binding);
@@ -277,7 +277,7 @@ mod tests {
     #[test]
     fn the_hit_when_an_intersection_occurs_on_the_outside() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let shape = new_sphere();
+        let shape = new_sphere().build();
         let i = Intersection::new(4.0, &shape);
         let binding = Intersections { list: vec![i] };
         let comps = prepare_computations(&i, &r, &binding);
@@ -286,7 +286,7 @@ mod tests {
     #[test]
     fn the_hit_when_an_intersection_occurs_on_the_inside() {
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
-        let shape = new_sphere();
+        let shape = new_sphere().build();
         let i = Intersection::new(1.0, &shape);
         let binding = Intersections { list: vec![i] };
         let comps = prepare_computations(&i, &r, &binding);
@@ -299,10 +299,7 @@ mod tests {
     #[test]
     fn the_hit_should_offset_the_point() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let mut shape = new_sphere();
-        let mut trans = Transform::translate(0.0, 0.0, 1.0);
-        trans.inverse();
-        shape.set_transform(&trans);
+        let mut shape = new_sphere().translate(0.0, 0.0, 1.0).build();
         let i = Intersection::new(5.0, &shape);
         let binding = Intersections { list: vec![i] };
         let comps = prepare_computations(&i, &r, &binding);
@@ -312,7 +309,7 @@ mod tests {
 
     #[test]
     fn precomputing_the_reflection_vector() {
-        let shape = new_plane();
+        let shape = new_plane().build();
         let r = Ray::new(
             new_point(0.0, 1.0, -1.0),
             new_vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
@@ -329,31 +326,22 @@ mod tests {
     #[test]
     fn finding_n1_and_n2_at_various_intersections() {
         #[allow(non_snake_case)]
-        let mut A = glass_sphere();
-        let mut trans = Transform::scaling(2.0, 2.0, 2.0);
-        trans.inverse();
-        A.set_transform(&trans);
-        let mut mat = A.get_material();
-        mat.refractive_index = 1.5;
-        A.set_material(&mat);
+        let A = glass_sphere()
+            .scale(2.0, 2.0, 2.0)
+            .refractive_index(1.5)
+            .build();
 
         #[allow(non_snake_case)]
-        let mut B = glass_sphere();
-        let mut trans = Transform::translate(0.0, 0.0, -0.25);
-        trans.inverse();
-        B.set_transform(&trans);
-        mat = B.get_material();
-        mat.refractive_index = 2.0;
-        B.set_material(&mat);
+        let B = glass_sphere()
+            .translate(0.0, 0.0, -0.25)
+            .refractive_index(2.0)
+            .build();
 
         #[allow(non_snake_case)]
-        let mut C = glass_sphere();
-        let mut trans = Transform::translate(0.0, 0.0, 0.25);
-        trans.inverse();
-        C.set_transform(&trans);
-        mat = C.get_material();
-        mat.refractive_index = 2.5;
-        C.set_material(&mat);
+        let C = glass_sphere()
+            .translate(0.0, 0.0, 0.25)
+            .refractive_index(2.5)
+            .build();
 
         let r = Ray::new(new_point(0.0, 0.0, -4.0), new_vector(0.0, 0.0, 1.0));
         let xs = Intersections {
@@ -386,10 +374,7 @@ mod tests {
     #[test]
     fn the_under_point_is_offset_below_the_surface() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let mut shape = glass_sphere();
-        let mut trans = Transform::translate(0.0, 0.0, 1.0);
-        trans.inverse();
-        shape.set_transform(&trans);
+        let shape = glass_sphere().translate(0.0, 0.0, 1.0).build();
         let i = Intersection::new(5.0, &shape);
         let xs = Intersections::new(&[i]);
         let comps = prepare_computations(&i, &r, &xs);
@@ -398,7 +383,7 @@ mod tests {
     }
     #[test]
     fn the_schlick_approximation_under_total_internal_reflection() {
-        let shape = glass_sphere();
+        let shape = glass_sphere().build();
         let r = Ray::new(
             new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
             new_vector(0.0, 1.0, 0.0),
@@ -414,7 +399,7 @@ mod tests {
     }
     #[test]
     fn the_schlick_approximation_with_a_perpendicular_viewing_angle() {
-        let shape = glass_sphere();
+        let shape = glass_sphere().build();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 1.0, 0.0));
         let intersection_bindings = [
             Intersection::new(-1.0, &shape),
@@ -427,7 +412,7 @@ mod tests {
     }
     #[test]
     fn the_schlick_approximation_with_small_angle_and_n2_greater_than_n1() {
-        let shape = glass_sphere();
+        let shape = glass_sphere().build();
         let r = Ray::new(new_point(0.0, 0.99, -2.0), new_vector(0.0, 0.0, 1.0));
         let binding = Intersection::new(1.8589, &shape);
         let xs = Intersections::new(&[binding]);
