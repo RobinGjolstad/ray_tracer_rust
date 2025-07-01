@@ -84,7 +84,7 @@ impl Shapes for Cylinder {
             new_vector(point.x, 0.0, point.z)
         }
     }
-    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
+    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         // let a = local_ray.direction.x.powi(2) + local_ray.direction.z.powi(2);
         let a = local_ray
             .direction

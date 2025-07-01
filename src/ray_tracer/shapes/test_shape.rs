@@ -50,7 +50,7 @@ impl Shapes for TestShape {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
+    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         unsafe {
             SAVED_RAY = Some(local_ray);
         }

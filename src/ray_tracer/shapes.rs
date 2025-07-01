@@ -76,7 +76,7 @@ pub trait Shapes: Debug + Default + Sync {
     fn get_transform(&self) -> Matrix<4>;
     fn get_material(&self) -> Material;
     fn local_normal_at(&self, point: Point) -> Vector;
-    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>);
+    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

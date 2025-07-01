@@ -59,10 +59,10 @@ impl Shapes for Group {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
+    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         // All children have their transformations already prepared for conversion to world space.
         // So, we can just intersect the ray with each child.
-        let Some(children) = self.get_children() else {
+        let Some(ref children) = self.children else {
             return;
         };
 

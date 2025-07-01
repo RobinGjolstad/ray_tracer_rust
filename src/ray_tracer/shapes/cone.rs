@@ -91,7 +91,7 @@ impl Shapes for Cone {
         }
     }
     fn local_intersect<'a>(
-        &self,
+        &'a self,
         object: &'a Object,
         local_ray: Ray,
         intersection_list: &mut Vec<Intersection<'a>>,

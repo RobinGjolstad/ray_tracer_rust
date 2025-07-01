@@ -43,7 +43,7 @@ impl Shapes for Sphere {
     fn local_normal_at(&self, point: Point) -> Vector {
         point - new_point(0.0, 0.0, 0.0)
     }
-    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
+    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         // Center of sphere is in Point::new(0.0, 0.0, 0.0) == Point::default().
         let sphere_to_ray = local_ray.origin - Point::default();
         let a = Vector::dot(&local_ray.direction, &local_ray.direction);

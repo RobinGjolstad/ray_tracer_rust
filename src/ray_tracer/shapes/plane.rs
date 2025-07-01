@@ -43,7 +43,7 @@ impl Shapes for Plane {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(0.0, 1.0, 0.0)
     }
-    fn local_intersect<'a>(&self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
+    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
         if f64::abs(local_ray.direction.y) < EPSILON {
             return;
         }
