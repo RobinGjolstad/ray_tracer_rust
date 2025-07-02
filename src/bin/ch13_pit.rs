@@ -40,30 +40,26 @@ fn main() {
 
     let mut world_builder = World::builder();
 
-    let mut floor = new_plane();
-    floor.set_transform(&Transform::scaling(1.0, 1.0, 1.0));
-    let mut material = Material::new();
-    material.color = Color::new(1.0, 0.75, 0.75);
-    material.specular = 0.0;
-    material.reflective = 0.25;
-    floor.set_material(&material);
+    let floor = new_plane()
+        .scale(1.0, 1.0, 1.0)
+        .color(&Color::new(1.0, 0.75, 0.75))
+        .specular(0.0)
+        .reflective(0.25)
+        .build();
     world_builder.object(floor);
 
-    let mut cylinder = new_cylinder(Some((1.0, 0.0)));
-    let mut trans = Transform::scaling(0.25, 1.0, 0.25);
-    cylinder.set_transform(&trans);
-    material = Material::new();
-    material.color = Color::new(0.545098, 0.270588, 0.07451);
-    material.reflective = 0.0;
-    cylinder.set_material(&material);
+    let cylinder = new_cylinder(Some((1.0, 0.0)))
+        .scale(0.25, 1.0, 0.25)
+        .color(&Color::new(0.545098, 0.270588, 0.07451))
+        .reflective(0.0)
+        .build();
     world_builder.object(cylinder);
 
-    let mut cone = new_cone(Some((0.0, -1.0)));
-    trans = Transform::translate(0.0, 3.0, 0.0) * Transform::scaling(0.75, 2.0, 0.75);
-    cone.set_transform(&trans);
-    material = Material::new();
-    material.color = Color::new(0.133333, 0.545098, 0.133333);
-    cone.set_material(&material);
+    let cone = new_cone(Some((0.0, -1.0)))
+        .translate(0.0, 3.0, 0.0)
+        .scale(0.75, 2.0, 0.75)
+        .color(&Color::new(0.133333, 0.545098, 0.133333))
+        .build();
     world_builder.object(cone);
 
     world_builder.light(Light::point_light(
