@@ -7,6 +7,7 @@ use crate::ray_tracer::{
     tuples_new::{new_vector, Point, Vector},
     utils::EPSILON,
 };
+use std::sync::Arc;
 
 use super::{BaseShape, Object, Shapes};
 
@@ -43,7 +44,12 @@ impl Shapes for Plane {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(0.0, 1.0, 0.0)
     }
-    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
+    fn local_intersect(
+        &self,
+        object: Arc<Object>,
+        local_ray: Ray,
+        intersection_list: &mut Vec<Intersection>,
+    ) {
         if f64::abs(local_ray.direction.y) < EPSILON {
             return;
         }
@@ -55,7 +61,11 @@ impl Shapes for Plane {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray_tracer::{shapes::ShapeBuilder, tuples_new::new_point, utils::is_float_equal_low_precision};
+    use std::sync::Arc;
+
+    use crate::ray_tracer::{
+        shapes::ShapeBuilder, tuples_new::new_point, utils::is_float_equal_low_precision,
+    };
 
     use super::*;
 
@@ -76,7 +86,7 @@ mod tests {
         let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 10.0, 1.0), new_vector(0.0, 0.0, 1.0));
         let mut xs = Vec::new();
-        p.local_intersect(&obj_plane, r, &mut xs);
+        p.local_intersect(Arc::new(obj_plane.clone()), r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]
@@ -85,7 +95,7 @@ mod tests {
         let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let mut xs = Vec::new();
-        p.local_intersect(&obj_plane, r, &mut xs);
+        p.local_intersect(Arc::new(obj_plane.clone()), r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]
@@ -94,7 +104,7 @@ mod tests {
         let p_o = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 1.0, 0.0), new_vector(0.0, -1.0, 0.0));
         let mut xs = Vec::new();
-        p.local_intersect(&p_o, r, &mut xs);
+        p.local_intersect(Arc::new(p_o.clone()), r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal_low_precision(
             &xs.first().unwrap().get_time(),
@@ -109,7 +119,7 @@ mod tests {
         let p_o = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, -1.0, 0.0), new_vector(0.0, 1.0, 0.0));
         let mut xs = Vec::new();
-        p.local_intersect(&p_o, r, &mut xs);
+        p.local_intersect(Arc::new(p_o.clone()), r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal_low_precision(
             &xs.first().unwrap().get_time(),

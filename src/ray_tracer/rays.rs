@@ -5,6 +5,7 @@ use crate::ray_tracer::{
     tuples_new::{Point, Vector},
     world::World,
 };
+use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ray {
@@ -32,11 +33,7 @@ impl Ray {
         )
     }
 
-    pub(crate) fn intersect<'a>(
-        &self,
-        object: &'a Object,
-        intersection_list: &mut Vec<Intersection<'a>>,
-    ) {
+    pub(crate) fn intersect(&self, object: &Object, intersection_list: &mut Vec<Intersection>) {
         let local_ray = if let Object::Group(_) = object {
             // Do not convert ray to local space if object is a group.
             // Conversions are taken care of in the group's intersect method.
@@ -48,13 +45,11 @@ impl Ray {
         object.local_intersect(local_ray, intersection_list);
     }
 
-    pub(crate) fn intersect_world<'a>(&self, world: &'a World) -> Intersections<'a> {
+    pub(crate) fn intersect_world(&self, world: &World) -> Intersections {
         let mut intersections = Intersections::default();
-        world
-            .objects
-            .iter()
-            .for_each(|object| self.intersect(object, &mut intersections.list));
-
+        for object in world.objects.iter() {
+            self.intersect(object, &mut intersections.list);
+        }
         intersections.sort();
         intersections
     }

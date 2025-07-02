@@ -7,6 +7,7 @@ use crate::ray_tracer::{
     rays::Ray,
     tuples_new::{new_vector, Point, Vector},
 };
+use std::sync::Arc;
 
 /// Ugly hack for testing purposes
 mod saved_ray {
@@ -50,7 +51,12 @@ impl Shapes for TestShape {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
+    fn local_intersect(
+        &self,
+        object: Arc<Object>,
+        local_ray: Ray,
+        intersection_list: &mut Vec<Intersection>,
+    ) {
         unsafe {
             SAVED_RAY = Some(local_ray);
         }

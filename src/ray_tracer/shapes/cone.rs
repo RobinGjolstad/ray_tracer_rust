@@ -9,6 +9,7 @@ use crate::ray_tracer::{
     tuples_new::{new_vector, Point, Vector},
     utils::{is_float_equal, EPSILON},
 };
+use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Cone {
@@ -40,14 +41,14 @@ impl Cone {
         x.mul_add(x, z.powi(2)) <= y_plane.powi(2)
     }
 
-    fn intersect_caps<'a>(&self, object: &'a Object, ray: &Ray, xs: &mut Vec<Intersection<'a>>) {
+    fn intersect_caps(&self, object: Arc<Object>, ray: &Ray, xs: &mut Vec<Intersection>) {
         if !self.closed || is_float_equal(&ray.direction.y, 0.0) {
             return;
         }
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Self::check_cap(self.minimum, ray, t) {
-            xs.push(Intersection::new(t, object));
+            xs.push(Intersection::new(t, object.clone()));
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
@@ -90,11 +91,11 @@ impl Shapes for Cone {
             new_vector(point.x, y, point.z)
         }
     }
-    fn local_intersect<'a>(
-        &'a self,
-        object: &'a Object,
+    fn local_intersect(
+        &self,
+        object: Arc<Object>,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection<'a>>,
+        intersection_list: &mut Vec<Intersection>,
     ) {
         // Original version. Trying FMA.
         //
@@ -142,7 +143,7 @@ impl Shapes for Cone {
             // Parallel to one of the halves.
             // One intersection.
             let t = -c / (2.0 * b);
-            intersection_list.push(Intersection::new(t, object));
+            intersection_list.push(Intersection::new(t, object.clone()));
         } else {
             // TODO: Figure out which version is faster.
             #[allow(clippy::suboptimal_flops)]
@@ -162,13 +163,13 @@ impl Shapes for Cone {
             // let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
             let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y0 && y0 < self.maximum {
-                intersection_list.push(Intersection::new(t0, object));
+                intersection_list.push(Intersection::new(t0, object.clone()));
             }
 
             // let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
             let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y1 && y1 < self.maximum {
-                intersection_list.push(Intersection::new(t1, object));
+                intersection_list.push(Intersection::new(t1, object.clone()));
             }
         }
 
@@ -178,6 +179,8 @@ impl Shapes for Cone {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use crate::ray_tracer::shapes::ShapeBuilder;
     use crate::ray_tracer::tuples_new::new_point;
 
@@ -215,7 +218,7 @@ mod tests {
                 direction,
             };
             let mut xs = Vec::new();
-            shape.local_intersect(&obj_shape, r, &mut xs);
+            shape.local_intersect(Arc::new(obj_shape.clone()), r, &mut xs);
             assert_eq!(xs.len(), 2);
             assert!(is_float_equal(&xs[0].get_time(), example.2));
             assert!(is_float_equal(&xs[1].get_time(), example.3));
@@ -230,7 +233,7 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, -1.0), direction);
 
         let mut xs = Vec::new();
-        shape.local_intersect(&obj_shape, r, &mut xs);
+        shape.local_intersect(Arc::new(obj_shape.clone()), r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal(&xs[0].get_time(), 0.35355));
     }
@@ -250,7 +253,7 @@ mod tests {
             let direction = example.1;
             let ray = Ray::new(example.0, direction.normalize());
             let mut xs = Vec::new();
-            cone.local_intersect(&obj_shape, ray, &mut xs);
+            cone.local_intersect(Arc::new(obj_shape.clone()), ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }
@@ -301,7 +304,7 @@ mod tests {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cone.local_intersect(&obj_shape, r, &mut xs);
+            cone.local_intersect(Arc::new(obj_shape.clone()), r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -331,7 +334,7 @@ mod tests {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cone.local_intersect(&obj_shape, r, &mut xs);
+            cone.local_intersect(Arc::new(obj_shape.clone()), r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
     }
@@ -374,7 +377,7 @@ mod tests {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
             let mut xs = Vec::new();
-            cone.local_intersect(&obj_shape, r, &mut xs);
+            cone.local_intersect(Arc::new(obj_shape.clone()), r, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }

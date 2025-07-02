@@ -59,28 +59,25 @@ impl Shapes for Group {
     fn local_normal_at(&self, point: Point) -> Vector {
         new_vector(point.x, point.y, point.z)
     }
-    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>) {
-        // All children have their transformations already prepared for conversion to world space.
-        // So, we can just intersect the ray with each child.
+    fn local_intersect(
+        &self,
+        object: Arc<Object>,
+        local_ray: Ray,
+        intersection_list: &mut Vec<Intersection>,
+    ) {
         let Some(ref children) = self.children else {
             return;
         };
-
-        // TODO: Restructure to avoid temporary list.
-        // Is is necessary to sort and dedup?
-        // Anyways, reserve a vector with enough space for two intersections for each child.
         let mut retval = Vec::with_capacity(children.len() * 2);
-        children.iter().for_each(|child| {
+        for child in children.iter() {
             local_ray.intersect(child, &mut retval);
-        });
-
+        }
         retval.sort_by(|a, b| {
             a.get_time()
                 .partial_cmp(&b.get_time())
                 .expect("Sorting intersections for group intersections failed.")
         });
         retval.dedup();
-
         intersection_list.extend(retval);
     }
 }
@@ -182,7 +179,7 @@ impl GroupBuilder {
                             .set_transform(new_transform)
                             .build();
                         *child = builder;
-                    },
+                    }
                     _ => {}
                 }
             }

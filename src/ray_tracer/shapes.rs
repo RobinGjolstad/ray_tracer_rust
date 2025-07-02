@@ -76,11 +76,11 @@ pub trait Shapes: Debug + Default + Sync {
     fn get_transform(&self) -> Matrix<4>;
     fn get_material(&self) -> Material;
     fn local_normal_at(&self, point: Point) -> Vector;
-    fn local_intersect<'a>(
-        &'a self,
-        object: &'a Object,
+    fn local_intersect(
+        &self,
+        object: Arc<Object>,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection<'a>>,
+        intersection_list: &mut Vec<Intersection>,
     );
 }
 
@@ -606,21 +606,22 @@ impl Object {
             Self::TestShape(s) => s.get_material(),
         }
     }
-    pub(crate) fn local_intersect<'a>(
-        &'a self,
+    pub(crate) fn local_intersect(
+        &self,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection<'a>>,
+        intersection_list: &mut Vec<Intersection>,
     ) {
+        let arc_self = Arc::new(self.clone());
         match self {
-            Self::Cone(c) => c.local_intersect(self, local_ray, intersection_list),
-            Self::Cube(c) => c.local_intersect(self, local_ray, intersection_list),
-            Self::Cylinder(c) => c.local_intersect(self, local_ray, intersection_list),
-            Self::Group(g) => g.local_intersect(self, local_ray, intersection_list),
-            Self::Plane(p) => p.local_intersect(self, local_ray, intersection_list),
-            Self::Sphere(s) => s.local_intersect(self, local_ray, intersection_list),
+            Self::Cone(c) => c.local_intersect(arc_self, local_ray, intersection_list),
+            Self::Cube(c) => c.local_intersect(arc_self, local_ray, intersection_list),
+            Self::Cylinder(c) => c.local_intersect(arc_self, local_ray, intersection_list),
+            Self::Group(g) => g.local_intersect(arc_self, local_ray, intersection_list),
+            Self::Plane(p) => p.local_intersect(arc_self, local_ray, intersection_list),
+            Self::Sphere(s) => s.local_intersect(arc_self, local_ray, intersection_list),
 
             #[cfg(test)]
-            Self::TestShape(s) => s.local_intersect(self, local_ray, intersection_list),
+            Self::TestShape(s) => s.local_intersect(arc_self, local_ray, intersection_list),
         }
     }
 

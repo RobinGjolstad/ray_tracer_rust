@@ -46,7 +46,7 @@ pub(super) trait Shapes: Debug + Default + Sync {
     fn set_material(&mut self, material: &Material);
     fn get_material(&self) -> Material;
     fn local_normal_at(&self, point: Point) -> Vector;
-    fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection>;
+    fn local_intersect(&self, object: Arc<Object>, local_ray: Ray, intersection_list: &mut Vec<Intersection>);
 }
 
 /// Contains the actual data of the tree.
@@ -199,16 +199,17 @@ impl Object {
         }
     }
     pub(crate) fn local_intersect(&self, local_ray: Ray) -> Vec<Intersection> {
+        let arc_self = Arc::new(self.clone());
         match self {
-            Object::Group(g) => g.local_intersect(local_ray),
-            Object::Sphere(s) => s.local_intersect(local_ray),
-            Object::Plane(p) => p.local_intersect(local_ray),
-            Object::Cube(c) => c.local_intersect(local_ray),
-            Object::Cylinder(c) => c.local_intersect(local_ray),
-            Object::Cone(c) => c.local_intersect(local_ray),
+            Object::Group(g) => g.local_intersect(arc_self, local_ray),
+            Object::Sphere(s) => s.local_intersect(arc_self, local_ray),
+            Object::Plane(p) => p.local_intersect(arc_self, local_ray),
+            Object::Cube(c) => c.local_intersect(arc_self, local_ray),
+            Object::Cylinder(c) => c.local_intersect(arc_self, local_ray),
+            Object::Cone(c) => c.local_intersect(arc_self, local_ray),
 
             #[cfg(test)]
-            Object::TestShape(s) => s.local_intersect(local_ray),
+            Object::TestShape(s) => s.local_intersect(arc_self, local_ray),
         }
     }
 }
