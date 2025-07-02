@@ -61,28 +61,27 @@ fn main() {
     let mut world_builder = World::builder();
 
     let num_spheres = 25;
-    let mut sphere = glass_sphere();
-
-    let mut material = sphere.get_material();
-    material.reflective = 0.9;
+    let mut sphere = glass_sphere().reflective(0.9);
 
     println!("Creating objects.");
     for x in 0..num_spheres {
         for y in 0..num_spheres {
             for z in 0..num_spheres {
-                material.color = Color::new(
+                let color = Color::new(
                     x as f64 / num_spheres as f64,
                     y as f64 / num_spheres as f64,
                     z as f64 / num_spheres as f64,
                 );
-                sphere.set_material(&material);
-                let mut s = sphere.clone();
-                let mut trans = Transform::translate(
-                    -(num_spheres as f64) / 2.0 + x as f64,
-                    -(num_spheres as f64) / 2.0 + y as f64,
-                    -(num_spheres as f64) / 2.0 + z as f64,
-                ) * Transform::scaling(0.33, 0.33, 0.33);
-                s.set_transform(trans.inverse());
+                let s = sphere
+                    .clone()
+                    .color(&color)
+                    .translate(
+                        -(num_spheres as f64) / 2.0 + x as f64,
+                        -(num_spheres as f64) / 2.0 + y as f64,
+                        -(num_spheres as f64) / 2.0 + z as f64,
+                    )
+                    .scale(0.33, 0.33, 0.33)
+                    .build();
                 world_builder.object(s);
             }
         }
