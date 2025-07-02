@@ -61,7 +61,7 @@ fn main() {
     let mut world_builder = World::builder();
 
     let num_spheres = 25;
-    let mut sphere = glass_sphere().reflective(0.9);
+    let sphere = glass_sphere().reflective(0.9);
 
     println!("Creating objects.");
     for x in 0..num_spheres {

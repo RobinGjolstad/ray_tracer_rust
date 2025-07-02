@@ -6,7 +6,6 @@ use ray_tracer_rust::ray_tracer::{
     camera::Camera,
     colors::Color,
     lights::Light,
-    materials::Material,
     shapes::*,
     transformations::Transform,
     tuples_new::{new_point, new_vector},

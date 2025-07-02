@@ -5,9 +5,8 @@ use super::{
     intersections::{prepare_computations, schlick, IntersectComp, Intersections},
     lights::Light,
     rays::Ray,
-    shapes::{new_sphere, Object},
-    transformations::Transform,
-    tuples_new::{new_point, Point, Vector},
+    shapes::Object,
+    tuples_new::{Point, Vector},
     utils::is_float_equal,
 };
 
@@ -66,6 +65,8 @@ impl World {
     #[cfg(test)]
     #[must_use]
     pub fn new_default_world() -> Self {
+        use crate::ray_tracer::{shapes::new_sphere, tuples_new::new_point};
+
         let s1 = new_sphere()
             .color(&Color::new(0.8, 1.0, 0.6))
             .diffuse(0.7)
@@ -181,10 +182,9 @@ impl World {
 mod tests {
     use crate::ray_tracer::{
         intersections::{Intersection, Intersections},
-        lights,
         patterns::Pattern,
-        shapes::{new_plane, ShapeBuilder, Sphere, TypeSpecified},
-        tuples_new::new_vector,
+        shapes::{new_plane, new_sphere, ShapeBuilder, Sphere, TypeSpecified},
+        tuples_new::{new_point, new_vector},
         utils::is_float_equal,
     };
 
@@ -283,7 +283,7 @@ mod tests {
         let w = default_world();
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = w.objects.first().unwrap();
-        let i = Intersection::new(4.0, &shape);
+        let i = Intersection::new(4.0, shape);
         let binding = Intersections::new(&[i]);
         let comps = prepare_computations(&i, &r, &binding);
         let c = w.shade_hit(&comps, 1);
@@ -295,9 +295,9 @@ mod tests {
         let objects = objects.into_iter().map(|s| s.build()).collect::<Vec<_>>();
         let light = Light::point_light(&new_point(0.0, 0.25, 0.0), &Color::new(1.0, 1.0, 1.0));
         let mut w = WorldBuilder::new();
-        objects.iter().for_each(|o| {
+        for o in &objects {
             w.object(o.clone());
-        });
+        }
         w.light(light);
         let w = w.build();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
@@ -588,7 +588,7 @@ mod tests {
             .build();
 
         let mut w = default_world().into_builder();
-        w.object(floor.clone()).object(ball.clone());
+        w.object(floor.clone()).object(ball);
         let w = w.build();
 
         let r = Ray::new(

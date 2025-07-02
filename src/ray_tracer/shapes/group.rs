@@ -177,7 +177,12 @@ impl GroupBuilder {
                         *child = builder;
                     }
                     #[cfg(test)]
-                    Object::TestShape(t) => todo!(),
+                    Object::TestShape(t) => {
+                        let mut builder = ShapeBuilder::from_test_shape(t.as_ref().clone())
+                            .set_transform(new_transform)
+                            .build();
+                        *child = builder;
+                    },
                     _ => {}
                 }
             }
@@ -217,7 +222,7 @@ mod tests {
     fn adding_a_child_to_a_group_keeps_the_childs_transformations() {
         let mut s = new_test_shape().translate(5.0, 0.0, 0.0).build();
 
-        let mut g = new_group(vec![s.clone()]);
+        let mut g = new_group(vec![s]);
 
         let Object::Group(group) = g else {
             panic!("Failed to get group from object.");
@@ -247,7 +252,7 @@ mod tests {
         let mut s2 = new_sphere().translate(0.0, 0.0, -3.0).build();
         let mut s3 = new_sphere().translate(5.0, 0.0, 0.0).build();
 
-        let mut g = new_group(vec![s1.clone(), s2.clone(), s3.clone()]);
+        let mut g = new_group(vec![s1.clone(), s2.clone(), s3]);
 
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
 
@@ -265,7 +270,7 @@ mod tests {
         let mut s = new_sphere().translate(5.0, 0.0, 0.0).build();
 
         let g = GroupBuilder::new()
-            .add(s.clone())
+            .add(s)
             .set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse())
             .build();
 

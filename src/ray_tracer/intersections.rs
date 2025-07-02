@@ -20,10 +20,10 @@ impl<'a> Intersection<'a> {
     }
     #[cfg(test)]
     pub(crate) const fn get_object_raw(&self) -> &Object {
-        &self.object
+        self.object
     }
     pub(crate) const fn get_object(&self) -> &Object {
-        &self.object
+        self.object
     }
 }
 
@@ -51,7 +51,7 @@ impl<'a> Intersections<'a> {
     #[cfg(test)]
     pub(crate) fn get_element(&self, index: usize) -> Option<Intersection> {
         if index <= self.list.len() {
-            Some(self.list[index].clone())
+            Some(self.list[index])
         } else {
             None
         }
@@ -70,7 +70,7 @@ impl<'a> Intersections<'a> {
             .iter()
             .filter(|x| x.t.is_sign_positive())
             .min_by(|&x, &y| x.t.partial_cmp(&y.t).unwrap())
-            .cloned()
+            .copied()
     }
 }
 
@@ -146,7 +146,7 @@ fn get_refractive_index_from_intersections(
             n1 = containers.last().unwrap().get_material().refractive_index;
         }
 
-        if containers.contains(&i.object) {
+        if containers.contains(i.object) {
             containers.retain(|item| item != i.object);
         } else {
             containers.push(i.object.clone());
@@ -199,7 +199,6 @@ mod tests {
 
     use crate::ray_tracer::{
         shapes::*,
-        transformations::Transform,
         utils::{is_float_equal, EPSILON},
     };
 
@@ -299,7 +298,7 @@ mod tests {
     #[test]
     fn the_hit_should_offset_the_point() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let mut shape = new_sphere().translate(0.0, 0.0, 1.0).build();
+        let shape = new_sphere().translate(0.0, 0.0, 1.0).build();
         let i = Intersection::new(5.0, &shape);
         let binding = Intersections { list: vec![i] };
         let comps = prepare_computations(&i, &r, &binding);

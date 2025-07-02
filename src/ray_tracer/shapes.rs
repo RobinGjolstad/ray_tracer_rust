@@ -76,7 +76,12 @@ pub trait Shapes: Debug + Default + Sync {
     fn get_transform(&self) -> Matrix<4>;
     fn get_material(&self) -> Material;
     fn local_normal_at(&self, point: Point) -> Vector;
-    fn local_intersect<'a>(&'a self, object: &'a Object, local_ray: Ray, intersection_list: &mut Vec<Intersection<'a>>);
+    fn local_intersect<'a>(
+        &'a self,
+        object: &'a Object,
+        local_ray: Ray,
+        intersection_list: &mut Vec<Intersection<'a>>,
+    );
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -101,7 +106,7 @@ impl Default for BaseShape {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RotationAxis {
     X,
     Y,
@@ -110,11 +115,11 @@ pub enum RotationAxis {
 
 trait Type {}
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TypeNotSpecified;
 impl Type for TypeNotSpecified {}
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TypeSpecified;
 impl Type for TypeSpecified {}
 
@@ -145,42 +150,52 @@ impl ShapeBuilder<(), TypeNotSpecified> {
         }
     }
     #[must_use]
-    pub fn from_cube(cube: Cube) -> ShapeBuilder<Cube, TypeSpecified> {
+    pub const fn from_cube(cube: Cube) -> ShapeBuilder<Cube, TypeSpecified> {
         ShapeBuilder {
-            base: cube.base.clone(),
+            base: cube.base,
             shape: Some(cube),
             type_specified: PhantomData,
         }
     }
     #[must_use]
-    pub fn from_cylinder(cylinder: Cylinder) -> ShapeBuilder<Cylinder, TypeSpecified> {
+    pub const fn from_cylinder(cylinder: Cylinder) -> ShapeBuilder<Cylinder, TypeSpecified> {
         ShapeBuilder {
-            base: cylinder.base.clone(),
+            base: cylinder.base,
             shape: Some(cylinder),
             type_specified: PhantomData,
         }
     }
     #[must_use]
-    pub fn from_cone(cone: Cone) -> ShapeBuilder<Cone, TypeSpecified> {
+    pub const fn from_cone(cone: Cone) -> ShapeBuilder<Cone, TypeSpecified> {
         ShapeBuilder {
-            base: cone.base.clone(),
+            base: cone.base,
             shape: Some(cone),
             type_specified: PhantomData,
         }
     }
     #[must_use]
-    pub fn from_plane(plane: Plane) -> ShapeBuilder<Plane, TypeSpecified> {
+    pub const fn from_plane(plane: Plane) -> ShapeBuilder<Plane, TypeSpecified> {
         ShapeBuilder {
-            base: plane.base.clone(),
+            base: plane.base,
             shape: Some(plane),
             type_specified: PhantomData,
         }
     }
     #[must_use]
-    pub fn from_sphere(sphere: Sphere) -> ShapeBuilder<Sphere, TypeSpecified> {
+    pub const fn from_sphere(sphere: Sphere) -> ShapeBuilder<Sphere, TypeSpecified> {
         ShapeBuilder {
-            base: sphere.base.clone(),
+            base: sphere.base,
             shape: Some(sphere),
+            type_specified: PhantomData,
+        }
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub const fn from_test_shape(test_shape: TestShape) -> ShapeBuilder<TestShape, TypeSpecified> {
+        ShapeBuilder {
+            base: test_shape.base,
+            shape: Some(test_shape),
             type_specified: PhantomData,
         }
     }
@@ -231,16 +246,18 @@ impl<S, T> ShapeBuilder<S, T> {
     pub fn group(self) -> GroupBuilder {
         GroupBuilder::default()
     }
-    pub fn set_transform(mut self, transformation: Matrix<4>) -> Self {
+    #[must_use]
+    pub const fn set_transform(mut self, transformation: Matrix<4>) -> Self {
         self.base.transform = transformation;
 
         self
     }
 
     #[cfg(test)]
+    #[must_use]
     pub fn test_shape(self) -> ShapeBuilder<TestShape, TypeSpecified> {
         ShapeBuilder {
-            base: self.base.clone(),
+            base: self.base,
             shape: Some(TestShape::new()),
             type_specified: PhantomData,
         }
@@ -251,7 +268,7 @@ impl ShapeBuilder<Cube, TypeSpecified> {
     #[must_use]
     pub fn build(&self) -> Object {
         let mut shape = self.shape.clone().unwrap();
-        shape.base = self.base.clone();
+        shape.base = self.base;
         shape.base.transform.inverse();
         Object::Cube(Arc::new(shape))
     }
@@ -261,12 +278,13 @@ impl ShapeBuilder<Cylinder, TypeSpecified> {
     #[must_use]
     pub fn build(&self) -> Object {
         let mut shape = self.shape.clone().unwrap();
-        shape.base = self.base.clone();
+        shape.base = self.base;
         shape.base.transform.inverse();
         Object::Cylinder(Arc::new(shape))
     }
 
-    pub fn caps(mut self, max: f64, min: f64) -> Self {
+    #[must_use]
+    pub const fn caps(mut self, max: f64, min: f64) -> Self {
         if let Some(shape) = self.shape.as_mut() {
             shape.maximum = max;
             shape.minimum = min;
@@ -281,12 +299,13 @@ impl ShapeBuilder<Cone, TypeSpecified> {
     #[must_use]
     pub fn build(&self) -> Object {
         let mut shape = self.shape.clone().unwrap();
-        shape.base = self.base.clone();
+        shape.base = self.base;
         shape.base.transform.inverse();
         Object::Cone(Arc::new(shape))
     }
 
-    pub fn caps(mut self, max: f64, min: f64) -> Self {
+    #[must_use]
+    pub const fn caps(mut self, max: f64, min: f64) -> Self {
         if let Some(shape) = self.shape.as_mut() {
             shape.maximum = max;
             shape.minimum = min;
@@ -301,7 +320,7 @@ impl ShapeBuilder<Plane, TypeSpecified> {
     #[must_use]
     pub fn build(&self) -> Object {
         let mut shape = self.shape.clone().unwrap();
-        shape.base = self.base.clone();
+        shape.base = self.base;
         shape.base.transform.inverse();
         Object::Plane(Arc::new(shape))
     }
@@ -311,7 +330,7 @@ impl ShapeBuilder<Sphere, TypeSpecified> {
     #[must_use]
     pub fn build(&self) -> Object {
         let mut shape = self.shape.clone().unwrap();
-        shape.base = self.base.clone();
+        shape.base = self.base;
         shape.base.transform.inverse();
         Object::Sphere(Arc::new(shape))
     }
@@ -322,31 +341,33 @@ impl ShapeBuilder<TestShape, TypeSpecified> {
     #[must_use]
     pub fn build(&self) -> Object {
         let mut shape = self.shape.clone().unwrap();
-        shape.base = self.base.clone();
+        shape.base = self.base;
         shape.base.transform.inverse();
-        Object::TestShape(shape)
+        Object::TestShape(Arc::new(shape))
     }
 }
 
 impl<S, T> ShapeBuilder<S, T> {
+    #[must_use]
     pub fn translate(mut self, x: f64, y: f64, z: f64) -> Self {
-        self.base.transform = self.base.transform
-            * Transform::translate(x, y, z);
+        self.base.transform = self.base.transform * Transform::translate(x, y, z);
 
         self
     }
+    #[must_use]
     pub fn scale(mut self, x: f64, y: f64, z: f64) -> Self {
-        self.base.transform = self.base.transform
-            * Transform::scaling(x, y, z);
-            
-        self
-    }
-    pub fn shear(mut self, x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Self {
-        self.base.transform = self.base.transform
-            * Transform::shearing(x_y, x_z, y_x, y_z, z_x, z_y);
+        self.base.transform = self.base.transform * Transform::scaling(x, y, z);
 
         self
     }
+    #[must_use]
+    pub fn shear(mut self, x_y: f64, x_z: f64, y_x: f64, y_z: f64, z_x: f64, z_y: f64) -> Self {
+        self.base.transform =
+            self.base.transform * Transform::shearing(x_y, x_z, y_x, y_z, z_x, z_y);
+
+        self
+    }
+    #[must_use]
     pub fn rotate(mut self, axis: &RotationAxis, angle: f64) -> Self {
         self.base.transform = match axis {
             RotationAxis::X => self.base.transform * Transform::rotation_x(angle),
@@ -356,47 +377,56 @@ impl<S, T> ShapeBuilder<S, T> {
 
         self
     }
-    pub fn color(mut self, color: &Color) -> Self {
+    #[must_use]
+    pub const fn color(mut self, color: &Color) -> Self {
         self.base.material.color = *color;
 
         self
     }
-    pub fn ambient(mut self, ambient: f64) -> Self {
+    #[must_use]
+    pub const fn ambient(mut self, ambient: f64) -> Self {
         self.base.material.ambient = ambient;
 
         self
     }
-    pub fn diffuse(mut self, diffuse: f64) -> Self {
+    #[must_use]
+    pub const fn diffuse(mut self, diffuse: f64) -> Self {
         self.base.material.diffuse = diffuse;
 
         self
     }
-    pub fn specular(mut self, specular: f64) -> Self {
+    #[must_use]
+    pub const fn specular(mut self, specular: f64) -> Self {
         self.base.material.specular = specular;
 
         self
     }
-    pub fn shininess(mut self, shininess: f64) -> Self {
+    #[must_use]
+    pub const fn shininess(mut self, shininess: f64) -> Self {
         self.base.material.shininess = shininess;
 
         self
     }
-    pub fn pattern(mut self, pattern: Pattern) -> Self {
+    #[must_use]
+    pub const fn pattern(mut self, pattern: Pattern) -> Self {
         self.base.material.pattern = Some(pattern);
 
         self
     }
-    pub fn reflective(mut self, reflective: f64) -> Self {
+    #[must_use]
+    pub const fn reflective(mut self, reflective: f64) -> Self {
         self.base.material.reflective = reflective;
 
         self
     }
-    pub fn transparency(mut self, transparency: f64) -> Self {
+    #[must_use]
+    pub const fn transparency(mut self, transparency: f64) -> Self {
         self.base.material.transparency = transparency;
 
         self
     }
-    pub fn refractive_index(mut self, refractive_index: f64) -> Self {
+    #[must_use]
+    pub const fn refractive_index(mut self, refractive_index: f64) -> Self {
         self.base.material.refractive_index = refractive_index;
 
         self
@@ -469,7 +499,7 @@ pub enum Object {
     Cone(Arc<Cone>),
 
     #[cfg(test)]
-    TestShape(TestShape),
+    TestShape(Arc<TestShape>),
 }
 impl Object {
     fn world_point_to_local(&self, point: &Point) -> Point {
@@ -582,15 +612,15 @@ impl Object {
         intersection_list: &mut Vec<Intersection<'a>>,
     ) {
         match self {
-            Self::Cone(c) => c.local_intersect(&self, local_ray, intersection_list),
-            Self::Cube(c) => c.local_intersect(&self, local_ray, intersection_list),
-            Self::Cylinder(c) => c.local_intersect(&self, local_ray, intersection_list),
-            Self::Group(g) => g.local_intersect(&self, local_ray, intersection_list),
-            Self::Plane(p) => p.local_intersect(&self, local_ray, intersection_list),
-            Self::Sphere(s) => s.local_intersect(&self, local_ray, intersection_list),
+            Self::Cone(c) => c.local_intersect(self, local_ray, intersection_list),
+            Self::Cube(c) => c.local_intersect(self, local_ray, intersection_list),
+            Self::Cylinder(c) => c.local_intersect(self, local_ray, intersection_list),
+            Self::Group(g) => g.local_intersect(self, local_ray, intersection_list),
+            Self::Plane(p) => p.local_intersect(self, local_ray, intersection_list),
+            Self::Sphere(s) => s.local_intersect(self, local_ray, intersection_list),
 
             #[cfg(test)]
-            Self::TestShape(s) => s.local_intersect(&self, local_ray, intersection_list),
+            Self::TestShape(s) => s.local_intersect(self, local_ray, intersection_list),
         }
     }
 

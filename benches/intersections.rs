@@ -4,7 +4,6 @@ use ray_tracer_rust::ray_tracer::{
     intersections::{prepare_computations, schlick, Intersection, Intersections},
     rays::Ray,
     shapes::{glass_sphere, new_sphere},
-    transformations::Transform,
     tuples_new::{new_point, new_vector},
 };
 
@@ -22,7 +21,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 let i3 = Intersection::new(-3.0, &s);
                 let i4 = Intersection::new(2.0, &s);
                 let xs = black_box(Intersections {
-                    list: vec![i1, i2, i3, i4.clone()],
+                    list: vec![i1, i2, i3, i4],
                 });
                 let _ = xs.hit();
             })
@@ -38,7 +37,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 black_box(&i),
                 black_box(&r),
                 black_box(&Intersections {
-                    list: vec![i.clone()],
+                    list: vec![i],
                 }),
             );
         })
@@ -53,7 +52,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 black_box(&i),
                 black_box(&r),
                 black_box(&Intersections {
-                    list: vec![i.clone()],
+                    list: vec![i],
                 }),
             );
         })
@@ -68,7 +67,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 black_box(&i),
                 black_box(&r),
                 black_box(&Intersections {
-                    list: vec![i.clone()],
+                    list: vec![i],
                 }),
             );
         })
