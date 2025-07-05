@@ -1,7 +1,7 @@
 #![allow(unused)]
 use super::{BaseShape, Debug, Object, Shapes};
 use crate::ray_tracer::{
-    intersections::Intersection,
+    intersections::{IntersectionsSoA, Intersection},
     materials::Material,
     matrices_new::Matrix,
     rays::Ray,
@@ -40,19 +40,19 @@ impl Cone {
         x.mul_add(x, z.powi(2)) <= y_plane.powi(2)
     }
 
-    fn intersect_caps(&self, object: &Object, ray: &Ray, xs: &mut Vec<Intersection>) {
+    fn intersect_caps(&self, object: &Object, ray: &Ray, xs: &mut IntersectionsSoA) {
         if !self.closed || is_float_equal(&ray.direction.y, 0.0) {
             return;
         }
 
         let t = (self.minimum - ray.origin.y) / ray.direction.y;
         if Self::check_cap(self.minimum, ray, t) {
-            xs.push(Intersection::new(t, object.clone()));
+            xs.push(t, object.clone());
         }
 
         let t = (self.maximum - ray.origin.y) / ray.direction.y;
         if Self::check_cap(self.maximum, ray, t) {
-            xs.push(Intersection::new(t, object.clone()));
+            xs.push(t, object.clone());
         }
     }
 }
@@ -94,7 +94,7 @@ impl Shapes for Cone {
         &self,
         object: &Object,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut IntersectionsSoA,
     ) {
         // Original version. Trying FMA.
         //
@@ -142,7 +142,7 @@ impl Shapes for Cone {
             // Parallel to one of the halves.
             // One intersection.
             let t = -c / (2.0 * b);
-            intersection_list.push(Intersection::new(t, object.clone()));
+            intersection_list.push(t, object.clone());
         } else {
             // TODO: Figure out which version is faster.
             #[allow(clippy::suboptimal_flops)]
@@ -162,13 +162,13 @@ impl Shapes for Cone {
             // let y0 = local_ray.origin.y + t0 * local_ray.direction.y;
             let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y0 && y0 < self.maximum {
-                intersection_list.push(Intersection::new(t0, object.clone()));
+                intersection_list.push(t0, object.clone());
             }
 
             // let y1 = local_ray.origin.y + t1 * local_ray.direction.y;
             let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
             if self.minimum < y1 && y1 < self.maximum {
-                intersection_list.push(Intersection::new(t1, object.clone()));
+                intersection_list.push(t1, object.clone());
             }
         }
 
@@ -216,11 +216,11 @@ mod tests {
                 origin: example.0,
                 direction,
             };
-            let mut xs = Vec::new();
+            let mut xs = IntersectionsSoA::default();
             shape.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(xs.len(), 2);
-            assert!(is_float_equal(&xs[0].get_time(), example.2));
-            assert!(is_float_equal(&xs[1].get_time(), example.3));
+            assert!(is_float_equal(&xs.ts[0], example.2));
+            assert!(is_float_equal(&xs.ts[1], example.3));
         }
     }
 
@@ -231,10 +231,10 @@ mod tests {
         let direction = new_vector(0.0, 1.0, 1.0).normalize();
         let r = Ray::new(new_point(0.0, 0.0, -1.0), direction);
 
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         shape.local_intersect(&obj_shape, r, &mut xs);
         assert_eq!(xs.len(), 1);
-        assert!(is_float_equal(&xs[0].get_time(), 0.35355));
+        assert!(is_float_equal(&xs.ts[0], 0.35355));
     }
 
     #[test]
@@ -251,7 +251,7 @@ mod tests {
         for example in examples {
             let direction = example.1;
             let ray = Ray::new(example.0, direction.normalize());
-            let mut xs = Vec::new();
+            let mut xs = IntersectionsSoA::default();
             cone.local_intersect(&obj_shape, ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
@@ -302,7 +302,7 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let mut xs = Vec::new();
+            let mut xs = IntersectionsSoA::default();
             cone.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
@@ -332,7 +332,7 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let mut xs = Vec::new();
+            let mut xs = IntersectionsSoA::default();
             cone.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(example.2, xs.len());
         }
@@ -375,7 +375,7 @@ mod tests {
         for example in examples {
             let direction = example.1.normalize();
             let r = Ray::new(example.0, direction);
-            let mut xs = Vec::new();
+            let mut xs = IntersectionsSoA::default();
             cone.local_intersect(&obj_shape, r, &mut xs);
             assert_eq!(xs.len(), 0);
         }

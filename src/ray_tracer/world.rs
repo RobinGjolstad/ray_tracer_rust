@@ -2,13 +2,14 @@ use std::sync::Arc;
 
 use super::{
     colors::Color,
-    intersections::{prepare_computations, schlick, IntersectComp, Intersections},
+    intersections::{prepare_computations, schlick, IntersectComp, IntersectionsSoA},
     lights::Light,
     rays::Ray,
     shapes::Object,
     tuples_new::{Point, Vector},
     utils::is_float_equal,
 };
+use crate::ray_tracer::intersections::Intersection;
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default, Debug, PartialEq, Clone)]
@@ -114,8 +115,9 @@ impl World {
         let int = r.intersect_world(self);
         int.hit().map_or_else(
             || Color::new(0.0, 0.0, 0.0),
-            |int_hit| {
-                let comp = prepare_computations(&int_hit, r, &int);
+            |(t, object)| {
+                let intersection = Intersection::new(t, object.clone());
+                let comp = prepare_computations(&intersection, r, &int);
                 self.shade_hit(&comp, remaining)
             },
         )
@@ -127,12 +129,12 @@ impl World {
         let direction = v.normalize();
 
         let r = Ray::new(*point, direction);
-        let mut intersections = Intersections::default();
+        let mut intersections = IntersectionsSoA::default();
 
         // Iterate over all objects, but stop on first valid intersection.
         for object in self.objects.iter() {
-            r.intersect(object, &mut intersections.list);
-            if intersections.hit().is_some_and(|h| h.get_time() < distance) {
+            r.intersect(object, &mut intersections);
+            if intersections.hit().is_some_and(|(t, _)| t < distance) {
                 return true;
             }
         }
@@ -183,7 +185,7 @@ mod tests {
     
 
     use crate::ray_tracer::{
-        intersections::{Intersection, Intersections},
+        intersections::{Intersection, IntersectionsSoA},
         patterns::Pattern,
         shapes::{new_plane, new_sphere, ShapeBuilder, Sphere, TypeSpecified},
         tuples_new::{new_point, new_vector},
@@ -273,21 +275,22 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = r.intersect_world(&w);
 
-        assert_eq!(xs.count(), 4);
-        assert!(is_float_equal(&xs.get_element(0).unwrap().get_time(), 4.0));
-        assert!(is_float_equal(&xs.get_element(1).unwrap().get_time(), 4.5));
-        assert!(is_float_equal(&xs.get_element(2).unwrap().get_time(), 5.5));
-        assert!(is_float_equal(&xs.get_element(3).unwrap().get_time(), 6.0));
+        assert_eq!(xs.len(), 4);
+        assert!(is_float_equal(&xs.ts[0], 4.0));
+        assert!(is_float_equal(&xs.ts[1], 4.5));
+        assert!(is_float_equal(&xs.ts[2], 5.5));
+        assert!(is_float_equal(&xs.ts[3], 6.0));
     }
 
     #[test]
     fn shading_an_intersection() {
         let w = default_world();
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let shape = w.objects.first().unwrap();
-        let i = Intersection::new(4.0, shape.clone());
-        let binding = Intersections::new(&[i.clone()]);
-        let comps = prepare_computations(&i, &r, &binding);
+        let shape = w.objects.first().unwrap().clone();
+        let i = Intersection::new(4.0, shape);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(i.get_time(), i.get_object().clone());
+        let comps = prepare_computations(&i, &r, &xs);
         let c = w.shade_hit(&comps, 1);
         assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855));
     }
@@ -305,8 +308,9 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let shape = w.objects[1].clone();
         let i = Intersection::new(0.5, shape);
-        let binding = Intersections::new(&[i.clone()]);
-        let comps = prepare_computations(&i, &r, &binding);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(i.get_time(), i.get_object().clone());
+        let comps = prepare_computations(&i, &r, &xs);
         let c = w.shade_hit(&comps, 1);
         assert_eq!(c, Color::new(0.90498, 0.90498, 0.90498));
     }
@@ -328,8 +332,9 @@ mod tests {
 
         let r = Ray::new(new_point(0.0, 0.0, 5.0), new_vector(0.0, 0.0, 1.0));
         let i = Intersection::new(4.0, s2);
-        let binding = Intersections::new(&[i.clone()]);
-        let comps = prepare_computations(&i, &r, &binding);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(i.get_time(), i.get_object().clone());
+        let comps = prepare_computations(&i, &r, &xs);
         let c = w.shade_hit(&comps, 1);
         assert_eq!(c, Color::new(0.1, 0.1, 0.1));
     }
@@ -405,8 +410,9 @@ mod tests {
 
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let i = Intersection::new(1.0, shape);
-        let binding = Intersections::new(&[i.clone()]);
-        let comps = prepare_computations(&i, &r, &binding);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(i.get_time(), i.get_object().clone());
+        let comps = prepare_computations(&i, &r, &xs);
         let color = w.reflected_color(&comps, 1);
         assert_eq!(color, Color::new(0.0, 0.0, 0.0));
     }
@@ -425,8 +431,9 @@ mod tests {
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
-        let binding = Intersections::new(&[i.clone()]);
-        let comps = prepare_computations(&i, &r, &binding);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(i.get_time(), i.get_object().clone());
+        let comps = prepare_computations(&i, &r, &xs);
         let color = w.reflected_color(&comps, 1);
         assert_eq!(color, Color::new(0.19032, 0.2379, 0.14274));
     }
@@ -445,8 +452,9 @@ mod tests {
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
-        let binding = Intersections::new(&[i.clone()]);
-        let comps = prepare_computations(&i, &r, &binding);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(i.get_time(), i.get_object().clone());
+        let comps = prepare_computations(&i, &r, &xs);
         let color = w.shade_hit(&comps, 1);
         assert_eq!(color, Color::new(0.87677, 0.92436, 0.82918));
     }
@@ -490,8 +498,9 @@ mod tests {
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
         let i = Intersection::new(2.0_f64.sqrt(), shape);
-        let binding = Intersections::new(&[i.clone()]);
-        let comps = prepare_computations(&i, &r, &binding);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(i.get_time(), i.get_object().clone());
+        let comps = prepare_computations(&i, &r, &xs);
         let color = w.reflected_color(&comps, 0);
         assert_eq!(color, Color::new(0.0, 0.0, 0.0));
     }
@@ -500,11 +509,10 @@ mod tests {
         let w = default_world();
         let shape = w.objects[0].clone();
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let xs = Intersections::new(&[
-            Intersection::new(4.0, shape.clone()),
-            Intersection::new(6.0, shape),
-        ]);
-        let comps = prepare_computations(&xs.list[0], &r, &xs);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(4.0, shape.clone());
+        xs.push(6.0, shape.clone());
+        let comps = prepare_computations(&Intersection::new(4.0, shape), &r, &xs);
         let c = w.refracted_color(&comps, 5);
         assert_eq!(c, Color::new(0.0, 0.0, 0.0));
     }
@@ -515,11 +523,10 @@ mod tests {
         shape.get_material().transparency = 1.0;
         shape.get_material().refractive_index = 1.5;
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-        let xs = Intersections::new(&[
-            Intersection::new(4.0, shape.clone()),
-            Intersection::new(6.0, shape),
-        ]);
-        let comps = prepare_computations(&xs.list[0], &r, &xs);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(4.0, shape.clone());
+        xs.push(6.0, shape.clone());
+        let comps = prepare_computations(&Intersection::new(4.0, shape), &r, &xs);
         let c = w.refracted_color(&comps, 0);
         assert_eq!(c, Color::new(0.0, 0.0, 0.0));
     }
@@ -533,11 +540,10 @@ mod tests {
             new_point(0.0, 0.0, 2.0_f64.sqrt() / 2.0),
             new_vector(0.0, 1.0, 0.0),
         );
-        let xs = Intersections::new(&[
-            Intersection::new(-(2.0_f64.sqrt()) / 2.0, shape.clone()),
-            Intersection::new(2.0_f64.sqrt() / 2.0, shape),
-        ]);
-        let comps = prepare_computations(&xs.list[1], &r, &xs);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(-(2.0_f64.sqrt()) / 2.0, shape.clone());
+        xs.push(2.0_f64.sqrt() / 2.0, shape.clone());
+        let comps = prepare_computations(&Intersection::new(2.0_f64.sqrt() / 2.0, shape), &r, &xs);
         let c = w.refracted_color(&comps, 5);
         assert_eq!(c, Color::new(0.0, 0.0, 0.0));
     }
@@ -564,13 +570,12 @@ mod tests {
         let w = wb.build();
 
         let r = Ray::new(new_point(0.0, 0.0, 0.1), new_vector(0.0, 1.0, 0.0));
-        let xs = Intersections::new(&[
-            Intersection::new(-0.9899, A.clone()),
-            Intersection::new(-0.4899, B.clone()),
-            Intersection::new(0.4899, B),
-            Intersection::new(0.9899, A),
-        ]);
-        let comps = prepare_computations(&xs.list[2], &r, &xs);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(-0.9899, A.clone());
+        xs.push(-0.4899, B.clone());
+        xs.push(0.4899, B.clone());
+        xs.push(0.9899, A);
+        let comps = prepare_computations(&Intersection::new(0.4899, B), &r, &xs);
         let c = w.refracted_color(&comps, 5);
         assert_eq!(c, Color::new(0.0, 0.99888, 0.04725));
     }
@@ -596,8 +601,9 @@ mod tests {
             new_point(0.0, 0.0, -3.0),
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
-        let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), floor)]);
-        let comps = prepare_computations(&xs.list[0], &r, &xs);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(2.0_f64.sqrt(), floor.clone());
+        let comps = prepare_computations(&Intersection::new(2.0_f64.sqrt(), floor), &r, &xs);
         let color = w.shade_hit(&comps, 5);
         assert_eq!(color, Color::new(0.93642, 0.68642, 0.68642));
     }
@@ -624,8 +630,9 @@ mod tests {
             new_point(0.0, 0.0, -3.0),
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
-        let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), floor)]);
-        let comps = prepare_computations(&xs.list[0], &r, &xs);
+        let mut xs = IntersectionsSoA::default();
+        xs.push(2.0_f64.sqrt(), floor.clone());
+        let comps = prepare_computations(&Intersection::new(2.0_f64.sqrt(), floor), &r, &xs);
         let color = w.shade_hit(&comps, 5);
         assert_eq!(color, Color::new(0.93391, 0.69643, 0.69243));
     }

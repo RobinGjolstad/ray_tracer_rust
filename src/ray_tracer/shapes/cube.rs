@@ -1,6 +1,6 @@
 #![allow(unused)]
 use crate::ray_tracer::{
-    intersections::Intersection,
+    intersections::{Intersection, IntersectionsSoA},
     materials::Material,
     matrices_new::Matrix,
     rays::Ray,
@@ -60,12 +60,11 @@ impl Shapes for Cube {
         &self,
         object: &Object,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut IntersectionsSoA,
     ) {
         let (xtmin, xtmax): (f64, f64) = check_axis(local_ray.origin.x, local_ray.direction.x);
         let (ytmin, ytmax): (f64, f64) = check_axis(local_ray.origin.y, local_ray.direction.y);
         let (ztmin, ztmax): (f64, f64) = check_axis(local_ray.origin.z, local_ray.direction.z);
-
         let tmin = [xtmin, ytmin, ztmin]
             .iter()
             .max_by(|a, b| a.total_cmp(b))
@@ -76,11 +75,10 @@ impl Shapes for Cube {
             .min_by(|a, b| a.total_cmp(b))
             .unwrap()
             .to_owned();
-
         if tmin > tmax {
         } else {
-            intersection_list.push(Intersection::new(tmin, object.clone()));
-            intersection_list.push(Intersection::new(tmax, object.clone()));
+            intersection_list.push(tmin, object.clone());
+            intersection_list.push(tmax, object.clone());
         }
     }
 }
@@ -160,17 +158,11 @@ mod tests {
         ];
 
         for intersection in examples {
-            let mut xs = Vec::new();
+            let mut xs = IntersectionsSoA::default();
             c.local_intersect(&obj_cube.clone(), intersection.0, &mut xs);
             assert_eq!(xs.len(), 2);
-            assert!(is_float_equal_low_precision(
-                &xs[0].get_time(),
-                intersection.1
-            ));
-            assert!(is_float_equal_low_precision(
-                &xs[1].get_time(),
-                intersection.2
-            ));
+            assert!(is_float_equal_low_precision(&xs.ts[0], intersection.1));
+            assert!(is_float_equal_low_precision(&xs.ts[1], intersection.2));
         }
     }
 
@@ -198,7 +190,7 @@ mod tests {
         ];
 
         for ray in examples {
-            let mut xs = Vec::new();
+            let mut xs = IntersectionsSoA::default();
             c.local_intersect(&obj_cube.clone(), ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }

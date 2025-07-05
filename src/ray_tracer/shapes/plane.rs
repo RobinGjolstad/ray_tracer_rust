@@ -1,6 +1,6 @@
 #![allow(unused)]
 use crate::ray_tracer::{
-    intersections::Intersection,
+    intersections::{Intersection, IntersectionsSoA},
     materials::Material,
     matrices_new::Matrix,
     rays::Ray,
@@ -47,14 +47,13 @@ impl Shapes for Plane {
         &self,
         object: &Object,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut crate::ray_tracer::intersections::IntersectionsSoA,
     ) {
         if f64::abs(local_ray.direction.y) < EPSILON {
             return;
         }
-
         let t = -local_ray.origin.y / local_ray.direction.y;
-        intersection_list.push(Intersection::new(t, object.clone()));
+        intersection_list.push(t, object.clone());
     }
 }
 
@@ -82,7 +81,7 @@ mod tests {
         let p = Plane::new();
         let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 10.0, 1.0), new_vector(0.0, 0.0, 1.0));
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         p.local_intersect(&obj_plane, r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
@@ -91,7 +90,7 @@ mod tests {
         let p = Plane::new();
         let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         p.local_intersect(&obj_plane, r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
@@ -100,14 +99,11 @@ mod tests {
         let p = Plane::new();
         let p_o = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 1.0, 0.0), new_vector(0.0, -1.0, 0.0));
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         p.local_intersect(&p_o, r, &mut xs);
         assert_eq!(xs.len(), 1);
-        assert!(is_float_equal_low_precision(
-            &xs.first().unwrap().get_time(),
-            1.0
-        ));
-        assert_eq!(*xs.first().unwrap().get_object(), p_o);
+        assert!(is_float_equal_low_precision(&xs.ts[0], 1.0));
+        assert_eq!(&xs.objects[0], &p_o);
     }
 
     #[test]
@@ -115,13 +111,10 @@ mod tests {
         let p = Plane::new();
         let p_o = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, -1.0, 0.0), new_vector(0.0, 1.0, 0.0));
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         p.local_intersect(&p_o, r, &mut xs);
         assert_eq!(xs.len(), 1);
-        assert!(is_float_equal_low_precision(
-            &xs.first().unwrap().get_time(),
-            1.0
-        ));
-        assert_eq!(*xs.first().unwrap().get_object(), p_o);
+        assert!(is_float_equal_low_precision(&xs.ts[0], 1.0));
+        assert_eq!(&xs.objects[0], &p_o);
     }
 }

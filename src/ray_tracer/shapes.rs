@@ -69,6 +69,8 @@ pub use plane::Plane;
 mod test_shape;
 #[cfg(test)]
 use test_shape::TestShape;
+#[cfg(test)]
+use crate::ray_tracer::intersections::IntersectionsSoA;
 
 use self::group::GroupBuilder;
 
@@ -80,7 +82,7 @@ pub trait Shapes: Debug + Default + Sync {
         &self,
         object: &Object,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut crate::ray_tracer::intersections::IntersectionsSoA,
     );
 }
 
@@ -609,7 +611,7 @@ impl Object {
     pub(crate) fn local_intersect(
         &self,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut crate::ray_tracer::intersections::IntersectionsSoA,
     ) {
         match self {
             Self::Cone(c) => c.local_intersect(self, local_ray, intersection_list),
@@ -734,10 +736,8 @@ mod tests {
     #[test]
     fn intersecting_a_scaled_shape_with_a_ray() {
         let mut s = new_test_shape().scale(2.0, 2.0, 2.0).build();
-
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
         assert_eq!(saved_ray.origin, new_point(0.0, 0.0, -2.5));
@@ -746,10 +746,8 @@ mod tests {
     #[test]
     fn intersecting_a_translated_shape_with_a_ray() {
         let mut s = new_test_shape().translate(5.0, 0.0, 0.0).build();
-
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         r.intersect(&s, &mut xs);
         let saved_ray = TestShape::get_saved_ray().unwrap();
         assert_eq!(saved_ray.origin, new_point(-5.0, 0.0, -5.0));

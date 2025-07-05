@@ -1,7 +1,7 @@
 #![allow(unused)]
 use super::*;
 use crate::ray_tracer::{
-    intersections::Intersection,
+    intersections::{Intersection, IntersectionsSoA},
     materials::Material,
     matrices_new::Matrix,
     rays::Ray,
@@ -55,7 +55,7 @@ impl Shapes for TestShape {
         &self,
         object: &Object,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        _intersection_list: &mut IntersectionsSoA,
     ) {
         unsafe {
             SAVED_RAY = Some(local_ray);

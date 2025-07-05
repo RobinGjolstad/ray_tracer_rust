@@ -47,28 +47,18 @@ impl Shapes for Sphere {
         &self,
         object: &Object,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut crate::ray_tracer::intersections::IntersectionsSoA,
     ) {
-        // Center of sphere is in Point::new(0.0, 0.0, 0.0) == Point::default().
         let sphere_to_ray = local_ray.origin - Point::default();
         let a = Vector::dot(&local_ray.direction, &local_ray.direction);
         let b = 2.0 * Vector::dot(&local_ray.direction, &sphere_to_ray);
         let c = Vector::dot(&sphere_to_ray, &sphere_to_ray) - 1.0;
-
-        // let discriminant = b.powi(2) - 4.0 * a * c;
         let discriminant = b.mul_add(b, -(4.0 * a * c));
         let discriminant_sqrt = discriminant.sqrt();
-
         if discriminant < 0.0 {
         } else {
-            intersection_list.push(Intersection::new(
-                (-b - discriminant_sqrt) / (2.0 * a),
-                object.clone(),
-            ));
-            intersection_list.push(Intersection::new(
-                (-b + discriminant_sqrt) / (2.0 * a),
-                object.clone(),
-            ));
+            intersection_list.push((-b - discriminant_sqrt) / (2.0 * a), object.clone());
+            intersection_list.push((-b + discriminant_sqrt) / (2.0 * a), object.clone());
         }
     }
 }

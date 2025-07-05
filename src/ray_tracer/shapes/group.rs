@@ -6,7 +6,7 @@ use std::{
 
 use super::{BaseShape, Object, Shapes};
 use crate::ray_tracer::{
-    intersections::Intersection,
+    intersections::{Intersection, IntersectionsSoA},
     materials::Material,
     matrices_new::Matrix,
     rays::Ray,
@@ -63,22 +63,20 @@ impl Shapes for Group {
         &self,
         object: &Object,
         local_ray: Ray,
-        intersection_list: &mut Vec<Intersection>,
+        intersection_list: &mut IntersectionsSoA,
     ) {
         let Some(ref children) = self.children else {
             return;
         };
-        let mut retval = Vec::with_capacity(children.len() * 2);
+        let mut retval = IntersectionsSoA::with_capacity(children.len() * 2);
         for child in children {
             local_ray.intersect(child, &mut retval);
         }
-        retval.sort_by(|a, b| {
-            a.get_time()
-                .partial_cmp(&b.get_time())
-                .expect("Sorting intersections for group intersections failed.")
-        });
-        retval.dedup();
-        intersection_list.extend(retval);
+        retval.sort();
+        // TODO: dedup if needed
+        for i in 0..retval.len() {
+            intersection_list.push(retval.ts[i], retval.objects[i].clone());
+        }
     }
 }
 
@@ -236,45 +234,35 @@ mod tests {
     fn intersecting_a_ray_with_an_empty_group() {
         let g = new_group(vec![]);
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
-
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         g.local_intersect(r, &mut xs);
-
-        assert!(xs.is_empty());
+        assert_eq!(xs.len(), 0);
     }
     #[test]
     fn intersecting_a_ray_with_a_nonempty_group() {
         let mut s1 = new_sphere().build();
         let mut s2 = new_sphere().translate(0.0, 0.0, -3.0).build();
         let mut s3 = new_sphere().translate(5.0, 0.0, 0.0).build();
-
         let mut g = new_group(vec![s1.clone(), s2.clone(), s3]);
-
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
-
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         g.local_intersect(r, &mut xs);
-
         assert_eq!(xs.len(), 4);
-        assert_eq!(xs[0].get_object(), &s2);
-        assert_eq!(xs[1].get_object(), &s2);
-        assert_eq!(xs[2].get_object(), &s1);
-        assert_eq!(xs[3].get_object(), &s1);
+        assert_eq!(&xs.objects[0], &s2);
+        assert_eq!(&xs.objects[1], &s2);
+        assert_eq!(&xs.objects[2], &s1);
+        assert_eq!(&xs.objects[3], &s1);
     }
     #[test]
     fn intersecting_a_transformed_group() {
         let mut s = new_sphere().translate(5.0, 0.0, 0.0).build();
-
         let g = GroupBuilder::new()
             .add(s)
             .set_transform(Transform::scaling(2.0, 2.0, 2.0).inverse())
             .build();
-
         let r = Ray::new(new_point(10.0, 0.0, -10.0), new_vector(0.0, 0.0, 1.0));
-
-        let mut xs = Vec::new();
+        let mut xs = IntersectionsSoA::default();
         r.intersect(&g, &mut xs);
-
         assert_eq!(xs.len(), 2);
     }
 }
