@@ -53,7 +53,7 @@ impl Shapes for TestShape {
     }
     fn local_intersect(
         &self,
-        object: Arc<Object>,
+        object: &Object,
         local_ray: Ray,
         intersection_list: &mut Vec<Intersection>,
     ) {

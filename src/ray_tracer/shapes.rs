@@ -78,7 +78,7 @@ pub trait Shapes: Debug + Default + Sync {
     fn local_normal_at(&self, point: Point) -> Vector;
     fn local_intersect(
         &self,
-        object: Arc<Object>,
+        object: &Object,
         local_ray: Ray,
         intersection_list: &mut Vec<Intersection>,
     );
@@ -270,7 +270,7 @@ impl ShapeBuilder<Cube, TypeSpecified> {
         let mut shape = self.shape.clone().unwrap();
         shape.base = self.base;
         shape.base.transform.inverse();
-        Object::Cube(Arc::new(shape))
+        Object::Cube(shape)
     }
 }
 
@@ -280,7 +280,7 @@ impl ShapeBuilder<Cylinder, TypeSpecified> {
         let mut shape = self.shape.clone().unwrap();
         shape.base = self.base;
         shape.base.transform.inverse();
-        Object::Cylinder(Arc::new(shape))
+        Object::Cylinder(shape)
     }
 
     #[must_use]
@@ -301,7 +301,7 @@ impl ShapeBuilder<Cone, TypeSpecified> {
         let mut shape = self.shape.clone().unwrap();
         shape.base = self.base;
         shape.base.transform.inverse();
-        Object::Cone(Arc::new(shape))
+        Object::Cone(shape)
     }
 
     #[must_use]
@@ -322,7 +322,7 @@ impl ShapeBuilder<Plane, TypeSpecified> {
         let mut shape = self.shape.clone().unwrap();
         shape.base = self.base;
         shape.base.transform.inverse();
-        Object::Plane(Arc::new(shape))
+        Object::Plane(shape)
     }
 }
 
@@ -332,7 +332,7 @@ impl ShapeBuilder<Sphere, TypeSpecified> {
         let mut shape = self.shape.clone().unwrap();
         shape.base = self.base;
         shape.base.transform.inverse();
-        Object::Sphere(Arc::new(shape))
+        Object::Sphere(shape)
     }
 }
 
@@ -343,7 +343,7 @@ impl ShapeBuilder<TestShape, TypeSpecified> {
         let mut shape = self.shape.clone().unwrap();
         shape.base = self.base;
         shape.base.transform.inverse();
-        Object::TestShape(Arc::new(shape))
+        Object::TestShape(shape)
     }
 }
 
@@ -438,7 +438,7 @@ impl TryFrom<Object> for ShapeBuilder<Cube, TypeSpecified> {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         if let Object::Cube(cube) = value {
-            Ok(ShapeBuilder::from_cube((*cube.as_ref()).clone()))
+            Ok(ShapeBuilder::from_cube(cube))
         } else {
             Err("Object is not a Cube".to_string())
         }
@@ -449,7 +449,7 @@ impl TryFrom<Object> for ShapeBuilder<Cylinder, TypeSpecified> {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         if let Object::Cylinder(cylinder) = value {
-            Ok(ShapeBuilder::from_cylinder((*cylinder.as_ref()).clone()))
+            Ok(ShapeBuilder::from_cylinder(cylinder))
         } else {
             Err("Object is not a Cylinder".to_string())
         }
@@ -460,7 +460,7 @@ impl TryFrom<Object> for ShapeBuilder<Cone, TypeSpecified> {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         if let Object::Cone(cone) = value {
-            Ok(ShapeBuilder::from_cone((*cone.as_ref()).clone()))
+            Ok(ShapeBuilder::from_cone(cone))
         } else {
             Err("Object is not a Cone".to_string())
         }
@@ -471,7 +471,7 @@ impl TryFrom<Object> for ShapeBuilder<Plane, TypeSpecified> {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         if let Object::Plane(plane) = value {
-            Ok(ShapeBuilder::from_plane((*plane.as_ref()).clone()))
+            Ok(ShapeBuilder::from_plane(plane))
         } else {
             Err("Object is not a Plane".to_string())
         }
@@ -482,7 +482,7 @@ impl TryFrom<Object> for ShapeBuilder<Sphere, TypeSpecified> {
 
     fn try_from(value: Object) -> Result<Self, Self::Error> {
         if let Object::Sphere(sphere) = value {
-            Ok(ShapeBuilder::from_sphere((*sphere.as_ref()).clone()))
+            Ok(ShapeBuilder::from_sphere(sphere))
         } else {
             Err("Object is not a Sphere".to_string())
         }
@@ -491,15 +491,15 @@ impl TryFrom<Object> for ShapeBuilder<Sphere, TypeSpecified> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
-    Group(Arc<Group>),
-    Sphere(Arc<Sphere>),
-    Plane(Arc<Plane>),
-    Cube(Arc<Cube>),
-    Cylinder(Arc<Cylinder>),
-    Cone(Arc<Cone>),
+    Group(Group),
+    Sphere(Sphere),
+    Plane(Plane),
+    Cube(Cube),
+    Cylinder(Cylinder),
+    Cone(Cone),
 
     #[cfg(test)]
-    TestShape(Arc<TestShape>),
+    TestShape(TestShape),
 }
 impl Object {
     fn world_point_to_local(&self, point: &Point) -> Point {
@@ -611,17 +611,16 @@ impl Object {
         local_ray: Ray,
         intersection_list: &mut Vec<Intersection>,
     ) {
-        let arc_self = Arc::new(self.clone());
         match self {
-            Self::Cone(c) => c.local_intersect(arc_self, local_ray, intersection_list),
-            Self::Cube(c) => c.local_intersect(arc_self, local_ray, intersection_list),
-            Self::Cylinder(c) => c.local_intersect(arc_self, local_ray, intersection_list),
-            Self::Group(g) => g.local_intersect(arc_self, local_ray, intersection_list),
-            Self::Plane(p) => p.local_intersect(arc_self, local_ray, intersection_list),
-            Self::Sphere(s) => s.local_intersect(arc_self, local_ray, intersection_list),
+            Self::Cone(c) => c.local_intersect(self, local_ray, intersection_list),
+            Self::Cube(c) => c.local_intersect(self, local_ray, intersection_list),
+            Self::Cylinder(c) => c.local_intersect(self, local_ray, intersection_list),
+            Self::Group(g) => g.local_intersect(self, local_ray, intersection_list),
+            Self::Plane(p) => p.local_intersect(self, local_ray, intersection_list),
+            Self::Sphere(s) => s.local_intersect(self, local_ray, intersection_list),
 
             #[cfg(test)]
-            Self::TestShape(s) => s.local_intersect(arc_self, local_ray, intersection_list),
+            Self::TestShape(s) => s.local_intersect(self, local_ray, intersection_list),
         }
     }
 

@@ -18,7 +18,7 @@ use crate::ray_tracer::{
 pub struct Group {
     transform: Matrix<4>,
     material: Option<Material>,
-    children: Option<Arc<[Object]>>,
+    children: Option<Vec<Object>>,
 }
 
 impl Group {
@@ -30,8 +30,8 @@ impl Group {
         }
     }
 
-    pub(super) fn get_children(&self) -> Option<Arc<[Object]>> {
-        self.children.clone()
+    pub(super) fn get_children(&self) -> Option<&[Object]> {
+        self.children.as_deref()
     }
 
     const fn has_children(&self) -> bool {
@@ -61,7 +61,7 @@ impl Shapes for Group {
     }
     fn local_intersect(
         &self,
-        object: Arc<Object>,
+        object: &Object,
         local_ray: Ray,
         intersection_list: &mut Vec<Intersection>,
     ) {
@@ -69,7 +69,7 @@ impl Shapes for Group {
             return;
         };
         let mut retval = Vec::with_capacity(children.len() * 2);
-        for child in children.iter() {
+        for child in children {
             local_ray.intersect(child, &mut retval);
         }
         retval.sort_by(|a, b| {
@@ -136,7 +136,7 @@ impl GroupBuilder {
             if let Object::Group(g) = child {
                 // Re-build the group with the current group's transform.
                 let new_g = Self::new()
-                    .add_children(&g.get_children().unwrap())
+                    .add_children(g.get_children().unwrap())
                     .set_transform(new_transform.inverse())
                     .build();
                 *child = new_g;
@@ -144,38 +144,38 @@ impl GroupBuilder {
                 // Unfortunately we need to extract the child object, create a builder for it, and apply the transformation.
                 match child {
                     Object::Sphere(s) => {
-                        let mut builder = ShapeBuilder::from_sphere(s.as_ref().clone())
+                        let mut builder = ShapeBuilder::from_sphere(s.clone())
                             .set_transform(new_transform)
                             .build();
                         *child = builder;
                     }
                     Object::Plane(p) => {
-                        let mut builder = ShapeBuilder::from_plane(p.as_ref().clone())
+                        let mut builder = ShapeBuilder::from_plane(p.clone())
                             .set_transform(new_transform)
                             .build();
                         *child = builder;
                     }
                     Object::Cube(c) => {
-                        let mut builder = ShapeBuilder::from_cube(c.as_ref().clone())
+                        let mut builder = ShapeBuilder::from_cube(c.clone())
                             .set_transform(new_transform)
                             .build();
                         *child = builder;
                     }
                     Object::Cylinder(c) => {
-                        let mut builder = ShapeBuilder::from_cylinder(c.as_ref().clone())
+                        let mut builder = ShapeBuilder::from_cylinder(c.clone())
                             .set_transform(new_transform)
                             .build();
                         *child = builder;
                     }
                     Object::Cone(c) => {
-                        let mut builder = ShapeBuilder::from_cone(c.as_ref().clone())
+                        let mut builder = ShapeBuilder::from_cone(c.clone())
                             .set_transform(new_transform)
                             .build();
                         *child = builder;
                     }
                     #[cfg(test)]
                     Object::TestShape(t) => {
-                        let mut builder = ShapeBuilder::from_test_shape(t.as_ref().clone())
+                        let mut builder = ShapeBuilder::from_test_shape(t.clone())
                             .set_transform(new_transform)
                             .build();
                         *child = builder;
@@ -192,9 +192,8 @@ impl GroupBuilder {
                 transform: *Matrix::<4>::identity().inverse(),
                 //transform: self.transform,
                 material: self.material,
-                children: Some(children.into()),
-            }
-            .into(),
+                children: Some(children),
+            },
         )
     }
 }

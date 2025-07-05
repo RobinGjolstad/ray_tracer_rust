@@ -7,7 +7,6 @@ use crate::ray_tracer::{
     tuples_new::{new_vector, Point, Vector},
     utils::is_float_equal,
 };
-use std::sync::Arc;
 
 use super::{BaseShape, Object, Shapes};
 
@@ -59,7 +58,7 @@ impl Shapes for Cube {
     }
     fn local_intersect(
         &self,
-        object: Arc<Object>,
+        object: &Object,
         local_ray: Ray,
         intersection_list: &mut Vec<Intersection>,
     ) {
@@ -81,7 +80,7 @@ impl Shapes for Cube {
         if tmin > tmax {
         } else {
             intersection_list.push(Intersection::new(tmin, object.clone()));
-            intersection_list.push(Intersection::new(tmax, object));
+            intersection_list.push(Intersection::new(tmax, object.clone()));
         }
     }
 }
@@ -104,8 +103,6 @@ fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use crate::ray_tracer::{
         shapes::ShapeBuilder, tuples_new::new_point, utils::is_float_equal_low_precision,
     };
@@ -164,7 +161,7 @@ mod tests {
 
         for intersection in examples {
             let mut xs = Vec::new();
-            c.local_intersect(Arc::new(obj_cube.clone()), intersection.0, &mut xs);
+            c.local_intersect(&obj_cube.clone(), intersection.0, &mut xs);
             assert_eq!(xs.len(), 2);
             assert!(is_float_equal_low_precision(
                 &xs[0].get_time(),
@@ -202,7 +199,7 @@ mod tests {
 
         for ray in examples {
             let mut xs = Vec::new();
-            c.local_intersect(Arc::new(obj_cube.clone()), ray, &mut xs);
+            c.local_intersect(&obj_cube.clone(), ray, &mut xs);
             assert_eq!(xs.len(), 0);
         }
     }

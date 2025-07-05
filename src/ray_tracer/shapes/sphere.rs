@@ -45,7 +45,7 @@ impl Shapes for Sphere {
     }
     fn local_intersect(
         &self,
-        object: Arc<Object>,
+        object: &Object,
         local_ray: Ray,
         intersection_list: &mut Vec<Intersection>,
     ) {
@@ -67,7 +67,7 @@ impl Shapes for Sphere {
             ));
             intersection_list.push(Intersection::new(
                 (-b + discriminant_sqrt) / (2.0 * a),
-                object,
+                object.clone(),
             ));
         }
     }
