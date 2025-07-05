@@ -122,17 +122,17 @@ impl Shapes for Cylinder {
         if disc < 0.0 {
             // Ray doesn't intersect the cylinder
             return;
-        } else {
-            let t0 = (-b - disc.sqrt()) / (2.0 * a);
-            let t1 = (-b + disc.sqrt()) / (2.0 * a);
-            let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
-            if self.minimum < y0 && y0 < self.maximum {
-                intersection_list.push(Intersection::new(t0, object.clone()));
-            }
-            let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
-            if self.minimum < y1 && y1 < self.maximum {
-                intersection_list.push(Intersection::new(t1, object.clone()));
-            }
+        }
+        
+        let t0 = (-b - disc.sqrt()) / (2.0 * a);
+        let t1 = (-b + disc.sqrt()) / (2.0 * a);
+        let y0 = t0.mul_add(local_ray.direction.y, local_ray.origin.y);
+        if self.minimum < y0 && y0 < self.maximum {
+            intersection_list.push(Intersection::new(t0, object.clone()));
+        }
+        let y1 = t1.mul_add(local_ray.direction.y, local_ray.origin.y);
+        if self.minimum < y1 && y1 < self.maximum {
+            intersection_list.push(Intersection::new(t1, object.clone()));
         }
 
         self.intersect_caps(object, &local_ray, intersection_list);

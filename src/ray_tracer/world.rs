@@ -327,7 +327,7 @@ mod tests {
         let w = w.build();
 
         let r = Ray::new(new_point(0.0, 0.0, 5.0), new_vector(0.0, 0.0, 1.0));
-        let i = Intersection::new(4.0, Arc::new(s2.clone()));
+        let i = Intersection::new(4.0, Arc::new(s2));
         let binding = Intersections::new(&[i.clone()]);
         let comps = prepare_computations(&i, &r, &binding);
         let c = w.shade_hit(&comps, 1);
@@ -404,7 +404,7 @@ mod tests {
         let w = w.build();
 
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
-        let i = Intersection::new(1.0, Arc::new(shape.clone()));
+        let i = Intersection::new(1.0, Arc::new(shape));
         let binding = Intersections::new(&[i.clone()]);
         let comps = prepare_computations(&i, &r, &binding);
         let color = w.reflected_color(&comps, 1);
@@ -424,7 +424,7 @@ mod tests {
             new_point(0.0, 0.0, -3.0),
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
-        let i = Intersection::new(2.0_f64.sqrt(), Arc::new(shape.clone()));
+        let i = Intersection::new(2.0_f64.sqrt(), Arc::new(shape));
         let binding = Intersections::new(&[i.clone()]);
         let comps = prepare_computations(&i, &r, &binding);
         let color = w.reflected_color(&comps, 1);
@@ -489,7 +489,7 @@ mod tests {
             new_point(0.0, 0.0, -3.0),
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
-        let i = Intersection::new(2.0_f64.sqrt(), Arc::new(shape.clone()));
+        let i = Intersection::new(2.0_f64.sqrt(), Arc::new(shape));
         let binding = Intersections::new(&[i.clone()]);
         let comps = prepare_computations(&i, &r, &binding);
         let color = w.reflected_color(&comps, 0);
@@ -502,7 +502,7 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = Intersections::new(&[
             Intersection::new(4.0, Arc::new(shape.clone())),
-            Intersection::new(6.0, Arc::new(shape.clone())),
+            Intersection::new(6.0, Arc::new(shape)),
         ]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
         let c = w.refracted_color(&comps, 5);
@@ -517,7 +517,7 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let xs = Intersections::new(&[
             Intersection::new(4.0, Arc::new(shape.clone())),
-            Intersection::new(6.0, Arc::new(shape.clone())),
+            Intersection::new(6.0, Arc::new(shape)),
         ]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
         let c = w.refracted_color(&comps, 0);
@@ -535,7 +535,7 @@ mod tests {
         );
         let xs = Intersections::new(&[
             Intersection::new(-(2.0_f64.sqrt()) / 2.0, Arc::new(shape.clone())),
-            Intersection::new(2.0_f64.sqrt() / 2.0, Arc::new(shape.clone())),
+            Intersection::new(2.0_f64.sqrt() / 2.0, Arc::new(shape)),
         ]);
         let comps = prepare_computations(&xs.list[1], &r, &xs);
         let c = w.refracted_color(&comps, 5);
@@ -567,8 +567,8 @@ mod tests {
         let xs = Intersections::new(&[
             Intersection::new(-0.9899, Arc::new(A.clone())),
             Intersection::new(-0.4899, Arc::new(B.clone())),
-            Intersection::new(0.4899, Arc::new(B.clone())),
-            Intersection::new(0.9899, Arc::new(A.clone())),
+            Intersection::new(0.4899, Arc::new(B)),
+            Intersection::new(0.9899, Arc::new(A)),
         ]);
         let comps = prepare_computations(&xs.list[2], &r, &xs);
         let c = w.refracted_color(&comps, 5);
@@ -596,7 +596,7 @@ mod tests {
             new_point(0.0, 0.0, -3.0),
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
-        let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), Arc::new(floor.clone()))]);
+        let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), Arc::new(floor))]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
         let color = w.shade_hit(&comps, 5);
         assert_eq!(color, Color::new(0.93642, 0.68642, 0.68642));
@@ -624,7 +624,7 @@ mod tests {
             new_point(0.0, 0.0, -3.0),
             new_vector(0.0, -(2.0_f64.sqrt()) / 2.0, 2.0_f64.sqrt() / 2.0),
         );
-        let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), Arc::new(floor.clone()))]);
+        let xs = Intersections::new(&[Intersection::new(2.0_f64.sqrt(), Arc::new(floor))]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
         let color = w.shade_hit(&comps, 5);
         assert_eq!(color, Color::new(0.93391, 0.69643, 0.69243));

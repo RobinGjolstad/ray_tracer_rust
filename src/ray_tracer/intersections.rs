@@ -13,10 +13,10 @@ pub struct Intersection {
 }
 impl Intersection {
     #[must_use]
-    pub fn new(time: f64, object: Arc<Object>) -> Self {
+    pub const fn new(time: f64, object: Arc<Object>) -> Self {
         Self { t: time, object }
     }
-    pub(crate) fn get_time(&self) -> f64 {
+    pub(crate) const fn get_time(&self) -> f64 {
         self.t
     }
     #[cfg(test)]
@@ -46,7 +46,7 @@ impl Intersections {
             .sort_unstable_by(|a, b| a.t.partial_cmp(&b.t).unwrap());
     }
     #[cfg(test)]
-    pub(crate) fn count(&self) -> usize {
+    pub(crate) const fn count(&self) -> usize {
         self.list.len()
     }
     #[cfg(test)]
@@ -208,8 +208,8 @@ mod tests {
     fn aggregating_intersections() {
         let s = new_sphere().build();
         let i1 = Intersection::new(1.0, Arc::new(s.clone()));
-        let i2 = Intersection::new(2.0, Arc::new(s.clone()));
-        let xs = Intersections::new(&[i1.clone(), i2.clone()]);
+        let i2 = Intersection::new(2.0, Arc::new(s));
+        let xs = Intersections::new(&[i1, i2]);
         assert_eq!(xs.count(), 2);
         assert!(is_float_equal(&xs.get_element(0).unwrap().t, 1.0));
         assert!(is_float_equal(&xs.get_element(1).unwrap().t, 2.0));
@@ -218,8 +218,8 @@ mod tests {
     fn the_hit_when_all_intersections_have_positive_t() {
         let s = new_sphere().build();
         let i1 = Intersection::new(1.0, Arc::new(s.clone()));
-        let i2 = Intersection::new(2.0, Arc::new(s.clone()));
-        let xs = Intersections::new(&[i2.clone(), i1.clone()]);
+        let i2 = Intersection::new(2.0, Arc::new(s));
+        let xs = Intersections::new(&[i2, i1.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i1));
     }
@@ -227,8 +227,8 @@ mod tests {
     fn the_hit_when_some_intersections_have_negative_t() {
         let s = new_sphere().build();
         let i1 = Intersection::new(-1.0, Arc::new(s.clone()));
-        let i2 = Intersection::new(1.0, Arc::new(s.clone()));
-        let xs = Intersections::new(&[i1.clone(), i2.clone()]);
+        let i2 = Intersection::new(1.0, Arc::new(s));
+        let xs = Intersections::new(&[i1, i2.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i2));
     }
@@ -236,8 +236,8 @@ mod tests {
     fn the_hit_when_all_intersections_have_negative_t() {
         let s = new_sphere().build();
         let i1 = Intersection::new(-2.0, Arc::new(s.clone()));
-        let i2 = Intersection::new(-1.0, Arc::new(s.clone()));
-        let xs = Intersections::new(&[i2.clone(), i1.clone()]);
+        let i2 = Intersection::new(-1.0, Arc::new(s));
+        let xs = Intersections::new(&[i2, i1]);
         let i = xs.hit();
         assert_eq!(i, None);
     }
@@ -247,8 +247,8 @@ mod tests {
         let i1 = Intersection::new(5.0, Arc::new(s.clone()));
         let i2 = Intersection::new(7.0, Arc::new(s.clone()));
         let i3 = Intersection::new(-3.0, Arc::new(s.clone()));
-        let i4 = Intersection::new(2.0, Arc::new(s.clone()));
-        let xs = Intersections::new(&[i1.clone(), i2.clone(), i3.clone(), i4.clone()]);
+        let i4 = Intersection::new(2.0, Arc::new(s));
+        let xs = Intersections::new(&[i1, i2, i3, i4.clone()]);
         let i = xs.hit();
         assert_eq!(i, Some(i4));
     }
@@ -256,7 +256,7 @@ mod tests {
     fn precomputing_the_state_of_an_intersection() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = new_sphere().build();
-        let i = Intersection::new(4.0, Arc::new(shape.clone()));
+        let i = Intersection::new(4.0, Arc::new(shape));
         let binding = Intersections {
             list: vec![i.clone()],
         };
@@ -271,7 +271,7 @@ mod tests {
     fn the_hit_when_an_intersection_occurs_on_the_outside() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = new_sphere().build();
-        let i = Intersection::new(4.0, Arc::new(shape.clone()));
+        let i = Intersection::new(4.0, Arc::new(shape));
         let binding = Intersections {
             list: vec![i.clone()],
         };
@@ -282,7 +282,7 @@ mod tests {
     fn the_hit_when_an_intersection_occurs_on_the_inside() {
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let shape = new_sphere().build();
-        let i = Intersection::new(1.0, Arc::new(shape.clone()));
+        let i = Intersection::new(1.0, Arc::new(shape));
         let binding = Intersections {
             list: vec![i.clone()],
         };
@@ -296,7 +296,7 @@ mod tests {
     fn the_hit_should_offset_the_point() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = new_sphere().translate(0.0, 0.0, 1.0).build();
-        let i = Intersection::new(5.0, Arc::new(shape.clone()));
+        let i = Intersection::new(5.0, Arc::new(shape));
         let binding = Intersections {
             list: vec![i.clone()],
         };
@@ -311,7 +311,7 @@ mod tests {
             new_point(0.0, 1.0, -1.0),
             new_vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
         );
-        let i = Intersection::new(f64::sqrt(2.0), Arc::new(shape.clone()));
+        let i = Intersection::new(f64::sqrt(2.0), Arc::new(shape));
         let binding = Intersections {
             list: vec![i.clone()],
         };
@@ -344,9 +344,9 @@ mod tests {
                 Intersection::new(2.0, Arc::new(A.clone())),
                 Intersection::new(2.75, Arc::new(B.clone())),
                 Intersection::new(3.25, Arc::new(C.clone())),
-                Intersection::new(4.75, Arc::new(B.clone())),
-                Intersection::new(5.25, Arc::new(C.clone())),
-                Intersection::new(6.0, Arc::new(A.clone())),
+                Intersection::new(4.75, Arc::new(B)),
+                Intersection::new(5.25, Arc::new(C)),
+                Intersection::new(6.0, Arc::new(A)),
             ],
         };
         let results = [
@@ -367,7 +367,7 @@ mod tests {
     fn the_under_point_is_offset_below_the_surface() {
         let r = Ray::new(new_point(0.0, 0.0, -5.0), new_vector(0.0, 0.0, 1.0));
         let shape = glass_sphere().translate(0.0, 0.0, 1.0).build();
-        let i = Intersection::new(5.0, Arc::new(shape.clone()));
+        let i = Intersection::new(5.0, Arc::new(shape));
         let xs = Intersections::new(&[i.clone()]);
         let comps = prepare_computations(&i, &r, &xs);
         assert!(comps.under_point.z > EPSILON / 2.0);
@@ -382,7 +382,7 @@ mod tests {
         );
         let intersection_bindings = [
             Intersection::new(-(2.0_f64.sqrt()) / 2.0, Arc::new(shape.clone())),
-            Intersection::new(2.0_f64.sqrt() / 2.0, Arc::new(shape.clone())),
+            Intersection::new(2.0_f64.sqrt() / 2.0, Arc::new(shape)),
         ];
         let xs = Intersections::new(&intersection_bindings);
         let comps = prepare_computations(&xs.list[1], &r, &xs);
@@ -395,7 +395,7 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 1.0, 0.0));
         let intersection_bindings = [
             Intersection::new(-1.0, Arc::new(shape.clone())),
-            Intersection::new(2.0, Arc::new(shape.clone())),
+            Intersection::new(2.0, Arc::new(shape)),
         ];
         let xs = Intersections::new(&intersection_bindings);
         let comps = prepare_computations(&xs.list[1], &r, &xs);
@@ -406,8 +406,8 @@ mod tests {
     fn the_schlick_approximation_with_small_angle_and_n2_greater_than_n1() {
         let shape = glass_sphere().build();
         let r = Ray::new(new_point(0.0, 0.99, -2.0), new_vector(0.0, 0.0, 1.0));
-        let binding = Intersection::new(1.8589, Arc::new(shape.clone()));
-        let xs = Intersections::new(&[binding.clone()]);
+        let binding = Intersection::new(1.8589, Arc::new(shape));
+        let xs = Intersections::new(&[binding]);
         let comps = prepare_computations(&xs.list[0], &r, &xs);
         let reflectance = schlick(&comps);
         assert!(is_float_equal(&reflectance, 0.48873));

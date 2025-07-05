@@ -86,7 +86,7 @@ mod tests {
         let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 10.0, 1.0), new_vector(0.0, 0.0, 1.0));
         let mut xs = Vec::new();
-        p.local_intersect(Arc::new(obj_plane.clone()), r, &mut xs);
+        p.local_intersect(Arc::new(obj_plane), r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]
@@ -95,7 +95,7 @@ mod tests {
         let obj_plane = ShapeBuilder::from_plane(p.clone()).build();
         let r = Ray::new(new_point(0.0, 0.0, 0.0), new_vector(0.0, 0.0, 1.0));
         let mut xs = Vec::new();
-        p.local_intersect(Arc::new(obj_plane.clone()), r, &mut xs);
+        p.local_intersect(Arc::new(obj_plane), r, &mut xs);
         assert_eq!(xs.len(), 0);
     }
     #[test]

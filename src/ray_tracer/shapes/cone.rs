@@ -233,7 +233,7 @@ mod tests {
         let r = Ray::new(new_point(0.0, 0.0, -1.0), direction);
 
         let mut xs = Vec::new();
-        shape.local_intersect(Arc::new(obj_shape.clone()), r, &mut xs);
+        shape.local_intersect(Arc::new(obj_shape), r, &mut xs);
         assert_eq!(xs.len(), 1);
         assert!(is_float_equal(&xs[0].get_time(), 0.35355));
     }

@@ -5,7 +5,6 @@ use crate::ray_tracer::{
     tuples_new::{Point, Vector},
     world::World,
 };
-use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ray {
